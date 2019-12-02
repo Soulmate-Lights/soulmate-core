@@ -3,7 +3,7 @@
 #ifndef BUILDER_LIBRARIES_SOULMATE_SOULMATEMAIN_H_
 #define BUILDER_LIBRARIES_SOULMATE_SOULMATEMAIN_H_
 
-#include <ArduinoJson.h>
+#include "./ArduinoJson/ArduinoJson.h"
 #include <functional>
 #include "./config.h"
 #include "./files.h"
