@@ -1,0 +1,20 @@
+{
+  "files.associations": {
+    "__locale": "cpp",
+    "__mutex_base": "cpp",
+    "__bit_reference": "cpp",
+    "__functional_base": "cpp",
+    "atomic": "cpp",
+    "bitset": "cpp",
+    "chrono": "cpp",
+    "functional": "cpp",
+    "iterator": "cpp",
+    "limits": "cpp",
+    "locale": "cpp",
+    "memory": "cpp",
+    "ratio": "cpp",
+    "system_error": "cpp",
+    "tuple": "cpp",
+    "type_traits": "cpp"
+  }
+}

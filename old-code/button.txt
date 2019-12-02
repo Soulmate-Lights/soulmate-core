@@ -1,0 +1,37 @@
+void adjustFromButton() {
+    EVERY_N_MILLISECONDS(10) {
+      bool buttonSignal = digitalRead(SOULMATE_BUTTON_PIN);
+      bool buttonIsCurrentlyDown = buttonSignal == BUTTON_ON_VALUE;
+
+      if (!buttonOn && buttonIsCurrentlyDown) { // Start pressing
+        buttonPressStart = millis();
+        newBrightness = brightness;
+      }
+
+      // Keep pressing
+      if (buttonIsCurrentlyDown && buttonOn) {
+        uint32_t buttonPressDuration = millis() - buttonPressStart;
+        if (buttonPressDuration > 500) {
+          newBrightness = newBrightness + (buttonIncreasingBrightness ? 1 : -1);
+          brightness = constrain(newBrightness, 0, 255);
+        }
+      }
+
+      // Finish pressing
+      if (buttonOn && !buttonIsCurrentlyDown) {
+        uint32_t buttonPressDuration = millis() - buttonPressStart;
+
+        if (buttonPressDuration < 1000) {
+          // If it's for less than a second, switch routine.
+          nextRoutine();
+        } else {
+          // Otherwise, Set whether we're increasing or decreasing the brightness.
+          buttonIncreasingBrightness = !buttonIncreasingBrightness;
+        }
+      }
+      buttonOn = buttonIsCurrentlyDown;
+    }
+  }
+
+
+pinMode(SOULMATE_BUTTON_PIN, INPUT_PULLDOWN);
