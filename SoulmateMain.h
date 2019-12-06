@@ -6,7 +6,7 @@
 #include "Arduino.h"
 #include "./ArduinoJson/ArduinoJson.h"
 #include <functional>
-#include "./config.h"
+#include "./SoulmateConfig.h"
 #include "./files.h"
 #include "./beatsinfloat.h"
 #include "./soulmateTime.h"
