@@ -13,7 +13,7 @@
 #include "./circadian.h"
 #include "./settings.h"
 
-#define SOULMATE_VERSION "5.22"
+#define SOULMATE_VERSION "5.23"
 #define MAX_NUMBER_OF_ROUTINES 25
 void FastLEDshowTask(void* pvParameters);
 
