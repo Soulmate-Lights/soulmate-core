@@ -1,5 +1,5 @@
 #include "./files.h"
-#include "./time.h"
+#include "./soulmateTime.h"
 
 #ifndef BUILDER_LIBRARIES_SOULMATE_CIRCADIAN_H_
 #define BUILDER_LIBRARIES_SOULMATE_CIRCADIAN_H_
@@ -24,21 +24,21 @@ namespace Circadian {
 
   double readSavedWakeTime() {
     String savedWakeTime = readFile("/wakeTime.txt");
-    #ifndef CORE_TEENSY
-      if (!savedWakeTime.equals("")) {
-        wakeTime = savedWakeTime.toDouble();
-      }
-    #endif
+#ifndef CORE_TEENSY
+    if (!savedWakeTime.equals("")) {
+      wakeTime = savedWakeTime.toDouble();
+    }
+#endif
     return wakeTime;
   }
 
   double readSavedSleepTime() {
     String savedSleepTime = readFile("/sleepTime.txt");
-    #ifndef CORE_TEENSY
-      if (!savedSleepTime.equals("")) {
-        sleepTime = savedSleepTime.toDouble();
-      }
-    #endif
+#ifndef CORE_TEENSY
+    if (!savedSleepTime.equals("")) {
+      sleepTime = savedSleepTime.toDouble();
+    }
+#endif
     return sleepTime;
   }
 
@@ -100,6 +100,6 @@ namespace Circadian {
     readSavedWakeTime();
     readSavedSleepTime();
   }
-}
+}  // namespace Circadian
 
 #endif

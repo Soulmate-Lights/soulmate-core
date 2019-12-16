@@ -5,13 +5,12 @@
 #ifndef BUILDER_LIBRARIES_SOULMATE_SOULMATEWIFI_H_
 #define BUILDER_LIBRARIES_SOULMATE_SOULMATEWIFI_H_
 
-#include <WiFi.h>
+#include <ArduinoOTA.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <ESPmDNS.h>
 #include <Preferences.h>
-#include <ArduinoOTA.h>
-#include <Preferences.h>
+#include <WiFi.h>
 #include "./settings.h"
 
 Preferences preferences;
@@ -55,7 +54,7 @@ namespace SoulmateWifi {
   }
 
   // WiFi configuration
-  void connectTo(const char* ssid, const char* pass) {
+  void connectTo(const char *ssid, const char *pass) {
     Serial.println(F("Connecting. Before:"));
     Serial.println(String(ESP.getFreeHeap()));
     preferences.begin("Wifi", false);
@@ -93,22 +92,21 @@ namespace SoulmateWifi {
 
   // WebSockets event received¡
   void onEvent(
-    AsyncWebSocket * server,
-    AsyncWebSocketClient * client,
-    AwsEventType type,
-    void * arg,
-    uint8_t *data,
-    size_t len
-  ) {
+      AsyncWebSocket *server,
+      AsyncWebSocketClient *client,
+      AwsEventType type,
+      void *arg,
+      uint8_t *data,
+      size_t len) {
     if (type != WS_EVT_DATA) return;
 
     bool finished = false;
-    AwsFrameInfo * info = reinterpret_cast<AwsFrameInfo*>(arg);
+    AwsFrameInfo *info = reinterpret_cast<AwsFrameInfo *>(arg);
 
     // Final frame
     if ((info->index + len) == info->len) {
       StaticJsonBuffer<200> jsonBuffer;
-      JsonObject& root = jsonBuffer.parseObject(reinterpret_cast<char *>(data));
+      JsonObject &root = jsonBuffer.parseObject(reinterpret_cast<char *>(data));
 
       if (root == JsonObject::invalid()) {
         Serial.println(F("Invalid JSON object received:"));
@@ -155,119 +153,119 @@ namespace SoulmateWifi {
   void WiFiEvent(WiFiEvent_t event) {
     switch (event) {
       case SYSTEM_EVENT_WIFI_READY:
-          Serial.println(F("[Wifi] WiFi interface ready"));
-          break;
+        Serial.println(F("[Wifi] WiFi interface ready"));
+        break;
       case SYSTEM_EVENT_SCAN_DONE:
-          Serial.println(F("[Wifi] Completed scan for access points"));
-          break;
+        Serial.println(F("[Wifi] Completed scan for access points"));
+        break;
       case SYSTEM_EVENT_STA_START:
-          Serial.println(F("[Wifi] WiFi client started"));
-          break;
+        Serial.println(F("[Wifi] WiFi client started"));
+        break;
       case SYSTEM_EVENT_STA_STOP:
-          Serial.println(F("[Wifi] WiFi clients stopped"));
-          break;
+        Serial.println(F("[Wifi] WiFi clients stopped"));
+        break;
       case SYSTEM_EVENT_STA_CONNECTED:
-          Serial.println(F("[Wifi] Connected to access point"));
-          break;
+        Serial.println(F("[Wifi] Connected to access point"));
+        break;
       case SYSTEM_EVENT_STA_DISCONNECTED:
-          Serial.println(F("[Wifi] Disconnected from WiFi access point"));
-          if (isConnected) {
-            isConnected = false;
-            connectToSavedWifi();
-          } else {
-            Serial.println(F("Spurious disconnect event"));
-          }
-          break;
+        Serial.println(F("[Wifi] Disconnected from WiFi access point"));
+        if (isConnected) {
+          isConnected = false;
+          connectToSavedWifi();
+        } else {
+          Serial.println(F("Spurious disconnect event"));
+        }
+        break;
       case SYSTEM_EVENT_STA_AUTHMODE_CHANGE:
-          Serial.println(F("[Wifi] Authentication mode of access point has changed"));
-          break;
+        Serial.println(F("[Wifi] Authentication mode of access point has changed"));
+        break;
       case SYSTEM_EVENT_STA_GOT_IP:
-          if (!isConnected) {
-            Serial.println(F("Got IP. Before:"));
-            Serial.println(String(ESP.getFreeHeap()));
+        if (!isConnected) {
+          Serial.println(F("Got IP. Before:"));
+          Serial.println(String(ESP.getFreeHeap()));
 
-            isConnected = true;
-            Serial.print("Obtained IP address: ");
-            Serial.println(WiFi.localIP());
-            Serial.println(F("Starting MDNS"));
-            startMDNS();
-            Serial.println(F("Got IP. After:"));
-            Serial.println(String(ESP.getFreeHeap()));
+          isConnected = true;
+          Serial.print("Obtained IP address: ");
+          Serial.println(WiFi.localIP());
+          Serial.println(F("Starting MDNS"));
+          startMDNS();
+          Serial.println(F("Got IP. After:"));
+          Serial.println(String(ESP.getFreeHeap()));
 
-            Serial.println(F("WS on Event. Before:"));
-            Serial.println(String(ESP.getFreeHeap()));
-            ws.onEvent(onEvent);
-            Serial.println(F("WS on Event. After:"));
-            Serial.println(String(ESP.getFreeHeap()));
-            socketServer.addHandler(&ws);
+          Serial.println(F("WS on Event. Before:"));
+          Serial.println(String(ESP.getFreeHeap()));
+          ws.onEvent(onEvent);
+          Serial.println(F("WS on Event. After:"));
+          Serial.println(String(ESP.getFreeHeap()));
+          socketServer.addHandler(&ws);
 
-            Serial.println(F("Server 1: Before:"));
-            Serial.println(String(ESP.getFreeHeap()));
-            socketServer.begin();
-            Serial.println(F("Server 1: After:"));
-            Serial.println(String(ESP.getFreeHeap()));
-            Serial.println(F("Server 2: Before:"));
-            Serial.println(String(ESP.getFreeHeap()));
-            server.begin();
-            Serial.println(F("Server 2: After:"));
-            Serial.println(String(ESP.getFreeHeap()));
-          } else {
-            Serial.println(F("Spurious got IP event."));
-            Serial.println(F("Reconnecting to saved wifi..."));
-            connectToSavedWifi();
-          }
-          break;
+          Serial.println(F("Server 1: Before:"));
+          Serial.println(String(ESP.getFreeHeap()));
+          socketServer.begin();
+          Serial.println(F("Server 1: After:"));
+          Serial.println(String(ESP.getFreeHeap()));
+          Serial.println(F("Server 2: Before:"));
+          Serial.println(String(ESP.getFreeHeap()));
+          server.begin();
+          Serial.println(F("Server 2: After:"));
+          Serial.println(String(ESP.getFreeHeap()));
+        } else {
+          Serial.println(F("Spurious got IP event."));
+          Serial.println(F("Reconnecting to saved wifi..."));
+          connectToSavedWifi();
+        }
+        break;
       case SYSTEM_EVENT_STA_LOST_IP:
-          Serial.println(F("[Wifi] Lost IP address and IP address is reset to 0"));
-          break;
+        Serial.println(F("[Wifi] Lost IP address and IP address is reset to 0"));
+        break;
       case SYSTEM_EVENT_STA_WPS_ER_SUCCESS:
-          Serial.println(F("[Wifi] WiFi Protected Setup (WPS): succeeded in enrollee mode"));
-          break;
+        Serial.println(F("[Wifi] WiFi Protected Setup (WPS): succeeded in enrollee mode"));
+        break;
       case SYSTEM_EVENT_STA_WPS_ER_FAILED:
-          Serial.println(F("[Wifi] WiFi Protected Setup (WPS): failed in enrollee mode"));
-          break;
+        Serial.println(F("[Wifi] WiFi Protected Setup (WPS): failed in enrollee mode"));
+        break;
       case SYSTEM_EVENT_STA_WPS_ER_TIMEOUT:
-          Serial.println(F("[Wifi] WiFi Protected Setup (WPS): timeout in enrollee mode"));
-          break;
+        Serial.println(F("[Wifi] WiFi Protected Setup (WPS): timeout in enrollee mode"));
+        break;
       case SYSTEM_EVENT_STA_WPS_ER_PIN:
-          Serial.println(F("[Wifi] WiFi Protected Setup (WPS): pin code in enrollee mode"));
-          break;
+        Serial.println(F("[Wifi] WiFi Protected Setup (WPS): pin code in enrollee mode"));
+        break;
       case SYSTEM_EVENT_AP_START:
-          Serial.println(F("[Wifi] WiFi access point started"));
-          break;
+        Serial.println(F("[Wifi] WiFi access point started"));
+        break;
       case SYSTEM_EVENT_AP_STOP:
-          Serial.println(F("[Wifi] WiFi access point  stopped"));
-          break;
+        Serial.println(F("[Wifi] WiFi access point  stopped"));
+        break;
       case SYSTEM_EVENT_AP_STACONNECTED:
-          Serial.println(F("[Wifi] Client connected"));
-          break;
+        Serial.println(F("[Wifi] Client connected"));
+        break;
       case SYSTEM_EVENT_AP_STADISCONNECTED:
-          Serial.println(F("[Wifi] Client disconnected"));
-          break;
+        Serial.println(F("[Wifi] Client disconnected"));
+        break;
       case SYSTEM_EVENT_AP_STAIPASSIGNED:
-          Serial.println(F("[Wifi] Assigned IP address to client"));
-          break;
+        Serial.println(F("[Wifi] Assigned IP address to client"));
+        break;
       case SYSTEM_EVENT_AP_PROBEREQRECVED:
-          Serial.println(F("[Wifi] Received probe request"));
-          break;
+        Serial.println(F("[Wifi] Received probe request"));
+        break;
       case SYSTEM_EVENT_GOT_IP6:
-          Serial.println(F("[Wifi] IPv6 is preferred"));
-          break;
+        Serial.println(F("[Wifi] IPv6 is preferred"));
+        break;
       case SYSTEM_EVENT_ETH_START:
-          Serial.println(F("[Wifi] Ethernet started"));
-          break;
+        Serial.println(F("[Wifi] Ethernet started"));
+        break;
       case SYSTEM_EVENT_ETH_STOP:
-          Serial.println(F("[Wifi] Ethernet stopped"));
-          break;
+        Serial.println(F("[Wifi] Ethernet stopped"));
+        break;
       case SYSTEM_EVENT_ETH_CONNECTED:
-          Serial.println(F("[Wifi] Ethernet connected"));
-          break;
+        Serial.println(F("[Wifi] Ethernet connected"));
+        break;
       case SYSTEM_EVENT_ETH_DISCONNECTED:
-          Serial.println(F("[Wifi] Ethernet disconnected"));
-          break;
+        Serial.println(F("[Wifi] Ethernet disconnected"));
+        break;
       case SYSTEM_EVENT_ETH_GOT_IP:
-          Serial.println(F("[Wifi] Obtained IP address"));
-          break;
+        Serial.println(F("[Wifi] Obtained IP address"));
+        break;
     }
   }
 
@@ -279,25 +277,24 @@ namespace SoulmateWifi {
 
     connectToSavedWifi();
 
-    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
       request->send(200, F("text/plain"), Soulmate.status());
     });
 
-    server.on("/status", HTTP_GET, [](AsyncWebServerRequest *request){
+    server.on("/status", HTTP_GET, [](AsyncWebServerRequest *request) {
       request->send(200, F("text/plain"), Soulmate.status());
     });
 
     // respond to GET requests on URL /heap
-    server.on("/heap", HTTP_GET, [](AsyncWebServerRequest *request){
+    server.on("/heap", HTTP_GET, [](AsyncWebServerRequest *request) {
       request->send(200, F("text/plain"), String(ESP.getFreeHeap()));
     });
 
-    server.on("/ota", HTTP_POST, [](AsyncWebServerRequest *request){
+    server.on("/ota", HTTP_POST, [](AsyncWebServerRequest *request) {
       Serial.println(F("Closing request"));
       AsyncWebServerResponse *response = request->beginResponse(200, F("text/plain"), "OK");
       response->addHeader("Connection", "close");
-      request->send(response);
-    }, [](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final){
+      request->send(response); }, [](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
       EVERY_N_MILLISECONDS(100) {
         if (request->hasHeader(F("Content-Length"))) {
           AsyncWebHeader* h = request->getHeader("Content-Length");
@@ -339,8 +336,7 @@ namespace SoulmateWifi {
         // For some multi-thread reason,
         // it's better to restart in the main loop thread.
         restartRequired = true;
-      }
-    });
+      } });
 
     Serial.println(F("Setting up WIFI. After:"));
     Serial.println(String(ESP.getFreeHeap()));
@@ -370,7 +366,7 @@ void SoulmateLibrary::reconnect() {
   SoulmateWifi::reconnect();
 }
 
-void SoulmateLibrary::connectTo(const char* ssid, const char* pass) {
+void SoulmateLibrary::connectTo(const char *ssid, const char *pass) {
   preferences.begin("Wifi", false);
   preferences.putString("ssid", String(ssid));
   preferences.putString("pass", String(pass));
