@@ -305,7 +305,6 @@ namespace SoulmateWifi {
       }
 
       if (!index) {
-        Serial.println(F("Starting OTA update"));
 
         stopMDNS();
         Soulmate.StopBluetooth();
