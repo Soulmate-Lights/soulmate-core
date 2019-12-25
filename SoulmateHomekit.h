@@ -1,3 +1,5 @@
+// TODO: Notify Bluetooth when value changes (without crashing)
+
 #include <string.h>
 #include "driver/gpio.h"
 #include "freertos/FreeRTOS.h"
@@ -39,19 +41,19 @@ static SemaphoreHandle_t ev_mutex;
 static int brightness = 10;
 static void* _brightness_ev_handle = NULL;
 
-void temperature_humidity_monitoring_task(void* arm) {
-    while (1) {
-        ESP_LOGI("MAIN", "RAM LEFT %d", esp_get_free_heap_size());
-        ESP_LOGI("MAIN", "TASK STACK : %d", uxTaskGetStackHighWaterMark(NULL));
 
-        if (_brightness_ev_handle) {
-            ESP_LOGI("MAIN", "HAP Event response");
-            hap_event_response(acc, _brightness_ev_handle, (void*)brightness);
-        }
-
-        vTaskDelay( 3000 / portTICK_RATE_MS );
-    }
+static bool _identifed = false;
+void* identify_read(void* arg) {
+    return (void*)true;
 }
+
+static void* _ev_handle;
+static int led = false;
+
+void* _state_handle;
+void* _brightness_handle;
+void* _hue_handle;
+void* _saturation_handle;
 
 static void* _brightness_read(void* arg) {
     ESP_LOGI("MAIN", "_brightness_read");
@@ -67,26 +69,12 @@ void _brightness_notify(void* arg, void* ev_handle, bool enable) {
     }
 }
 
-static bool _identifed = false;
-void* identify_read(void* arg) {
-    return (void*)true;
-}
-
-static void* _ev_handle;
-static int led = false;
-
-void* _state_handle;
-void* _brightness_handle;
-void* _hue_handle;
-void* _saturation_handle;
-
-
-void* led_read(void* arg) {
+void* on_read(void* arg) {
   printf("[MAIN] LED READ\n");
   return (void*)Soulmate.on;
 }
 
-void led_write(void* arg, void* value, int len) {
+void on_write(void* arg, void* value, int len) {
   printf("[MAIN] LED WRITE. %d\n", (int)value);
 
   led = (int)value;
@@ -103,17 +91,15 @@ void led_write(void* arg, void* value, int len) {
       // BLE::willNotify = true;
   }
 
-  if (_ev_handle)
-      hap_event_response(acc, _ev_handle, (void*)led);
+  if (_ev_handle) hap_event_response(acc, _ev_handle, (void*)led);
 
   return;
 }
 
-void led_notify(void* arg, void* ev_handle, bool enable) {
+void on_notify(void* arg, void* ev_handle, bool enable) {
   if (enable) {
       _brightness_handle = ev_handle;
-  }
-  else {
+  } else {
       _brightness_handle = NULL;
   }
 }
@@ -129,8 +115,7 @@ void brightness_write(void* arg, void* value, int len) {
   int soulmateBrightness = (float)(int)value / 100.0 * 255;
   Soulmate.brightness = soulmateBrightness;
 
-  if (_brightness_handle)
-      hap_event_response(acc, _brightness_handle, (void*)led);
+  if (_brightness_handle) hap_event_response(acc, _brightness_handle, (void*)led);
 
   return;
 }
@@ -138,8 +123,7 @@ void brightness_write(void* arg, void* value, int len) {
 void brightness_notify(void* arg, void* ev_handle, bool enable) {
   if (enable) {
       _ev_handle = ev_handle;
-  }
-  else {
+  } else {
       _ev_handle = NULL;
   }
 }
@@ -154,9 +138,7 @@ void* led_saturation_read(void* arg) {
 
 void led_saturation_write(void* arg, void* value, int len) {
     printf("[MAIN] LED SATURATION WRITE. %d\n", (int)value);
-
     saturation = (int)value;
-
     if (_saturation_handle) hap_event_response(acc, _saturation_handle, (void*)saturation);
 }
 
@@ -200,7 +182,7 @@ void hap_object_init(void* arg) {
   hap_service_and_characteristics_add(acc, accessory_object, HAP_SERVICE_ACCESSORY_INFORMATION, cs, ARRAY_SIZE(cs));
 
   struct hap_characteristic cc[] = {
-      {HAP_CHARACTER_ON, (void*)led, NULL, led_read, led_write, led_notify},
+      {HAP_CHARACTER_ON, (void*)led, NULL, on_read, on_write, on_notify},
       {HAP_CHARACTER_BRIGHTNESS, (void*)brightness, NULL, brightness_read, brightness_write, brightness_notify},
       // {HAP_CHARACTER_HUE, (void*)hue, NULL, led_hue_read, led_hue_write, led_hue_notify},
       // {HAP_CHARACTER_SATURATION, (void*)saturation, NULL, led_saturation_read, led_saturation_write, led_saturation_notify},
