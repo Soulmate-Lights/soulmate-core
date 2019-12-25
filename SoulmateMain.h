@@ -208,16 +208,16 @@ class SoulmateLibrary {
     #endif
 
     #ifdef ESP32
-      if (SoulmateSettings::startInWifiMode()) {
+      // if (SoulmateSettings::startInWifiMode()) {
         WifiSetup();
-        SoulmateSettings::setStartInWifiMode(false);
-      } else {
+        // SoulmateSettings::setStartInWifiMode(false);
+      // } else {
         #ifndef SKIP_BLUETOOTH
           BluetoothSetup();
         #else  // Without BT it starts too fast to print
           delay(1000);
         #endif
-      }
+      // }
     #endif
 
     // Important, the command line uses this!

@@ -23,8 +23,8 @@
 #define SERIAL_NUMBER "12341234"
 #define FIRMWARE_REVISION "0.1"
 
-#define ACCESSORY_NAME  "Soulmate"
-#define MANUFACTURER_NAME   "Soulmate Lighting, LLC"
+#define ACCESSORY_NAME "Soulmate"
+#define MANUFACTURER_NAME "Soulmate Lighting, LLC"
 #define MODEL_NAME  "DEMO"
 #define ARRAY_SIZE(array) (sizeof(array) / sizeof(array[0]))
 
@@ -75,6 +75,12 @@ void* identify_read(void* arg) {
 static void* _ev_handle;
 static int led = false;
 
+void* _state_handle;
+void* _brightness_handle;
+void* _hue_handle;
+void* _saturation_handle;
+
+
 void* led_read(void* arg) {
   printf("[MAIN] LED READ\n");
   return (void*)Soulmate.on;
@@ -87,10 +93,14 @@ void led_write(void* arg, void* value, int len) {
   if (value) {
       led = true;
       Soulmate.on = true;
+      Soulmate.updateWifiClients();
+      // BLE::willNotify = true;
   }
   else {
       led = false;
       Soulmate.on = false;
+      Soulmate.updateWifiClients();
+      // BLE::willNotify = true;
   }
 
   if (_ev_handle)
@@ -101,11 +111,80 @@ void led_write(void* arg, void* value, int len) {
 
 void led_notify(void* arg, void* ev_handle, bool enable) {
   if (enable) {
+      _brightness_handle = ev_handle;
+  }
+  else {
+      _brightness_handle = NULL;
+  }
+}
+
+void* brightness_read(void* arg) {
+  printf("[MAIN] brightness READ\n");
+  return (void*)Soulmate.on;
+}
+
+void brightness_write(void* arg, void* value, int len) {
+  printf("[MAIN] brightness WRITE. %d\n", (int)value);
+
+  int soulmateBrightness = (float)(int)value / 100.0 * 255;
+  Soulmate.brightness = soulmateBrightness;
+
+  if (_brightness_handle)
+      hap_event_response(acc, _brightness_handle, (void*)led);
+
+  return;
+}
+
+void brightness_notify(void* arg, void* ev_handle, bool enable) {
+  if (enable) {
       _ev_handle = ev_handle;
   }
   else {
       _ev_handle = NULL;
   }
+}
+
+volatile int hue = 0;
+volatile int saturation = 0;
+
+void* led_saturation_read(void* arg) {
+    printf("[MAIN] LED SATURATION READ\n");
+    return (void*)saturation;
+}
+
+void led_saturation_write(void* arg, void* value, int len) {
+    printf("[MAIN] LED SATURATION WRITE. %d\n", (int)value);
+
+    saturation = (int)value;
+
+    if (_saturation_handle) hap_event_response(acc, _saturation_handle, (void*)saturation);
+}
+
+void led_saturation_notify(void* arg, void* saturation_handle, bool enable) {
+    if (enable) {
+        _saturation_handle = saturation_handle;
+    } else {
+        _saturation_handle = NULL;
+    }
+}
+
+void* led_hue_read(void* arg) {
+    printf("[MAIN] LED HUE READ\n");
+    return (void*)hue;
+}
+
+void led_hue_write(void* arg, void* value, int len) {
+    printf("[MAIN] LED HUE WRITE. %d\n", (int)value);
+    hue = (int)value;
+    if (_hue_handle) hap_event_response(acc, _hue_handle, (void*)hue);
+}
+
+void led_hue_notify(void* arg, void* hue_handle, bool enable) {
+    if (enable) {
+        _hue_handle = hue_handle;
+    } else {
+        _hue_handle = NULL;
+    }
 }
 
 void hap_object_init(void* arg) {
@@ -122,79 +201,9 @@ void hap_object_init(void* arg) {
 
   struct hap_characteristic cc[] = {
       {HAP_CHARACTER_ON, (void*)led, NULL, led_read, led_write, led_notify},
+      {HAP_CHARACTER_BRIGHTNESS, (void*)brightness, NULL, brightness_read, brightness_write, brightness_notify},
+      // {HAP_CHARACTER_HUE, (void*)hue, NULL, led_hue_read, led_hue_write, led_hue_notify},
+      // {HAP_CHARACTER_SATURATION, (void*)saturation, NULL, led_saturation_read, led_saturation_write, led_saturation_notify},
   };
-  hap_service_and_characteristics_add(acc, accessory_object, HAP_SERVICE_SWITCHS, cc, ARRAY_SIZE(cc));
-
-  // struct hap_characteristic brightness_sensor[] = {
-  //     {HAP_CHARACTER_CURRENT_RELATIVE_HUMIDITY, (void*)brightness, NULL, _brightness_read, NULL, _brightness_notify},
-  //     {HAP_CHARACTER_NAME, (void*)"Soulmate", NULL, NULL, NULL, NULL},
-  // };
-  // hap_service_and_characteristics_add(acc, accessory_object, HAP_SERVICE_LIGHTBULB, brightness_sensor, ARRAY_SIZE(brightness_sensor));
+  hap_service_and_characteristics_add(acc, accessory_object, HAP_SERVICE_LIGHTBULB, cc, ARRAY_SIZE(cc));
 }
-
-
-
-// static esp_err_t event_handler(void *ctx, system_event_t *event)
-// {
-//     switch(event->event_id) {
-//     case SYSTEM_EVENT_STA_START:
-//         esp_wifi_connect();
-//         break;
-//     case SYSTEM_EVENT_STA_GOT_IP:
-//         ESP_LOGI(TAG, "got ip:%s",
-//                  ip4addr_ntoa(&event->event_info.got_ip.ip_info.ip));
-//         xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_BIT);
-//         {
-//             hap_init();
-
-//             uint8_t mac[6];
-//             esp_wifi_get_mac(ESP_IF_WIFI_STA, mac);
-//             char accessory_id[32] = {0,};
-//             sprintf(accessory_id, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-//             hap_accessory_callback_t callback;
-//             callback.hap_object_init = hap_object_init;
-//             acc = hap_accessory_register(
-//                 (char*)ACCESSORY_NAME,
-//                 accessory_id,
-//                 (char*)"111-11-111",
-//                 (char*)MANUFACTURER_NAME,
-//                 HAP_ACCESSORY_CATEGORY_OTHER,
-//                 811,
-//                 1,
-//                 NULL,
-//                 &callback
-//             );
-//         }
-//         break;
-//     case SYSTEM_EVENT_STA_DISCONNECTED:
-//         esp_wifi_connect();
-//         xEventGroupClearBits(wifi_event_group, WIFI_CONNECTED_BIT);
-//         break;
-//     default:
-//         break;
-//     }
-//     return ESP_OK;
-// }
-
-// void wifi_init_sta()
-// {
-//     wifi_event_group = xEventGroupCreate();
-
-//     tcpip_adapter_init();
-//     ESP_ERROR_CHECK(esp_event_loop_init(event_handler, NULL) );
-
-//     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-//     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
-//     wifi_config_t wifi_config;
-//     memset(&wifi_config, 0, sizeof(wifi_config));
-//     memcpy(wifi_config.sta.ssid, EXAMPLE_ESP_WIFI_SSID, strlen(EXAMPLE_ESP_WIFI_SSID));
-//     memcpy(wifi_config.sta.password, EXAMPLE_ESP_WIFI_PASS, strlen(EXAMPLE_ESP_WIFI_PASS));
-
-//     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA) );
-//     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config) );
-//     ESP_ERROR_CHECK(esp_wifi_start() );
-
-//     ESP_LOGI(TAG, "wifi_init_sta finished.");
-//     ESP_LOGI(TAG, "connect to ap SSID:%s password:%s",
-//              EXAMPLE_ESP_WIFI_SSID, EXAMPLE_ESP_WIFI_PASS);
-// }
