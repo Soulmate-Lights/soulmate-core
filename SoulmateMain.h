@@ -24,6 +24,8 @@ class SoulmateLibrary {
   // Overridden by config later
   String name = F("New Soulmate");
   int brightness = 255;
+  int hue = 0;
+  int saturation = 0;
   bool on = true;
   bool cycle = false;
 
@@ -256,6 +258,14 @@ class SoulmateLibrary {
     }
   }
 
+  void playCurrentRoutine() {
+    if (currentRoutine == -1) {
+      fill_solid(led_arr, N_LEDS, CHSV(hue, saturation, 255));
+    } else {
+      routines[currentRoutine]();
+    }
+  }
+
   void showPixels() {
     if (isStopped()) return;
 
@@ -275,7 +285,7 @@ class SoulmateLibrary {
       memcpy(&previous_led_arr, &led_arr, size);
       // Put the next pattern's arrays into led_arr and run with it
       memcpy(&led_arr, &next_led_arr, size);
-      routines[currentRoutine]();
+      playCurrentRoutine();
       memcpy(&next_led_arr, &led_arr, size);
       // Blend the two together
       for (int i = 0; i < N_CELLS; i++) {
@@ -286,7 +296,7 @@ class SoulmateLibrary {
       FastLED.show();
       faded = true;
     } else {
-      routines[currentRoutine]();
+      playCurrentRoutine();
       FastLED.show();
       fill_solid(previous_led_arr, N_LEDS, CRGB::Black);
       fill_solid(next_led_arr, N_LEDS, CRGB::Black);
