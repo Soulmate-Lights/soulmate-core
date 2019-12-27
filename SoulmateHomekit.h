@@ -88,8 +88,6 @@ void brightness_write(void *arg, void *value, int len) {
   Soulmate.brightness = soulmateBrightness;
 
   if (_brightness_handle) {
-    Serial.println("=================== brightness handle, responding");
-    Serial.println(brightness);
     hap_event_response(acc, _brightness_handle, (void *)brightness);
   }
 
@@ -111,7 +109,7 @@ void led_saturation_write(void *arg, void *value, int len) {
   saturation = (int)value;
   Soulmate.saturation = (float)saturation / 100.0 * 255.0;
   if (_saturation_handle) {
-    hap_event_response(acc, _saturation_handle, (void*)((int)value * 100));
+    hap_event_response(acc, _saturation_handle, (void*)((int)value));
   }
 }
 
@@ -131,7 +129,7 @@ void led_hue_write(void *arg, void *value, int len) {
   Soulmate.hue = (float)hue / 360.0 * 255.0;
   Soulmate.currentRoutine = -1;
   if (_hue_handle) {
-    hap_event_response(acc, _hue_handle, (void*)((int)value * 100));
+    hap_event_response(acc, _hue_handle, (void*)((int)value));
   }
 }
 
@@ -141,6 +139,8 @@ void led_hue_notify(void *arg, void *hue_handle, bool enable) {
 }
 
 void hap_object_init(void *arg) {
+  brightness = (float)Soulmate.brightness / 255.0 * 100.0;
+
   void *accessory_object = hap_accessory_add(acc);
   struct hap_characteristic cs[] = {
       {HAP_CHARACTER_IDENTIFY, (void *)true, NULL, identify_read, NULL, NULL},
