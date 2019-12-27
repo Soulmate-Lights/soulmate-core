@@ -74,7 +74,6 @@ void on_notify(void *arg, void *ev_handle, bool enable) {
 void *brightness_read(void *arg) {
   // printf("[MAIN] brightness READ\n");
   int brightness = (float)Soulmate.brightness / 255.0 * 100.0;
-  Serial.println(brightness);
   return (void *)brightness;
 }
 
@@ -105,10 +104,8 @@ void led_saturation_write(void *arg, void *value, int len) {
 
 void led_saturation_notify(void *arg, void *saturation_handle, bool enable) {
   if (enable) {
-    Serial.println("led_saturation_notify on");
     _saturation_handle = saturation_handle;
   } else {
-    Serial.println("led_saturation_notify off");
     _saturation_handle = NULL;
   }
 }
@@ -134,9 +131,12 @@ void led_hue_notify(void *arg, void *hue_handle, bool enable) {
 void hap_object_init(void *arg) {
   void *accessory_object = hap_accessory_add(acc);
   struct hap_characteristic cs[] = {
-      {HAP_CHARACTER_IDENTIFY, (void *)true, NULL, identify_read, NULL, NULL},     {HAP_CHARACTER_MANUFACTURER, (void *)MANUFACTURER_NAME, NULL, NULL, NULL, NULL},
-      {HAP_CHARACTER_MODEL, (void *)MODEL_NAME, NULL, NULL, NULL, NULL},           {HAP_CHARACTER_NAME, (void *)ACCESSORY_NAME, NULL, NULL, NULL, NULL},
-      {HAP_CHARACTER_SERIAL_NUMBER, (void *)"0123456789", NULL, NULL, NULL, NULL}, {HAP_CHARACTER_FIRMWARE_REVISION, (void *)"1.0", NULL, NULL, NULL, NULL},
+      {HAP_CHARACTER_IDENTIFY, (void *)true, NULL, identify_read, NULL, NULL},
+      {HAP_CHARACTER_MANUFACTURER, (void *)MANUFACTURER_NAME, NULL, NULL, NULL, NULL},
+      {HAP_CHARACTER_MODEL, (void *)MODEL_NAME, NULL, NULL, NULL, NULL},
+      {HAP_CHARACTER_NAME, (void *)ACCESSORY_NAME, NULL, NULL, NULL, NULL},
+      {HAP_CHARACTER_SERIAL_NUMBER, (void *)"0123456789", NULL, NULL, NULL, NULL},
+      {HAP_CHARACTER_FIRMWARE_REVISION, (void *)"1.0", NULL, NULL, NULL, NULL},
   };
   hap_service_and_characteristics_add(acc, accessory_object, HAP_SERVICE_ACCESSORY_INFORMATION, cs, ARRAY_SIZE(cs));
 
