@@ -340,8 +340,8 @@ namespace SoulmateWifi {
         Soulmate.StopBluetooth();
         Soulmate.stop();
         SPIFFS.end();
-        ws.enable(false);
-        ws.closeAll();
+        // ws.enable(false);
+        // ws.closeAll();
 
         if (!Update.begin()) {
           Update.printError(Serial);

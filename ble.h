@@ -91,9 +91,12 @@ namespace BLE {
     Serial.println(F("Stopping bluetooth"));
     btStop();
     pServer->getAdvertising()->stop();
-    BLEDevice::deinit(true);
+    Serial.println("Stopped advertising");
+    // BLEDevice::deinit(true);
+    Serial.println("Deinitialized");
     esp_bt_controller_mem_release(ESP_BT_MODE_BTDM);
     esp_bt_controller_mem_release(ESP_BT_MODE_BLE);
+    Serial.println("Released memory");
   }
 
   void notify() {
