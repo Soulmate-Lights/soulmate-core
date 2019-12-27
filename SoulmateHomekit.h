@@ -76,6 +76,7 @@ void *brightness_read(void *arg) {
   // printf("[MAIN] brightness READ\n");
   // int brightness = (float)Soulmate.brightness / 255.0 * 100.0;
   // Serial.println(brightness);
+  // int brightness = (float)Soulmate.brightness / 255.0 * 100.0;
   return (void *)brightness;
   // return (void *)brightness;
 }
