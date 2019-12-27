@@ -36,12 +36,13 @@ const int WIFI_CONNECTED_BIT = BIT0;
 static void *acc;
 static SemaphoreHandle_t ev_mutex;
 
-static int brightness = 10;
-static int led = false;
-static int hue = 128;
-static int saturation = 128;
+int brightness = 10;
+int led = false;
+int hue = 128;
+int saturation = 128;
 
 static bool _identifed = false;
+
 static void *_on_handle;
 static void *_brightness_handle;
 static void *_hue_handle;
@@ -73,21 +74,30 @@ void on_notify(void *arg, void *ev_handle, bool enable) {
 
 void *brightness_read(void *arg) {
   // printf("[MAIN] brightness READ\n");
-  int brightness = (float)Soulmate.brightness / 255.0 * 100.0;
-  Serial.println(brightness);
+  // int brightness = (float)Soulmate.brightness / 255.0 * 100.0;
+  // Serial.println(brightness);
   return (void *)brightness;
+  // return (void *)brightness;
 }
 
 void brightness_write(void *arg, void *value, int len) {
   // printf("[MAIN] brightness WRITE. %d\n", (int)value);
+  brightness = (int)value;
+
   int soulmateBrightness = (float)(int)value / 100.0 * 255;
   Soulmate.brightness = soulmateBrightness;
-  if (_brightness_handle) hap_event_response(acc, _brightness_handle, (void *)brightness);
+
+  if (_brightness_handle) {
+    Serial.println("=================== brightness handle, responding");
+    Serial.println(brightness);
+    hap_event_response(acc, _brightness_handle, (void *)brightness);
+  }
+
   return;
 }
 
 void brightness_notify(void *arg, void *ev_handle, bool enable) {
-  _on_handle = enable ? ev_handle : NULL;
+  _brightness_handle = enable ? ev_handle : NULL;
 }
 
 void *led_saturation_read(void *arg) {
@@ -100,17 +110,13 @@ void led_saturation_write(void *arg, void *value, int len) {
   // printf("[MAIN] LED SATURATION WRITE. %d\n", (int)value);
   saturation = (int)value;
   Soulmate.saturation = (float)saturation / 100.0 * 255.0;
-  // if (_saturation_handle) hap_event_response(acc, _saturation_handle, (void*)saturation);
+  if (_saturation_handle) {
+    hap_event_response(acc, _saturation_handle, (void*)((int)value * 100));
+  }
 }
 
 void led_saturation_notify(void *arg, void *saturation_handle, bool enable) {
-  if (enable) {
-    Serial.println("led_saturation_notify on");
-    _saturation_handle = saturation_handle;
-  } else {
-    Serial.println("led_saturation_notify off");
-    _saturation_handle = NULL;
-  }
+  _saturation_handle = enable ? saturation_handle : NULL;
 }
 
 void *led_hue_read(void *arg) {
@@ -124,19 +130,25 @@ void led_hue_write(void *arg, void *value, int len) {
   hue = (int)value;
   Soulmate.hue = (float)hue / 360.0 * 255.0;
   Soulmate.currentRoutine = -1;
-  // if (_hue_handle) hap_event_response(acc, _hue_handle, (void*)hue);
+  if (_hue_handle) {
+    hap_event_response(acc, _hue_handle, (void*)((int)value * 100));
+  }
 }
 
 void led_hue_notify(void *arg, void *hue_handle, bool enable) {
+  Serial.println("led_hue_notify");
   _hue_handle = enable ? hue_handle : NULL;
 }
 
 void hap_object_init(void *arg) {
   void *accessory_object = hap_accessory_add(acc);
   struct hap_characteristic cs[] = {
-      {HAP_CHARACTER_IDENTIFY, (void *)true, NULL, identify_read, NULL, NULL},     {HAP_CHARACTER_MANUFACTURER, (void *)MANUFACTURER_NAME, NULL, NULL, NULL, NULL},
-      {HAP_CHARACTER_MODEL, (void *)MODEL_NAME, NULL, NULL, NULL, NULL},           {HAP_CHARACTER_NAME, (void *)ACCESSORY_NAME, NULL, NULL, NULL, NULL},
-      {HAP_CHARACTER_SERIAL_NUMBER, (void *)"0123456789", NULL, NULL, NULL, NULL}, {HAP_CHARACTER_FIRMWARE_REVISION, (void *)"1.0", NULL, NULL, NULL, NULL},
+      {HAP_CHARACTER_IDENTIFY, (void *)true, NULL, identify_read, NULL, NULL},
+      {HAP_CHARACTER_MANUFACTURER, (void *)MANUFACTURER_NAME, NULL, NULL, NULL, NULL},
+      {HAP_CHARACTER_MODEL, (void *)MODEL_NAME, NULL, NULL, NULL, NULL},
+      {HAP_CHARACTER_NAME, (void *)ACCESSORY_NAME, NULL, NULL, NULL, NULL},
+      {HAP_CHARACTER_SERIAL_NUMBER, (void *)"0123456789", NULL, NULL, NULL, NULL},
+      {HAP_CHARACTER_FIRMWARE_REVISION, (void *)"1.0", NULL, NULL, NULL, NULL},
   };
   hap_service_and_characteristics_add(acc, accessory_object, HAP_SERVICE_ACCESSORY_INFORMATION, cs, ARRAY_SIZE(cs));
 
