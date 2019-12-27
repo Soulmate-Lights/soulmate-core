@@ -13,7 +13,7 @@
 #include "./circadian.h"
 #include "./settings.h"
 
-#define SOULMATE_VERSION "5.23"
+#define SOULMATE_VERSION "5.24"
 #define MAX_NUMBER_OF_ROUTINES 25
 void FastLEDshowTask(void* pvParameters);
 
@@ -96,6 +96,8 @@ class SoulmateLibrary {
     message["wakeTime"] = Circadian::wakeTime;
     message["sleepTime"] = Circadian::sleepTime;
     message["LANIP"] = false;
+    message["homekit"] = true;
+
     if (showLANIP) message["LANIP"] = ip();
 
     #ifdef ESP32
