@@ -4,31 +4,31 @@
 #ifndef BUILDER_LIBRARIES_SOULMATE_BLE_H_
 #define BUILDER_LIBRARIES_SOULMATE_BLE_H_
 
-#include <string>
-#include <BLEDevice.h>
-#include <BLEUtils.h>
-#include <BLEServer.h>
-#include <Preferences.h>
 #include <BLE2902.h>
+#include <BLEDevice.h>
+#include <BLEServer.h>
+#include <BLEUtils.h>
+#include <Preferences.h>
+#include <string>
 
-#define SERVICE_UUID        "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
+#define SERVICE_UUID "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
 #define CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
 
 namespace BLE {
   bool willNotify = false;
 }
 
-class MyServerCallbacks: public BLEServerCallbacks {
-  void onConnect(BLEServer* pServer) {
+class MyServerCallbacks : public BLEServerCallbacks {
+  void onConnect(BLEServer *pServer) {
     pServer->getAdvertising()->start();
   }
 
-  void onDisconnect(BLEServer* pServer) {
+  void onDisconnect(BLEServer *pServer) {
     Serial.println(F("A device disconnected."));
   }
 };
 
-class MyCallbacks: public BLECharacteristicCallbacks {
+class MyCallbacks : public BLECharacteristicCallbacks {
   void onRead(BLECharacteristic *pCharacteristic) {
   }
 
@@ -37,7 +37,7 @@ class MyCallbacks: public BLECharacteristicCallbacks {
     String input = value.c_str();
 
     StaticJsonBuffer<200> jsonBuffer;
-    JsonObject& root = jsonBuffer.parseObject(input);
+    JsonObject &root = jsonBuffer.parseObject(input);
     Soulmate.consumeJson(root);
 
     BLE::willNotify = true;
@@ -67,19 +67,17 @@ namespace BLE {
     pService = pServer->createService(SERVICE_UUID);
 
     pCharacteristic = pService->createCharacteristic(
-      CHARACTERISTIC_UUID,
-      BLECharacteristic::PROPERTY_NOTIFY |
-      BLECharacteristic::PROPERTY_READ |
-      BLECharacteristic::PROPERTY_WRITE |
-      BLECharacteristic::PROPERTY_WRITE_NR);
+        CHARACTERISTIC_UUID,
+        BLECharacteristic::PROPERTY_NOTIFY |
+            BLECharacteristic::PROPERTY_READ |
+            BLECharacteristic::PROPERTY_WRITE |
+            BLECharacteristic::PROPERTY_WRITE_NR);
     pCharacteristic->addDescriptor(new BLE2902());
     pCharacteristic->setCallbacks(new MyCallbacks());
     pCharacteristic->setValue("{}");
 
-
     btStart();
     pService->start();
-
 
     pServer->getAdvertising()->setScanResponse(true);
     pServer->getAdvertising()->setMinPreferred(0x06);  // functions that help with iPhone connections issue
@@ -88,12 +86,9 @@ namespace BLE {
   }
 
   void stop() {
-    Serial.println(F("Stopping bluetooth"));
     btStop();
     pServer->getAdvertising()->stop();
-    Serial.println("Stopped advertising");
     // BLEDevice::deinit(true);
-    Serial.println("Deinitialized");
     esp_bt_controller_mem_release(ESP_BT_MODE_BTDM);
     esp_bt_controller_mem_release(ESP_BT_MODE_BLE);
     Serial.println("Released memory");
