@@ -12,7 +12,7 @@
 #include "./files.h"
 #include "./settings.h"
 
-#define SOULMATE_VERSION "6.0.0"
+#define SOULMATE_VERSION "6.0.1"
 #define MAX_NUMBER_OF_ROUTINES 25
 void FastLEDshowTask(void* pvParameters);
 

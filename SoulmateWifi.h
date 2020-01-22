@@ -20,6 +20,18 @@ AsyncWebServer server(80);
 AsyncWebServer socketServer(81);
 AsyncWebSocket ws("/");
 
+void delayAndConnect( void * parameter ) {
+  WiFi.disconnect();
+  vTaskDelay(1000 / portTICK_PERIOD_MS);
+  Serial.println("Ending timeout, connecting");
+  preferences.begin("Wifi", false);
+  String ssid = preferences.getString("ssid", "");
+  String pass = preferences.getString("pass", "");
+  WiFi.begin(ssid.c_str(), pass.c_str());
+  preferences.end();
+  vTaskDelete(NULL);
+}
+
 namespace SoulmateWifi {
 
   bool connected = false;
@@ -105,60 +117,30 @@ namespace SoulmateWifi {
     preferences.begin("Wifi", false);
     String ssid = preferences.getString("ssid", "");
     String pass = preferences.getString("pass", "");
+    preferences.end();
 
     if (!ssid.equals("")) {
       isConnected = false;
       // We may or may not need this for ESP32 wifi stability.
-      WiFi.disconnect(true);
-      // delay(500);
-      WiFi.mode(WIFI_STA);
-      // delay(500);
-
-      WiFi.begin(ssid.c_str(), pass.c_str());
-
-      // uint32_t endTime = millis() + 2000;
-      // while (WiFi.status() != WL_CONNECTED && millis() < endTime) {
-      //   delay(500);
-      //   Serial.println(F("[Soulmate-Wifi] ."));
-      // }
+      xTaskCreate(delayAndConnect, "DelayAndConnect", 10000, NULL, 1, NULL);
     }
-    preferences.end();
   }
 
   void reconnect() {
-    disconnect();
+    Serial.println(F("[Soulmate-Wifi] Reconnecting..."));
+    isConnected = false;
     connectToSavedWifi();
   }
 
   void WiFiEvent(WiFiEvent_t event) {
     switch (event) {
-      case SYSTEM_EVENT_WIFI_READY:
-        Serial.println(F("[Soulmate-Wifi] WiFi interface ready"));
-        break;
-      case SYSTEM_EVENT_SCAN_DONE:
-        Serial.println(F("[Soulmate-Wifi] Completed scan for access points"));
-        break;
-      case SYSTEM_EVENT_STA_START:
-        Serial.println(F("[Soulmate-Wifi] WiFi client started"));
-        break;
-      case SYSTEM_EVENT_STA_STOP:
-        Serial.println(F("[Soulmate-Wifi] WiFi clients stopped"));
-        break;
-      case SYSTEM_EVENT_STA_CONNECTED:
-        Serial.println(F("[Soulmate-Wifi] Connected to access point"));
-        break;
       case SYSTEM_EVENT_STA_DISCONNECTED:
         Serial.println(F("[Soulmate-Wifi] Disconnected from WiFi access point"));
-
         if (isConnected) {
-          isConnected = false;
-          connectToSavedWifi();
+          reconnect();
         } else {
           Serial.println(F("[Soulmate-Wifi] Spurious disconnect event"));
         }
-        break;
-      case SYSTEM_EVENT_STA_AUTHMODE_CHANGE:
-        Serial.println(F("[Soulmate-Wifi] Authentication mode of access point has changed"));
         break;
       case SYSTEM_EVENT_STA_GOT_IP:
         if (!isConnected) {
@@ -197,17 +179,13 @@ namespace SoulmateWifi {
           }
         } else {
           Serial.println(F("[Soulmate-Wifi] Spurious got IP event."));
-          Serial.println(F("[Soulmate-Wifi] Reconnecting to saved wifi..."));
-          connectToSavedWifi();
+          // Serial.println(F("[Soulmate-Wifi] Reconnecting to saved wifi..."));
+          // connectToSavedWifi();
         }
         break;
       case SYSTEM_EVENT_STA_LOST_IP:
         Serial.println(F("[Soulmate-Wifi] [Wifi] Lost IP address and IP address is reset to 0"));
-        isConnected = false;
-        connectToSavedWifi();
-        break;
-      case SYSTEM_EVENT_GOT_IP6:
-        Serial.println(F("[Soulmate-Wifi] [Wifi] IPv6 is preferred"));
+        reconnect();
         break;
       default:
         break;
