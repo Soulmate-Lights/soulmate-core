@@ -60,6 +60,7 @@ namespace BLE {
     // BLEDevice::init(name.c_str());
 
     Serial.println(F("Init Bluetooth device..."));
+    // TODO: Should this be Soulmate.name?
     BLEDevice::init("Soulmate");
 
     pServer = BLEDevice::createServer();
