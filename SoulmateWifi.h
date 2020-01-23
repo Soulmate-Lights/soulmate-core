@@ -21,26 +21,23 @@ AsyncWebServer socketServer(81);
 AsyncWebSocket ws("/");
 
 void delayAndConnect(void * parameter) {
-  Serial.println("[Soulmate-Wifi] delayAndConnect");
+  Serial.println("[Soulmate-Wifi] delayAndConnect starting.");
+  Serial.println("[Soulmate-Wifi] Disconnect WiFi...");
   WiFi.disconnect();
   vTaskDelay(1000 / portTICK_PERIOD_MS);
 
+  Serial.println("[Soulmate-Wifi] Read credentials...");
   preferences.begin("Wifi", false);
   String ssid = preferences.getString("ssid", "");
   String pass = preferences.getString("pass", "");
   preferences.end();
 
-  Serial.println(ssid);
-  Serial.println(pass);
-
+  Serial.println("[Soulmate-Wifi] Set STA mode...");
   WiFi.mode(WIFI_STA);
   vTaskDelay(1000 / portTICK_PERIOD_MS);
-  WiFi.begin(ssid.c_str(), pass.c_str());
 
-  while (WiFi.status() != WL_CONNECTED) {
-    vTaskDelay(500);
-    Serial.println(".");
-  }
+  Serial.println("[Soulmate-Wifi] WiFi.begin()...");
+  WiFi.begin(ssid.c_str(), pass.c_str());
 
   vTaskDelete(NULL);
 }
@@ -189,12 +186,14 @@ namespace SoulmateWifi {
           wifi_event_group = xEventGroupCreate();
           xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_BIT);
           {
+            Serial.println("[Soulmate-Wifi] Registering with HomeKit");
             hap_init();
             uint8_t mac[6];
             esp_wifi_get_mac(ESP_IF_WIFI_STA, mac);
             char accessory_id[32] = {0};
             hap_accessory_callback_t callback;
             callback.hap_object_init = hap_object_init;
+            Serial.println("[Soulmate-Wifi] Creating accessory");
             acc = hap_accessory_register(
                 (char *)ACCESSORY_NAME,
                 accessory_id,
@@ -297,10 +296,7 @@ void SoulmateLibrary::connectTo(const char *ssid, const char *pass) {
   preferences.putString("pass", String(pass));
   preferences.end();
 
-  Serial.println("Start connect task");
-
-  // SoulmateSettings::setStartInWifiMode(true);
-  // ESP.restart();
+  Serial.println("[Soulmate-Wifi] Saved credentials, start connect task");
   xTaskCreate(delayAndConnect, "DelayAndConnect", 10000, NULL, 0, NULL);
 }
 
