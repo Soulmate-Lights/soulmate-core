@@ -222,7 +222,7 @@ namespace SoulmateWifi {
   void setup(void) {
     WiFi.onEvent(WiFiEvent);
 
-    // connectToSavedWifi();
+    connectToSavedWifi();
 
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
       request->send(200, F("text/plain"), Soulmate.status());
