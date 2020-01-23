@@ -132,7 +132,7 @@ namespace SoulmateWifi {
     if (!ssid.equals("")) {
       isConnected = false;
       // We may or may not need this for ESP32 wifi stability.
-      xTaskCreate(delayAndConnect, "DelayAndConnect", 10000, NULL, 0, NULL);
+      xTaskCreate(delayAndConnect, "DelayAndConnect", 10000, NULL, 1, NULL);
     }
   }
 
@@ -164,10 +164,7 @@ namespace SoulmateWifi {
         Serial.println(F("[Soulmate-Wifi] Disconnected from WiFi access point"));
         if (isConnected) {
           Serial.println("Was connected. Reconnect");
-          // WiFi.disconnect();
           xTaskCreate(delayAndConnect, "DelayAndConnect", 10000, NULL, 0, NULL);
-          // reconnect();
-          // xTaskCreate(delayAndConnect, "DelayAndConnect", 10000, NULL, 0, NULL);
         } else {
           Serial.println(F("[Soulmate-Wifi] Spurious disconnect event"));
         }
