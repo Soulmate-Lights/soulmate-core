@@ -180,31 +180,7 @@ namespace SoulmateWifi {
           socketServer.begin();
           server.begin();
 
-          wifi_event_group = xEventGroupCreate();
-          xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_BIT);
-          {
-            Serial.println("[Soulmate-Wifi] Registering with HomeKit");
-            hap_init();
-            uint8_t mac[6];
-            esp_wifi_get_mac(ESP_IF_WIFI_STA, mac);
-            char accessory_id[32] = {
-              0,
-            };
-            sprintf(accessory_id, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-            hap_accessory_callback_t callback;
-            callback.hap_object_init = hap_object_init;
-            Serial.println("[Soulmate-Wifi] Creating accessory");
-            acc = hap_accessory_register(
-                (char *)ACCESSORY_NAME,
-                accessory_id,
-                (char *)"111-11-111",
-                (char *)MANUFACTURER_NAME,
-                HAP_ACCESSORY_CATEGORY_OTHER,
-                811,
-                1,
-                NULL,
-                &callback);
-          }
+          setupHomekit();
         } else {
           Serial.println(F("[Soulmate-Wifi] Spurious got IP event."));
         }

@@ -471,8 +471,7 @@ class SoulmateLibrary {
     }
 
     if (root.containsKey("Name")) {
-      String n = root["Name"];
-      if (n.length() > 0) setName(n);
+      setName(root["Name"]);
     }
   }
 };

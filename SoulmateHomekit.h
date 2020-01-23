@@ -1,5 +1,6 @@
 // TODO(elliott): Notify Bluetooth when value changes (without crashing)
 
+#include <string.h>
 #include "driver/gpio.h"
 #include "esp_event_loop.h"
 #include "esp_log.h"
@@ -14,14 +15,8 @@
 #include "./SoulmateMain.h"
 #include "hap.h"
 #include "rom/ets_sys.h"
-#include <string.h>
 
-#define TAG "SOULMATE"
-#define SERIAL_NUMBER "12341234"
-#define ACCESSORY_NAME "Soulmate"
-#define FIRMWARE_REVISION "0.1"
 #define MANUFACTURER_NAME "Soulmate Lighting, LLC"
-#define MODEL_NAME "DEMO"
 #define ARRAY_SIZE(array) (sizeof(array) / sizeof(array[0]))
 
 static EventGroupHandle_t wifi_event_group;
@@ -126,11 +121,13 @@ void hap_object_init(void *arg) {
   brightness = (float)Soulmate.brightness / 255.0 * 100.0;
 
   void *accessory_object = hap_accessory_add(acc);
+  char *soulmateName = const_cast<char*>(Soulmate.name.c_str());
+
   struct hap_characteristic cs[] = {
     {HAP_CHARACTER_IDENTIFY, (void *)true, NULL, identify_read, NULL, NULL},
     {HAP_CHARACTER_MANUFACTURER, (void *)MANUFACTURER_NAME, NULL, NULL, NULL, NULL},
-    {HAP_CHARACTER_MODEL, (void *)MODEL_NAME, NULL, NULL, NULL, NULL},
-    {HAP_CHARACTER_NAME, (void *)ACCESSORY_NAME, NULL, NULL, NULL, NULL},
+    {HAP_CHARACTER_MODEL, (void *)FIRMWARE_NAME, NULL, NULL, NULL, NULL},
+    {HAP_CHARACTER_NAME, (void *)soulmateName, NULL, NULL, NULL, NULL},
     {HAP_CHARACTER_SERIAL_NUMBER, (void *)"0123456789", NULL, NULL, NULL, NULL},
     {HAP_CHARACTER_FIRMWARE_REVISION, (void *)SOULMATE_VERSION, NULL, NULL, NULL, NULL},
   };
@@ -143,4 +140,34 @@ void hap_object_init(void *arg) {
     {HAP_CHARACTER_SATURATION, (void *)saturation, NULL, led_saturation_read, led_saturation_write, led_saturation_notify},
   };
   hap_service_and_characteristics_add(acc, accessory_object, HAP_SERVICE_LIGHTBULB, cc, ARRAY_SIZE(cc));
+}
+
+void setupHomekit() {
+  wifi_event_group = xEventGroupCreate();
+  xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_BIT);
+  {
+    Serial.println("[Soulmate-Wifi] Registering with HomeKit");
+    hap_init();
+    uint8_t mac[6];
+    esp_wifi_get_mac(ESP_IF_WIFI_STA, mac);
+
+    char accessory_id[32] = {
+      0,
+    };
+    sprintf(accessory_id, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+
+    hap_accessory_callback_t callback;
+    callback.hap_object_init = hap_object_init;
+
+    acc = hap_accessory_register(
+      Soulmate.name.c_str(),
+      accessory_id,
+      (char *)"111-11-111",
+      (char *)MANUFACTURER_NAME,
+      HAP_ACCESSORY_CATEGORY_OTHER,
+      811,
+      1,
+      NULL,
+      &callback);
+  }
 }
