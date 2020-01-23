@@ -190,7 +190,10 @@ namespace SoulmateWifi {
             hap_init();
             uint8_t mac[6];
             esp_wifi_get_mac(ESP_IF_WIFI_STA, mac);
-            char accessory_id[32] = {0,};
+            char accessory_id[32] = {
+              0,
+            };
+            sprintf(accessory_id, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
             hap_accessory_callback_t callback;
             callback.hap_object_init = hap_object_init;
             Serial.println("[Soulmate-Wifi] Creating accessory");
