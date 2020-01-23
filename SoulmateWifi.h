@@ -166,13 +166,9 @@ namespace SoulmateWifi {
           xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_BIT);
           {
             hap_init();
-
             uint8_t mac[6];
             esp_wifi_get_mac(ESP_IF_WIFI_STA, mac);
-            char accessory_id[32] = {
-                0,
-            };
-            sprintf(accessory_id, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+            char accessory_id[32] = {0};
             hap_accessory_callback_t callback;
             callback.hap_object_init = hap_object_init;
             acc = hap_accessory_register(
@@ -188,8 +184,6 @@ namespace SoulmateWifi {
           }
         } else {
           Serial.println(F("[Soulmate-Wifi] Spurious got IP event."));
-          // Serial.println(F("[Soulmate-Wifi] Reconnecting to saved wifi..."));
-          // connectToSavedWifi();
         }
         break;
       case SYSTEM_EVENT_STA_LOST_IP:
@@ -214,11 +208,6 @@ namespace SoulmateWifi {
       request->send(200, F("text/plain"), Soulmate.status());
     });
 
-    // respond to GET requests on URL /heap
-    server.on("/heap", HTTP_GET, [](AsyncWebServerRequest *request) {
-      request->send(200, F("text/plain"), String(ESP.getFreeHeap()));
-    });
-
     server.on("/ota", HTTP_POST, [](AsyncWebServerRequest *request) {
       AsyncWebServerResponse *response = request->beginResponse(200, F("text/plain"), "OK");
       response->addHeader("Connection", "close");
@@ -237,8 +226,6 @@ namespace SoulmateWifi {
         Soulmate.StopBluetooth();
         Soulmate.stop();
         SPIFFS.end();
-        // ws.enable(false);
-        // ws.closeAll();
 
         if (!Update.begin()) {
           Update.printError(Serial);
