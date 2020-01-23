@@ -297,21 +297,11 @@ void SoulmateLibrary::connectTo(const char *ssid, const char *pass) {
   preferences.putString("pass", String(pass));
   preferences.end();
 
+  Serial.println("Start connect task");
+
   // SoulmateSettings::setStartInWifiMode(true);
   // ESP.restart();
-  // xTaskCreate(delayAndConnect, "DelayAndConnect", 10000, NULL, 0, NULL);
-
-    preferences.begin("Wifi", false);
-  String ssid = preferences.getString("ssid", "");
-  String pass = preferences.getString("pass", "");
-  preferences.end();
-
-  WiFi.begin(ssid.c_str(), pass.c_str());
-
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.println(".");
-  }
+  xTaskCreate(delayAndConnect, "DelayAndConnect", 10000, NULL, 0, NULL);
 }
 
 bool SoulmateLibrary::wifiConnected() {

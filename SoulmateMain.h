@@ -463,7 +463,7 @@ class SoulmateLibrary {
       const char* ssid = root["SSID"].as<char*>();
       const char* pass = root["WIFIPASS"].as<char*>();
       connectTo(ssid, pass);
-      StopBluetooth();
+      // StopBluetooth();
     }
 
     if (root.containsKey("on")) {
