@@ -30,9 +30,13 @@ void delayAndConnect(void * parameter) {
   String pass = preferences.getString("pass", "");
   preferences.end();
 
+  Serial.println(ssid);
+  Serial.println(pass);
+
   WiFi.mode(WIFI_STA);
   vTaskDelay(1000 / portTICK_PERIOD_MS);
   WiFi.begin(ssid.c_str(), pass.c_str());
+
   while (WiFi.status() != WL_CONNECTED) {
     vTaskDelay(500);
     Serial.println(".");
@@ -76,7 +80,7 @@ namespace SoulmateWifi {
 
     // Soulmate.StopBluetooth();
     // WiFi.begin(ssid, pass);
-    xTaskCreate(delayAndConnect, "DelayAndConnect", 10000, NULL, 1, NULL);
+    xTaskCreate(delayAndConnect, "DelayAndConnect", 10000, NULL, 0, NULL);
   }
 
   void disconnect() {
@@ -131,7 +135,7 @@ namespace SoulmateWifi {
     if (!ssid.equals("")) {
       isConnected = false;
       // We may or may not need this for ESP32 wifi stability.
-      xTaskCreate(delayAndConnect, "DelayAndConnect", 10000, NULL, 1, NULL);
+      xTaskCreate(delayAndConnect, "DelayAndConnect", 10000, NULL, 0, NULL);
     }
   }
 
@@ -142,13 +146,33 @@ namespace SoulmateWifi {
   }
 
   void WiFiEvent(WiFiEvent_t event) {
+    Serial.println("WiFiEvent");
     switch (event) {
+      case SYSTEM_EVENT_WIFI_READY:
+          Serial.println(F("[Wifi] WiFi interface ready"));
+          break;
+      case SYSTEM_EVENT_SCAN_DONE:
+          Serial.println(F("[Wifi] Completed scan for access points"));
+          break;
+      case SYSTEM_EVENT_STA_START:
+          Serial.println(F("[Wifi] WiFi client started"));
+          break;
+      case SYSTEM_EVENT_STA_STOP:
+          Serial.println(F("[Wifi] WiFi clients stopped"));
+          break;
+      case SYSTEM_EVENT_STA_CONNECTED:
+          Serial.println(F("[Wifi] Connected to access point"));
+          break;
       case SYSTEM_EVENT_STA_DISCONNECTED:
         Serial.println(F("[Soulmate-Wifi] Disconnected from WiFi access point"));
         if (isConnected) {
-          reconnect();
-        // } else {
-        //   Serial.println(F("[Soulmate-Wifi] Spurious disconnect event"));
+          Serial.println("Was connected. Reconnect");
+          // WiFi.disconnect();
+          xTaskCreate(delayAndConnect, "DelayAndConnect", 10000, NULL, 0, NULL);
+          // reconnect();
+          // xTaskCreate(delayAndConnect, "DelayAndConnect", 10000, NULL, 0, NULL);
+        } else {
+          Serial.println(F("[Soulmate-Wifi] Spurious disconnect event"));
         }
         break;
       case SYSTEM_EVENT_STA_GOT_IP:
@@ -198,7 +222,7 @@ namespace SoulmateWifi {
   void setup(void) {
     WiFi.onEvent(WiFiEvent);
 
-    connectToSavedWifi();
+    // connectToSavedWifi();
 
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
       request->send(200, F("text/plain"), Soulmate.status());
@@ -273,8 +297,21 @@ void SoulmateLibrary::connectTo(const char *ssid, const char *pass) {
   preferences.putString("pass", String(pass));
   preferences.end();
 
-  SoulmateSettings::setStartInWifiMode(true);
-  ESP.restart();
+  // SoulmateSettings::setStartInWifiMode(true);
+  // ESP.restart();
+  // xTaskCreate(delayAndConnect, "DelayAndConnect", 10000, NULL, 0, NULL);
+
+    preferences.begin("Wifi", false);
+  String ssid = preferences.getString("ssid", "");
+  String pass = preferences.getString("pass", "");
+  preferences.end();
+
+  WiFi.begin(ssid.c_str(), pass.c_str());
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.println(".");
+  }
 }
 
 bool SoulmateLibrary::wifiConnected() {
