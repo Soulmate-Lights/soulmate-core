@@ -1,5 +1,6 @@
-// TODO: Notify Bluetooth when value changes (without crashing)
+// TODO(elliott): Notify Bluetooth when value changes (without crashing)
 
+#include <string.h>
 #include "driver/gpio.h"
 #include "esp_event_loop.h"
 #include "esp_log.h"
@@ -11,21 +12,13 @@
 #include "lwip/err.h"
 #include "lwip/sys.h"
 #include "nvs_flash.h"
-#include <string.h>
-
 #include "./SoulmateMain.h"
-
 #include "hap.h"
-
-#include "driver/gpio.h"
 #include "rom/ets_sys.h"
 
 #define TAG "SOULMATE"
-
 #define SERIAL_NUMBER "12341234"
-#define FIRMWARE_REVISION "0.1"
-
-#define ACCESSORY_NAME "Soulmate"
+#define ACCESSORY_NAME "New Soulmate"
 #define MANUFACTURER_NAME "Soulmate Lighting, LLC"
 #define MODEL_NAME "DEMO"
 #define ARRAY_SIZE(array) (sizeof(array) / sizeof(array[0]))
@@ -136,8 +129,8 @@ void hap_object_init(void *arg) {
     {HAP_CHARACTER_MANUFACTURER, (void *)MANUFACTURER_NAME, NULL, NULL, NULL, NULL},
     {HAP_CHARACTER_MODEL, (void *)MODEL_NAME, NULL, NULL, NULL, NULL},
     {HAP_CHARACTER_NAME, (void *)ACCESSORY_NAME, NULL, NULL, NULL, NULL},
-    {HAP_CHARACTER_SERIAL_NUMBER, (void *)"0123456789", NULL, NULL, NULL, NULL},
-    {HAP_CHARACTER_FIRMWARE_REVISION, (void *)"1.0", NULL, NULL, NULL, NULL},
+    {HAP_CHARACTER_SERIAL_NUMBER, (void *)SERIAL_NUMBER, NULL, NULL, NULL, NULL},
+    {HAP_CHARACTER_FIRMWARE_REVISION, (void *)SOULMATE_VERSION, NULL, NULL, NULL, NULL},
   };
   hap_service_and_characteristics_add(acc, accessory_object, HAP_SERVICE_ACCESSORY_INFORMATION, cs, ARRAY_SIZE(cs));
 
