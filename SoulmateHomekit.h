@@ -127,8 +127,7 @@ void hap_object_init(void *arg) {
     {HAP_CHARACTER_IDENTIFY, (void *)true, NULL, identify_read, NULL, NULL},
     {HAP_CHARACTER_MANUFACTURER, (void *)MANUFACTURER_NAME, NULL, NULL, NULL, NULL},
     {HAP_CHARACTER_MODEL, (void *)FIRMWARE_NAME, NULL, NULL, NULL, NULL},
-    // {HAP_CHARACTER_NAME, (void *)soulmateName, NULL, NULL, NULL, NULL},
-    {HAP_CHARACTER_NAME, (void *)"Soulmate", NULL, NULL, NULL, NULL},
+    {HAP_CHARACTER_NAME, (void *)soulmateName, NULL, NULL, NULL, NULL},
     {HAP_CHARACTER_SERIAL_NUMBER, (void *)"0123456789", NULL, NULL, NULL, NULL},
     {HAP_CHARACTER_FIRMWARE_REVISION, (void *)SOULMATE_VERSION, NULL, NULL, NULL, NULL},
   };
@@ -161,8 +160,7 @@ void setupHomekit() {
     callback.hap_object_init = hap_object_init;
 
     acc = hap_accessory_register(
-      // Soulmate.name.c_str(),
-      "Soulmate",
+      Soulmate.name.c_str(),
       accessory_id,
       (char *)"111-11-111",
       (char *)MANUFACTURER_NAME,

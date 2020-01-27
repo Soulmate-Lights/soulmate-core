@@ -32,12 +32,14 @@ void delayAndConnect(void * parameter) {
   String pass = preferences.getString("pass", "");
   preferences.end();
 
-  Serial.println("[Soulmate-Wifi] Set STA mode...");
-  WiFi.mode(WIFI_STA);
-  vTaskDelay(1000 / portTICK_PERIOD_MS);
+  if (!ssid.equals("")) {
+    Serial.println("[Soulmate-Wifi] Set STA mode...");
+    WiFi.mode(WIFI_STA);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
 
-  Serial.println("[Soulmate-Wifi] WiFi.begin()...");
-  WiFi.begin(ssid.c_str(), pass.c_str());
+    Serial.println("[Soulmate-Wifi] WiFi.begin()...");
+    WiFi.begin(ssid.c_str(), pass.c_str());
+  }
 
   vTaskDelete(NULL);
 }
