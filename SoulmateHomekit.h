@@ -143,8 +143,9 @@ void hap_object_init(void *arg) {
 }
 
 void teardownHomekit() {
-  // Do we do this?!?!?!
+  // Trying this to tear down the HomeKit variables we use
   Serial.println("[Soulmate-Wifi] Tearing down variables");
+
   _on_handle = NULL;
   _brightness_handle = NULL;
   _hue_handle = NULL; 
