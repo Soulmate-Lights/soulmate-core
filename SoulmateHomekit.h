@@ -49,7 +49,7 @@ void *on_read(void *arg) {
 // }
 
 void on_write(void *arg, void *value, int len) {
-  Serial.println("[Soulmate-Homekit] HomeKit write!");
+  Serial.println("[Soulmate-Homekit] HomeKit write on!");
   led = (bool)value;
   Soulmate.on = (bool)value;
   if (_on_handle) hap_event_response(acc, _on_handle, (void *)led);
@@ -142,8 +142,22 @@ void hap_object_init(void *arg) {
   hap_service_and_characteristics_add(acc, accessory_object, HAP_SERVICE_LIGHTBULB, cc, ARRAY_SIZE(cc));
 }
 
+void teardownHomekit() {
+  // Do we do this?!?!?!
+  Serial.println("[Soulmate-Wifi] Tearing down variables");
+  _on_handle = NULL;
+  _brightness_handle = NULL;
+  _hue_handle = NULL; 
+  _saturation_handle = NULL;
+  
+  xEventGroupClearBits(wifi_event_group, WIFI_CONNECTED_BIT);
+}
+
 void setupHomekit() {
   wifi_event_group = xEventGroupCreate();
+}
+
+void connectHomekit() {
   xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_BIT);
   {
     Serial.println("[Soulmate-Wifi] Registering with HomeKit");
