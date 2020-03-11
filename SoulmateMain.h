@@ -12,7 +12,7 @@
 #include "./files.h"
 #include "./settings.h"
 
-#define SOULMATE_VERSION "6.0.0"
+#define SOULMATE_VERSION "6.1.1"
 #define MAX_NUMBER_OF_ROUTINES 25
 void FastLEDshowTask(void* pvParameters);
 
@@ -463,7 +463,7 @@ class SoulmateLibrary {
       const char* ssid = root["SSID"].as<char*>();
       const char* pass = root["WIFIPASS"].as<char*>();
       connectTo(ssid, pass);
-      StopBluetooth();
+      // StopBluetooth();
     }
 
     if (root.containsKey("on")) {
@@ -471,8 +471,7 @@ class SoulmateLibrary {
     }
 
     if (root.containsKey("Name")) {
-      String n = root["Name"];
-      if (n.length() > 0) setName(n);
+      setName(root["Name"]);
     }
   }
 };

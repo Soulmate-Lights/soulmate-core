@@ -1,4 +1,4 @@
-// TODO: Notify Bluetooth when value changes (without crashing)
+// TODO(elliott): Notify Bluetooth when value changes (without crashing)
 
 #include <string.h>
 #include "driver/gpio.h"
@@ -12,22 +12,11 @@
 #include "lwip/err.h"
 #include "lwip/sys.h"
 #include "nvs_flash.h"
-
 #include "./SoulmateMain.h"
-
 #include "hap.h"
-
-#include "driver/gpio.h"
 #include "rom/ets_sys.h"
 
-#define TAG "SOULMATE"
-
-#define SERIAL_NUMBER "12341234"
-#define FIRMWARE_REVISION "0.1"
-
-#define ACCESSORY_NAME "Soulmate"
 #define MANUFACTURER_NAME "Soulmate Lighting, LLC"
-#define MODEL_NAME "DEMO"
 #define ARRAY_SIZE(array) (sizeof(array) / sizeof(array[0]))
 
 static EventGroupHandle_t wifi_event_group;
@@ -51,7 +40,6 @@ static void *_saturation_handle;
 void *identify_read(void *arg) { return (void *)true; }
 
 void *on_read(void *arg) {
-  // printf("[MAIN] LED READ\n");
   return (void *)Soulmate.on;
 }
 
@@ -61,7 +49,7 @@ void *on_read(void *arg) {
 // }
 
 void on_write(void *arg, void *value, int len) {
-  // printf("[MAIN] LED WRITE. %d\n", (int)value);
+  Serial.println("[Soulmate-Homekit] HomeKit write on!");
   led = (bool)value;
   Soulmate.on = (bool)value;
   if (_on_handle) hap_event_response(acc, _on_handle, (void *)led);
@@ -73,16 +61,10 @@ void on_notify(void *arg, void *ev_handle, bool enable) {
 }
 
 void *brightness_read(void *arg) {
-  // printf("[MAIN] brightness READ\n");
-  // int brightness = (float)Soulmate.brightness / 255.0 * 100.0;
-  // Serial.println(brightness);
-  // int brightness = (float)Soulmate.brightness / 255.0 * 100.0;
   return (void *)brightness;
-  // return (void *)brightness;
 }
 
 void brightness_write(void *arg, void *value, int len) {
-  // printf("[MAIN] brightness WRITE. %d\n", (int)value);
   brightness = (int)value;
 
   int soulmateBrightness = (float)(int)value / 100.0 * 255;
@@ -100,13 +82,10 @@ void brightness_notify(void *arg, void *ev_handle, bool enable) {
 }
 
 void *led_saturation_read(void *arg) {
-  // printf("[MAIN] LED SATURATION READ\n");
-  // int saturation = 100; // (float)Soulmate.saturation / 255.0 * 100.0;
   return (void *)saturation;
 }
 
 void led_saturation_write(void *arg, void *value, int len) {
-  // printf("[MAIN] LED SATURATION WRITE. %d\n", (int)value);
   saturation = (int)value / 100;
   Soulmate.saturation = (float)saturation / 100.0 * 255.0;
   if (_saturation_handle) {
@@ -119,13 +98,11 @@ void led_saturation_notify(void *arg, void *saturation_handle, bool enable) {
 }
 
 void *led_hue_read(void *arg) {
-  // printf("[MAIN] LED HUE READ\n");
   int hue = (float)Soulmate.hue / 255.0 * 360.0;
   return (void *)hue;
 }
 
 void led_hue_write(void *arg, void *value, int len) {
-  // printf("[MAIN] LED HUE WRITE. %d\n", (int)value);
   hue = (int)value / 100;
   Soulmate.hue = (float)hue / 360.0 * 255.0;
   Soulmate.currentRoutine = -1;
@@ -139,24 +116,72 @@ void led_hue_notify(void *arg, void *hue_handle, bool enable) {
 }
 
 void hap_object_init(void *arg) {
+  Serial.println("Initializing HAP object");
   brightness = (float)Soulmate.brightness / 255.0 * 100.0;
 
   void *accessory_object = hap_accessory_add(acc);
+  char *soulmateName = const_cast<char*>(Soulmate.name.c_str());
+
   struct hap_characteristic cs[] = {
-      {HAP_CHARACTER_IDENTIFY, (void *)true, NULL, identify_read, NULL, NULL},
-      {HAP_CHARACTER_MANUFACTURER, (void *)MANUFACTURER_NAME, NULL, NULL, NULL, NULL},
-      {HAP_CHARACTER_MODEL, (void *)MODEL_NAME, NULL, NULL, NULL, NULL},
-      {HAP_CHARACTER_NAME, (void *)ACCESSORY_NAME, NULL, NULL, NULL, NULL},
-      {HAP_CHARACTER_SERIAL_NUMBER, (void *)"0123456789", NULL, NULL, NULL, NULL},
-      {HAP_CHARACTER_FIRMWARE_REVISION, (void *)"1.0", NULL, NULL, NULL, NULL},
+    {HAP_CHARACTER_IDENTIFY, (void *)true, NULL, identify_read, NULL, NULL},
+    {HAP_CHARACTER_MANUFACTURER, (void *)MANUFACTURER_NAME, NULL, NULL, NULL, NULL},
+    {HAP_CHARACTER_MODEL, (void *)FIRMWARE_NAME, NULL, NULL, NULL, NULL},
+    {HAP_CHARACTER_NAME, (void *)soulmateName, NULL, NULL, NULL, NULL},
+    {HAP_CHARACTER_SERIAL_NUMBER, (void *)"0123456789", NULL, NULL, NULL, NULL},
+    {HAP_CHARACTER_FIRMWARE_REVISION, (void *)SOULMATE_VERSION, NULL, NULL, NULL, NULL},
   };
   hap_service_and_characteristics_add(acc, accessory_object, HAP_SERVICE_ACCESSORY_INFORMATION, cs, ARRAY_SIZE(cs));
 
   struct hap_characteristic cc[] = {
-      {HAP_CHARACTER_ON, (void *)led, NULL, on_read, on_write, on_notify},
-      {HAP_CHARACTER_BRIGHTNESS, (void *)brightness, NULL, brightness_read, brightness_write, brightness_notify},
-      {HAP_CHARACTER_HUE, (void *)hue, NULL, led_hue_read, led_hue_write, led_hue_notify},
-      {HAP_CHARACTER_SATURATION, (void *)saturation, NULL, led_saturation_read, led_saturation_write, led_saturation_notify},
+    {HAP_CHARACTER_ON, (void *)led, NULL, on_read, on_write, on_notify},
+    {HAP_CHARACTER_BRIGHTNESS, (void *)brightness, NULL, brightness_read, brightness_write, brightness_notify},
+    {HAP_CHARACTER_HUE, (void *)hue, NULL, led_hue_read, led_hue_write, led_hue_notify},
+    {HAP_CHARACTER_SATURATION, (void *)saturation, NULL, led_saturation_read, led_saturation_write, led_saturation_notify},
   };
   hap_service_and_characteristics_add(acc, accessory_object, HAP_SERVICE_LIGHTBULB, cc, ARRAY_SIZE(cc));
+}
+
+void teardownHomekit() {
+  // Trying this to tear down the HomeKit variables we use
+  Serial.println("[Soulmate-Wifi] Tearing down variables");
+
+  _on_handle = NULL;
+  _brightness_handle = NULL;
+  _hue_handle = NULL; 
+  _saturation_handle = NULL;
+  
+  xEventGroupClearBits(wifi_event_group, WIFI_CONNECTED_BIT);
+}
+
+void setupHomekit() {
+  wifi_event_group = xEventGroupCreate();
+}
+
+void connectHomekit() {
+  xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_BIT);
+  {
+    Serial.println("[Soulmate-Wifi] Registering with HomeKit");
+    hap_init();
+    uint8_t mac[6];
+    esp_wifi_get_mac(ESP_IF_WIFI_STA, mac);
+
+    char accessory_id[32] = {
+      0,
+    };
+    sprintf(accessory_id, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+
+    hap_accessory_callback_t callback;
+    callback.hap_object_init = hap_object_init;
+
+    acc = hap_accessory_register(
+      Soulmate.name.c_str(),
+      accessory_id,
+      (char *)"111-11-111",
+      (char *)MANUFACTURER_NAME,
+      HAP_ACCESSORY_CATEGORY_OTHER,
+      811,
+      1,
+      NULL,
+      &callback);
+  }
 }
