@@ -1,5 +1,6 @@
 // TODO: Notify Bluetooth when value changes (without crashing)
 
+#include <string.h>
 #include "driver/gpio.h"
 #include "esp_event_loop.h"
 #include "esp_log.h"
@@ -11,7 +12,6 @@
 #include "lwip/err.h"
 #include "lwip/sys.h"
 #include "nvs_flash.h"
-#include <string.h>
 
 #include "./SoulmateMain.h"
 
@@ -110,7 +110,7 @@ void led_saturation_write(void *arg, void *value, int len) {
   saturation = (int)value / 100;
   Soulmate.saturation = (float)saturation / 100.0 * 255.0;
   if (_saturation_handle) {
-    hap_event_response(acc, _saturation_handle, (void*)((int)value));
+    hap_event_response(acc, _saturation_handle, (void *)((int)value));
   }
 }
 
@@ -130,12 +130,11 @@ void led_hue_write(void *arg, void *value, int len) {
   Soulmate.hue = (float)hue / 360.0 * 255.0;
   Soulmate.currentRoutine = -1;
   if (_hue_handle) {
-    hap_event_response(acc, _hue_handle, (void*)((int)value));
+    hap_event_response(acc, _hue_handle, (void *)((int)value));
   }
 }
 
 void led_hue_notify(void *arg, void *hue_handle, bool enable) {
-  Serial.println("led_hue_notify");
   _hue_handle = enable ? hue_handle : NULL;
 }
 
