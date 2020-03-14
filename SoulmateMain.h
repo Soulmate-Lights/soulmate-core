@@ -7,10 +7,10 @@
 #include <functional>
 #include "./ArduinoJson/ArduinoJson.h"
 #include "./SoulmateConfig.h"
-#include "./beatsinfloat.h"
-#include "./circadian.h"
-#include "./files.h"
-#include "./settings.h"
+#include "./SoulmateBeatSin.h"
+#include "./SoulmateCircadian.h"
+#include "./SoulmateFiles.h"
+#include "./SoulmateSettings.h"
 
 #define SOULMATE_VERSION "6.1.1"
 #define MAX_NUMBER_OF_ROUTINES 25

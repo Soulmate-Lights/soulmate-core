@@ -12,7 +12,7 @@
 #include <Preferences.h>
 #include <WiFi.h>
 #include "./SoulmateHomekit.h"
-#include "./settings.h"
+#include "./SoulmateSettings.h"
 
 Preferences preferences;
 
