@@ -53,20 +53,20 @@ namespace SoulmateWifi {
   // Bounjour / mDNS presence announcement.
   void startMDNS() {
     // MDNS.end();
-    // delay(100);
-    // String name = String("soulmate-" + WiFi.macAddress() + String(random(255)));
-    // name.replace(":", "");
-    // char copy[50];
-    // name.toCharArray(copy, 50);
-    // if (MDNS.begin(copy)) {
-    //   MDNS.addService("http", "tcp", 80);
-    // } else {
-    //   Serial.println(F("[Soulmate-Wifi] Error starting MDNS"));
-    // }
+    delay(100);
+    String name = String("soulmate-" + WiFi.macAddress() + String(random(255)));
+    name.replace(":", "");
+    char copy[50];
+    name.toCharArray(copy, 50);
+    if (MDNS.begin(copy)) {
+      MDNS.addService("http", "tcp", 80);
+    } else {
+      Serial.println(F("[Soulmate-Wifi] Error starting MDNS"));
+    }
   }
 
   void stopMDNS() {
-    // MDNS.end();
+    MDNS.end();
   }
 
   // WiFi configuration

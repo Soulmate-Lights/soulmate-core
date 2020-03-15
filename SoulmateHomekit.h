@@ -16,7 +16,7 @@
 #include "hap.h"
 #include "rom/ets_sys.h"
 
-#define MANUFACTURER_NAME "Soulmate Lighting, LLC"
+#define MANUFACTURER_NAME "Soulmate"
 #define ARRAY_SIZE(array) (sizeof(array) / sizeof(array[0]))
 
 static EventGroupHandle_t wifi_event_group;
@@ -147,9 +147,9 @@ void teardownHomekit() {
 
   _on_handle = NULL;
   _brightness_handle = NULL;
-  _hue_handle = NULL; 
+  _hue_handle = NULL;
   _saturation_handle = NULL;
-  
+
   xEventGroupClearBits(wifi_event_group, WIFI_CONNECTED_BIT);
 }
 
@@ -174,11 +174,11 @@ void connectHomekit() {
     callback.hap_object_init = hap_object_init;
 
     acc = hap_accessory_register(
-      Soulmate.name.c_str(),
-      accessory_id,
-      (char *)"111-11-111",
-      (char *)MANUFACTURER_NAME,
-      HAP_ACCESSORY_CATEGORY_OTHER,
+      Soulmate.name.c_str(), // name
+      accessory_id, // id
+      (char *)"111-11-111", // pincode
+      (char *)MANUFACTURER_NAME, // vendor
+      HAP_ACCESSORY_CATEGORY_OTHER, // category
       811,
       1,
       NULL,
