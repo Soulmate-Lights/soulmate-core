@@ -166,13 +166,7 @@ class SoulmateLibrary {
 
     Circadian::setup();
 
-#ifndef SOULMATE_DISABLE_CYCLE
     cycle = SoulmateSettings::shouldCycle();
-#endif
-
-#ifdef FORCE_CYCLE
-    cycle = true;
-#endif
 
     // Restore last brightness, and then we'll fade into it
     int savedBrightness = SoulmateSettings::savedBrightness();

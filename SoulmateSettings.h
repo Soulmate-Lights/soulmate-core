@@ -18,6 +18,12 @@ namespace SoulmateSettings {
   }
 
   bool shouldCycle() {
+    #ifdef SOULMATE_DISABLE_CYCLE
+      return false
+    #endif
+    #ifdef FORCE_CYCLE
+      return true;
+    #endif
     return readFile("/cycle.txt") == "true";
   }
 
