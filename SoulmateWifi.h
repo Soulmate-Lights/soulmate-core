@@ -12,7 +12,7 @@
 #include <Preferences.h>
 #include <WiFi.h>
 #include "./SoulmateHomekit.h"
-#include "./settings.h"
+#include "./SoulmateSettings.h"
 
 Preferences preferences;
 
@@ -32,12 +32,14 @@ void delayAndConnect(void * parameter) {
   String pass = preferences.getString("pass", "");
   preferences.end();
 
-  Serial.println("[Soulmate-Wifi] Set STA mode...");
-  WiFi.mode(WIFI_STA);
-  vTaskDelay(1000 / portTICK_PERIOD_MS);
+  if (!ssid.equals("")) {
+    Serial.println("[Soulmate-Wifi] Set STA mode...");
+    WiFi.mode(WIFI_STA);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
 
-  Serial.println("[Soulmate-Wifi] WiFi.begin()...");
-  WiFi.begin(ssid.c_str(), pass.c_str());
+    Serial.println("[Soulmate-Wifi] WiFi.begin()...");
+    WiFi.begin(ssid.c_str(), pass.c_str());
+  }
 
   vTaskDelete(NULL);
 }
@@ -50,7 +52,7 @@ namespace SoulmateWifi {
 
   // Bounjour / mDNS presence announcement.
   void startMDNS() {
-    MDNS.end();
+    // MDNS.end();
     delay(100);
     String name = String("soulmate-" + WiFi.macAddress() + String(random(255)));
     name.replace(":", "");
@@ -162,12 +164,14 @@ namespace SoulmateWifi {
           break;
       case SYSTEM_EVENT_STA_DISCONNECTED:
         Serial.println(F("[Soulmate-Wifi] Disconnected from WiFi access point"));
-        if (isConnected) {
+        // if (isConnected) {
+          teardownHomekit();
+          isConnected = false;
           Serial.println("Was connected. Reconnect");
           xTaskCreate(delayAndConnect, "DelayAndConnect", 10000, NULL, 0, NULL);
-        } else {
-          Serial.println(F("[Soulmate-Wifi] Spurious disconnect event"));
-        }
+        // } else {
+        //   Serial.println(F("[Soulmate-Wifi] Spurious disconnect event"));
+        // }
         break;
       case SYSTEM_EVENT_STA_GOT_IP:
         if (!isConnected) {
@@ -180,7 +184,7 @@ namespace SoulmateWifi {
           socketServer.begin();
           server.begin();
 
-          setupHomekit();
+          connectHomekit();
         } else {
           Serial.println(F("[Soulmate-Wifi] Spurious got IP event."));
         }
@@ -198,6 +202,7 @@ namespace SoulmateWifi {
     WiFi.onEvent(WiFiEvent);
 
     connectToSavedWifi();
+    setupHomekit();
 
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
       request->send(200, F("text/plain"), Soulmate.status());

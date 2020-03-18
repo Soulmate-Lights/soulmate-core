@@ -7,12 +7,12 @@
 #include <functional>
 #include "./ArduinoJson/ArduinoJson.h"
 #include "./SoulmateConfig.h"
-#include "./beatsinfloat.h"
-#include "./circadian.h"
-#include "./files.h"
-#include "./settings.h"
+#include "./SoulmateBeatSin.h"
+#include "./SoulmateCircadian.h"
+#include "./SoulmateFiles.h"
+#include "./SoulmateSettings.h"
 
-#define SOULMATE_VERSION "6.1.0"
+#define SOULMATE_VERSION "6.1.1"
 #define MAX_NUMBER_OF_ROUTINES 25
 void FastLEDshowTask(void* pvParameters);
 
@@ -166,13 +166,7 @@ class SoulmateLibrary {
 
     Circadian::setup();
 
-#ifndef SOULMATE_DISABLE_CYCLE
     cycle = SoulmateSettings::shouldCycle();
-#endif
-
-#ifdef FORCE_CYCLE
-    cycle = true;
-#endif
 
     // Restore last brightness, and then we'll fade into it
     int savedBrightness = SoulmateSettings::savedBrightness();
@@ -211,16 +205,12 @@ class SoulmateLibrary {
 #endif
 
 #ifdef ESP32
-    // if (SoulmateSettings::startInWifiMode()) {
     WifiSetup();
-    // SoulmateSettings::setStartInWifiMode(false);
-    // } else {
 #ifndef SKIP_BLUETOOTH
     BluetoothSetup();
 #else  // Without BT it starts too fast to print
     delay(1000);
 #endif
-    // }
 #endif
 
     // Important, the command line uses this!

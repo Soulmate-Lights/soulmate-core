@@ -16,7 +16,7 @@
 #include "hap.h"
 #include "rom/ets_sys.h"
 
-#define MANUFACTURER_NAME "Soulmate Lighting, LLC"
+#define MANUFACTURER_NAME "Soulmate"
 #define ARRAY_SIZE(array) (sizeof(array) / sizeof(array[0]))
 
 static EventGroupHandle_t wifi_event_group;
@@ -49,7 +49,7 @@ void *on_read(void *arg) {
 // }
 
 void on_write(void *arg, void *value, int len) {
-  Serial.println("[Soulmate-Homekit] HomeKit write!");
+  Serial.println("[Soulmate-Homekit] HomeKit write on!");
   led = (bool)value;
   Soulmate.on = (bool)value;
   if (_on_handle) hap_event_response(acc, _on_handle, (void *)led);
@@ -89,7 +89,7 @@ void led_saturation_write(void *arg, void *value, int len) {
   saturation = (int)value / 100;
   Soulmate.saturation = (float)saturation / 100.0 * 255.0;
   if (_saturation_handle) {
-    hap_event_response(acc, _saturation_handle, (void*)((int)value));
+    hap_event_response(acc, _saturation_handle, (void *)((int)value));
   }
 }
 
@@ -107,12 +107,11 @@ void led_hue_write(void *arg, void *value, int len) {
   Soulmate.hue = (float)hue / 360.0 * 255.0;
   Soulmate.currentRoutine = -1;
   if (_hue_handle) {
-    hap_event_response(acc, _hue_handle, (void*)((int)value));
+    hap_event_response(acc, _hue_handle, (void *)((int)value));
   }
 }
 
 void led_hue_notify(void *arg, void *hue_handle, bool enable) {
-  Serial.println("led_hue_notify");
   _hue_handle = enable ? hue_handle : NULL;
 }
 
@@ -127,8 +126,7 @@ void hap_object_init(void *arg) {
     {HAP_CHARACTER_IDENTIFY, (void *)true, NULL, identify_read, NULL, NULL},
     {HAP_CHARACTER_MANUFACTURER, (void *)MANUFACTURER_NAME, NULL, NULL, NULL, NULL},
     {HAP_CHARACTER_MODEL, (void *)FIRMWARE_NAME, NULL, NULL, NULL, NULL},
-    // {HAP_CHARACTER_NAME, (void *)soulmateName, NULL, NULL, NULL, NULL},
-    {HAP_CHARACTER_NAME, (void *)"Soulmate", NULL, NULL, NULL, NULL},
+    {HAP_CHARACTER_NAME, (void *)soulmateName, NULL, NULL, NULL, NULL},
     {HAP_CHARACTER_SERIAL_NUMBER, (void *)"0123456789", NULL, NULL, NULL, NULL},
     {HAP_CHARACTER_FIRMWARE_REVISION, (void *)SOULMATE_VERSION, NULL, NULL, NULL, NULL},
   };
@@ -143,8 +141,23 @@ void hap_object_init(void *arg) {
   hap_service_and_characteristics_add(acc, accessory_object, HAP_SERVICE_LIGHTBULB, cc, ARRAY_SIZE(cc));
 }
 
+void teardownHomekit() {
+  // Trying this to tear down the HomeKit variables we use
+  Serial.println("[Soulmate-Wifi] Tearing down variables");
+
+  _on_handle = NULL;
+  _brightness_handle = NULL;
+  _hue_handle = NULL;
+  _saturation_handle = NULL;
+
+  xEventGroupClearBits(wifi_event_group, WIFI_CONNECTED_BIT);
+}
+
 void setupHomekit() {
   wifi_event_group = xEventGroupCreate();
+}
+
+void connectHomekit() {
   xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_BIT);
   {
     Serial.println("[Soulmate-Wifi] Registering with HomeKit");
@@ -161,12 +174,11 @@ void setupHomekit() {
     callback.hap_object_init = hap_object_init;
 
     acc = hap_accessory_register(
-      // Soulmate.name.c_str(),
-      "Soulmate",
-      accessory_id,
-      (char *)"111-11-111",
-      (char *)MANUFACTURER_NAME,
-      HAP_ACCESSORY_CATEGORY_OTHER,
+      Soulmate.name.c_str(), // name
+      accessory_id, // id
+      (char *)"111-11-111", // pincode
+      (char *)MANUFACTURER_NAME, // vendor
+      HAP_ACCESSORY_CATEGORY_OTHER, // category
       811,
       1,
       NULL,

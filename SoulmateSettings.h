@@ -1,4 +1,4 @@
-#include "./files.h"
+#include "./SoulmateFiles.h"
 
 #ifndef BUILDER_LIBRARIES_SOULMATE_SETTINGS_H_
 #define BUILDER_LIBRARIES_SOULMATE_SETTINGS_H_
@@ -18,6 +18,12 @@ namespace SoulmateSettings {
   }
 
   bool shouldCycle() {
+    #ifdef SOULMATE_DISABLE_CYCLE
+      return false
+    #endif
+    #ifdef FORCE_CYCLE
+      return true;
+    #endif
     return readFile("/cycle.txt") == "true";
   }
 

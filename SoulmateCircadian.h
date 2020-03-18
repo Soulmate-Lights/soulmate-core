@@ -1,5 +1,5 @@
-#include "./files.h"
-#include "./soulmateTime.h"
+#include "./SoulmateFiles.h"
+#include "./SoulmateTime.h"
 
 #ifndef BUILDER_LIBRARIES_SOULMATE_CIRCADIAN_H_
 #define BUILDER_LIBRARIES_SOULMATE_CIRCADIAN_H_
