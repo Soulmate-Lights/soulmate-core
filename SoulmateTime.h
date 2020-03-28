@@ -22,7 +22,8 @@ long fetchTime() {
     if (root.containsKey("datetime")) {
       const char *datetime = root.get<char *>("datetime");
       int Year, Month, Day, Hour, Minute, Second;
-      sscanf(datetime, "%d-%d-%dT%d:%d:%d", &Year, &Month, &Day, &Hour, &Minute, &Second);
+      sscanf(datetime, "%d-%d-%dT%d:%d:%d", &Year, &Month, &Day, &Hour, &Minute,
+             &Second);
 
       seconds = Hour * 3600 + Minute * 60 + Second;
     }

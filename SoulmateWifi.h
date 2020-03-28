@@ -2,19 +2,19 @@
 /* cpplint-ignore readability/casting */
 
 #ifdef ESP32
-#ifndef BUILDER_LIBRARIES_SOULMATE_SOULMATEWIFI_H_
-#define BUILDER_LIBRARIES_SOULMATE_SOULMATEWIFI_H_
+  #ifndef BUILDER_LIBRARIES_SOULMATE_SOULMATEWIFI_H_
+    #define BUILDER_LIBRARIES_SOULMATE_SOULMATEWIFI_H_
 
-#include <ArduinoOTA.h>
-#include <AsyncTCP.h>
-#include <ESPAsyncWebServer.h>
-#include <ESPmDNS.h>
-#include <Preferences.h>
-#include <WiFi.h>
+    #include <ArduinoOTA.h>
+    #include <AsyncTCP.h>
+    #include <ESPAsyncWebServer.h>
+    #include <ESPmDNS.h>
+    #include <Preferences.h>
+    #include <WiFi.h>
 
-#include "./SoulmateHomekit.h"
-#include "./SoulmateSettings.h"
-#include "./SoulmateTime.h"
+    #include "./SoulmateHomekit.h"
+    #include "./SoulmateSettings.h"
+    #include "./SoulmateTime.h"
 
 Preferences preferences;
 
@@ -99,14 +99,10 @@ namespace SoulmateWifi {
   }
 
   // WebSockets event received¡
-  void onEvent(
-      AsyncWebSocket *server,
-      AsyncWebSocketClient *client,
-      AwsEventType type,
-      void *arg,
-      uint8_t *data,
-      size_t len) {
-    if (type != WS_EVT_DATA) return;
+  void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
+               AwsEventType type, void *arg, uint8_t *data, size_t len) {
+    if (type != WS_EVT_DATA)
+      return;
 
     AwsFrameInfo *info = reinterpret_cast<AwsFrameInfo *>(arg);
 
@@ -149,61 +145,62 @@ namespace SoulmateWifi {
   void WiFiEvent(WiFiEvent_t event) {
     Serial.println("WiFiEvent");
     switch (event) {
-      case SYSTEM_EVENT_WIFI_READY:
-        Serial.println(F("[Wifi] WiFi interface ready"));
-        break;
-      case SYSTEM_EVENT_SCAN_DONE:
-        Serial.println(F("[Wifi] Completed scan for access points"));
-        break;
-      case SYSTEM_EVENT_STA_START:
-        Serial.println(F("[Wifi] WiFi client started"));
-        break;
-      case SYSTEM_EVENT_STA_STOP:
-        Serial.println(F("[Wifi] WiFi clients stopped"));
-        break;
-      case SYSTEM_EVENT_STA_CONNECTED:
-        Serial.println(F("[Wifi] Connected to access point"));
-        break;
-      case SYSTEM_EVENT_STA_DISCONNECTED:
-        Serial.println(F("[Soulmate-Wifi] Disconnected from WiFi access point"));
-        // if (isConnected) {
-        teardownHomekit();
-        isConnected = false;
-        Serial.println("Was connected. Reconnect");
-        xTaskCreate(delayAndConnect, "DelayAndConnect", 10000, NULL, 0, NULL);
-        // } else {
-        //   Serial.println(F("[Soulmate-Wifi] Spurious disconnect event"));
-        // }
-        break;
-      case SYSTEM_EVENT_STA_GOT_IP:
-        if (!isConnected) {
-          isConnected = true;
-          Serial.print("Obtained IP address: ");
-          Serial.println(WiFi.localIP());
-          startMDNS();
-          ws.onEvent(onEvent);
-          socketServer.addHandler(&ws);
-          socketServer.begin();
-          server.begin();
+    case SYSTEM_EVENT_WIFI_READY:
+      Serial.println(F("[Wifi] WiFi interface ready"));
+      break;
+    case SYSTEM_EVENT_SCAN_DONE:
+      Serial.println(F("[Wifi] Completed scan for access points"));
+      break;
+    case SYSTEM_EVENT_STA_START:
+      Serial.println(F("[Wifi] WiFi client started"));
+      break;
+    case SYSTEM_EVENT_STA_STOP:
+      Serial.println(F("[Wifi] WiFi clients stopped"));
+      break;
+    case SYSTEM_EVENT_STA_CONNECTED:
+      Serial.println(F("[Wifi] Connected to access point"));
+      break;
+    case SYSTEM_EVENT_STA_DISCONNECTED:
+      Serial.println(F("[Soulmate-Wifi] Disconnected from WiFi access point"));
+      // if (isConnected) {
+      teardownHomekit();
+      isConnected = false;
+      Serial.println("Was connected. Reconnect");
+      xTaskCreate(delayAndConnect, "DelayAndConnect", 10000, NULL, 0, NULL);
+      // } else {
+      //   Serial.println(F("[Soulmate-Wifi] Spurious disconnect event"));
+      // }
+      break;
+    case SYSTEM_EVENT_STA_GOT_IP:
+      if (!isConnected) {
+        isConnected = true;
+        Serial.print("Obtained IP address: ");
+        Serial.println(WiFi.localIP());
+        startMDNS();
+        ws.onEvent(onEvent);
+        socketServer.addHandler(&ws);
+        socketServer.begin();
+        server.begin();
 
-          long receivedSeconds = fetchTime();
-          if (receivedSeconds > 0) {
-            unsigned long currentSeconds = millis() / 1000;
-            unsigned long startedSeconds = receivedSeconds - currentSeconds;
-            Circadian::startTrackingTime(startedSeconds);
-          }
-
-          connectHomekit();
-        } else {
-          Serial.println(F("[Soulmate-Wifi] Spurious got IP event."));
+        long receivedSeconds = fetchTime();
+        if (receivedSeconds > 0) {
+          unsigned long currentSeconds = millis() / 1000;
+          unsigned long startedSeconds = receivedSeconds - currentSeconds;
+          Circadian::startTrackingTime(startedSeconds);
         }
-        break;
-      case SYSTEM_EVENT_STA_LOST_IP:
-        Serial.println(F("[Soulmate-Wifi] [Wifi] Lost IP address and IP address is reset to 0"));
-        reconnect();
-        break;
-      default:
-        break;
+
+        connectHomekit();
+      } else {
+        Serial.println(F("[Soulmate-Wifi] Spurious got IP event."));
+      }
+      break;
+    case SYSTEM_EVENT_STA_LOST_IP:
+      Serial.println(F("[Soulmate-Wifi] [Wifi] Lost IP address and IP address "
+                       "is reset to 0"));
+      reconnect();
+      break;
+    default:
+      break;
     }
   }
 
@@ -222,49 +219,55 @@ namespace SoulmateWifi {
     });
 
     server.on(
-        "/ota", HTTP_POST, [](AsyncWebServerRequest *request) {
-      AsyncWebServerResponse *response = request->beginResponse(200, F("text/plain"), "OK");
-      response->addHeader("Connection", "close");
-      request->send(response); }, [](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
-      EVERY_N_MILLISECONDS(100) {
-        if (request->hasHeader(F("Content-Length"))) {
-          AsyncWebHeader* h = request->getHeader("Content-Length");
-          float size = String(h->value().c_str()).toFloat();
-          float percentage = (float)index / size;
-          Soulmate.lightPercentage(percentage);
-        }
-      }
+        "/ota", HTTP_POST,
+        [](AsyncWebServerRequest *request) {
+          AsyncWebServerResponse *response =
+              request->beginResponse(200, F("text/plain"), "OK");
+          response->addHeader("Connection", "close");
+          request->send(response);
+        },
+        [](AsyncWebServerRequest *request, String filename, size_t index,
+           uint8_t *data, size_t len, bool final) {
+          EVERY_N_MILLISECONDS(100) {
+            if (request->hasHeader(F("Content-Length"))) {
+              AsyncWebHeader *h = request->getHeader("Content-Length");
+              float size = String(h->value().c_str()).toFloat();
+              float percentage = (float)index / size;
+              Soulmate.lightPercentage(percentage);
+            }
+          }
 
-      if (!index) {
-        stopMDNS();
-        Soulmate.StopBluetooth();
-        Soulmate.stop();
-        SPIFFS.end();
+          if (!index) {
+            stopMDNS();
+            Soulmate.StopBluetooth();
+            Soulmate.stop();
+            SPIFFS.end();
 
-        if (!Update.begin()) {
-          Update.printError(Serial);
-          restartRequired = true;
-        }
-      }
+            if (!Update.begin()) {
+              Update.printError(Serial);
+              restartRequired = true;
+            }
+          }
 
-      if (!Update.hasError()) {
-        if (Update.write(data, len) != len) {
-          Update.printError(Serial);
-          restartRequired = true;
-        }
-      }
+          if (!Update.hasError()) {
+            if (Update.write(data, len) != len) {
+              Update.printError(Serial);
+              restartRequired = true;
+            }
+          }
 
-      if (final) {
-        if (Update.end(true)) {
-          Serial.printf("Update Success: %uB\n", index+len);
-        } else {
-          Update.printError(Serial);
-        }
+          if (final) {
+            if (Update.end(true)) {
+              Serial.printf("Update Success: %uB\n", index + len);
+            } else {
+              Update.printError(Serial);
+            }
 
-        // For some multi-thread reason,
-        // it's better to restart in the main loop thread.
-        restartRequired = true;
-      } });
+            // For some multi-thread reason,
+            // it's better to restart in the main loop thread.
+            restartRequired = true;
+          }
+        });
   }
 
   void loop() {
@@ -273,13 +276,23 @@ namespace SoulmateWifi {
       ESP.restart();
     }
   }
-}  // namespace SoulmateWifi
+} // namespace SoulmateWifi
 
-void SoulmateLibrary::WifiLoop() { SoulmateWifi::loop(); }
-void SoulmateLibrary::WifiSetup() { SoulmateWifi::setup(); }
-void SoulmateLibrary::updateWifiClients() { SoulmateWifi::updateWifiClients(); }
-void SoulmateLibrary::reconnect() { SoulmateWifi::reconnect(); }
-void SoulmateLibrary::disconnectWiFi() { SoulmateWifi::disconnect(); }
+void SoulmateLibrary::WifiLoop() {
+  SoulmateWifi::loop();
+}
+void SoulmateLibrary::WifiSetup() {
+  SoulmateWifi::setup();
+}
+void SoulmateLibrary::updateWifiClients() {
+  SoulmateWifi::updateWifiClients();
+}
+void SoulmateLibrary::reconnect() {
+  SoulmateWifi::reconnect();
+}
+void SoulmateLibrary::disconnectWiFi() {
+  SoulmateWifi::disconnect();
+}
 
 void SoulmateLibrary::connectTo(const char *ssid, const char *pass) {
   preferences.begin("Wifi", false);
@@ -299,5 +312,5 @@ String SoulmateLibrary::ip() {
   return WiFi.localIP().toString();
 }
 
-#endif
-#endif  // BUILDER_LIBRARIES_SOULMATE_SOULMATEWIFI_H_
+  #endif
+#endif // BUILDER_LIBRARIES_SOULMATE_SOULMATEWIFI_H_
