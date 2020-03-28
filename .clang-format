@@ -1,0 +1,4 @@
+---
+IndentPPDirectives: BeforeHash
+AllowShortFunctionsOnASingleLine: None
+NamespaceIndentation: All

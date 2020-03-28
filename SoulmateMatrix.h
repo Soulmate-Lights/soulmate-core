@@ -21,7 +21,7 @@
 namespace Matrix {
   int NUM_LEDS = kMatrixHeight * kMatrixWidth;
 
-  uint8_t CentreX =  (kMatrixWidth / 2) - 1;
+  uint8_t CentreX = (kMatrixWidth / 2) - 1;
   uint8_t CentreY = (kMatrixHeight / 2) - 1;
 
   // Function for returning XY coordinates
@@ -32,6 +32,7 @@ namespace Matrix {
   // 16x16 (+1) matrix pixel array
   CRGB leds[kMatrixWidth * kMatrixHeight + 1];
 
+  // clang-format off
   uint16_t mappedLeds[37] = {
     3, 5, 7, 9,
     28, 30, 32, 34, 36,
@@ -41,13 +42,15 @@ namespace Matrix {
     132, 134, 136, 138, 140,
     159, 161, 163, 165
   };
+  // clang-format on
 
   void setPixel(int x, int y, CRGB color) {
     int index = XY(x, y);
     leds[index] = color;
   }
 
-  double gradientDistance(double startX, double startY, double endX, double endY, double angle) {
+  double gradientDistance(double startX, double startY, double endX,
+                          double endY, double angle) {
     double x = endX - startX;
     double y = endY - startY;
     double z = sqrt(sq(x) + sq(y));
@@ -65,10 +68,11 @@ namespace Matrix {
 
   // Neat per-pixel loop function that gives x and y and expects a colour.
   // Usage:
-  // Matrix::forEach([&variableToCapture, &anotherVariableToCapture](int x, int y) -> CRGB {
-  // Notes:
-  // You need to "capture" variables inside a lambda functor thingie (variableToCapture in the example)
-  // in order to use them in the anonymous function.
+  // Matrix::forEach([&variableToCapture, &anotherVariableToCapture](int x, int
+  // y)
+  // -> CRGB { Notes: You need to "capture" variables inside a lambda functor
+  // thingie (variableToCapture in the example) in order to use them in the
+  // anonymous function.
   void forEach(std::function<CRGB(int, int)> perPixel) {
     for (uint16_t y = 0; y < kMatrixHeight; y++) {
       for (uint16_t x = 0; x < kMatrixWidth; x++) {
@@ -78,14 +82,13 @@ namespace Matrix {
     }
   }
 
-  void drawGradient(double angle, double xCenter, double yCenter, double hueDifference, uint8_t startingHue) {
-    forEach([&angle, &xCenter, &yCenter, &hueDifference, &startingHue](int x, int y) -> CRGB {
+  void drawGradient(double angle, double xCenter, double yCenter,
+                    double hueDifference, uint8_t startingHue) {
+    forEach([&angle, &xCenter, &yCenter, &hueDifference,
+             &startingHue](int x, int y) -> CRGB {
       double distance = Matrix::gradientDistance(
-        static_cast<double>(x),
-        static_cast<double>(y),
-        xCenter,
-        yCenter,
-        static_cast<double>(angle));
+          static_cast<double>(x), static_cast<double>(y), xCenter, yCenter,
+          static_cast<double>(angle));
 
       double hue = distance * hueDifference;
       return CHSV(hue + startingHue, 255, 255);
@@ -98,31 +101,33 @@ namespace Matrix {
       Soulmate.led_arr[z] = leds[mappedLeds[z]];
     }
   }
-}  // namespace Matrix
+} // namespace Matrix
 
 uint16_t XY(uint8_t x, uint8_t y) {
   return Matrix::XY(x, y);
 }
 
-float beatsin16Float(
-  float beats_per_minute,
-  float lowest = 0,
-  float highest = 65535,
-  uint32_t timebase = 0,
-  uint16_t phase_offset = 0) {
-    float multiplier = 1000;
-    float result = (float)beatsin16(
-      beats_per_minute * multiplier, lowest * multiplier, highest * multiplier, timebase, phase_offset);
-    return result / multiplier;
+float beatsin16Float(float beats_per_minute, float lowest = 0,
+                     float highest = 65535, uint32_t timebase = 0,
+                     uint16_t phase_offset = 0) {
+  float multiplier = 1000;
+  float result =
+      (float)beatsin16(beats_per_minute * multiplier, lowest * multiplier,
+                       highest * multiplier, timebase, phase_offset);
+  return result / multiplier;
 }
-  // accum88 beats_per_minute, uint16_t lowest = 0, uint16_t highest = 65535,
-  //                              uint32_t timebase = 0, uint16_t phase_offset = 0
+// accum88 beats_per_minute, uint16_t lowest = 0, uint16_t highest = 65535,
+//                              uint32_t timebase = 0, uint16_t phase_offset = 0
 
 int16_t gridIndexHorizontal(int16_t x, int16_t y) {
-  if (y > LED_ROWS) return -1;
-  if (x > LED_COLS) return -1;
-  if (x < 0) return -1;
-  if (y < 0) return -1;
+  if (y > LED_ROWS)
+    return -1;
+  if (x > LED_COLS)
+    return -1;
+  if (x < 0)
+    return -1;
+  if (y < 0)
+    return -1;
 
   int16_t index = 0;
   if (y % 2 == 1) {
@@ -156,4 +161,4 @@ int16_t gridIndex(int16_t x, int16_t y) {
   }
 }
 
-#endif  // BUILDER_LIBRARIES_SOULMATE_MATRIX_H_
+#endif // BUILDER_LIBRARIES_SOULMATE_MATRIX_H_

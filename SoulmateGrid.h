@@ -38,17 +38,18 @@
 
 namespace Grid {
 
-  struct Point {
-    int x, y;
-  };
+struct Point {
+  int x, y;
+};
 
-  struct Neighbors {
-    struct Point v[8] = {Point{-1, -1}};
-  };
+struct Neighbors {
+  struct Point v[8] = {Point{-1, -1}};
+};
 
-  // Maps physical lights to their logical cells
-  int n_hex_leds = 37;
+// Maps physical lights to their logical cells
+int n_hex_leds = 37;
 
+// clang-format off
   int hex[37] = {
     3, 5, 7, 9, 28, 30,
     32, 34, 36, 53, 55,
@@ -59,123 +60,122 @@ namespace Grid {
     138, 140, 159, 161, 163,
     165
   };
+// clang-format on
 
-  int GetIndex(struct Point pt) {
-    int v;
-    if (pt.y % 2 != 0) {
-      v = (LED_COLS - 1 - pt.x) + LED_COLS*pt.y;
-    } else {
-      v = pt.x + LED_COLS*pt.y;
-    }
-
-    return v;
+int GetIndex(struct Point pt) {
+  int v;
+  if (pt.y % 2 != 0) {
+    v = (LED_COLS - 1 - pt.x) + LED_COLS * pt.y;
+  } else {
+    v = pt.x + LED_COLS * pt.y;
   }
 
-  struct Point GetPoint(int index) {
-    Point out;
+  return v;
+}
 
-    if ((index > N_CELLS) || (index < 0)) {
-      out.x = -1;
-      out.y = -1;
+struct Point GetPoint(int index) {
+  Point out;
 
-      return out;
-    }
-    if (out.y % 2 != 0) {
-      out.x = (LED_COLS - 1) - (index % LED_COLS);
-      out.y = index / LED_COLS;
-
-    } else {
-      out.x = index % LED_COLS;
-      out.y = index / LED_COLS;
-    }
+  if ((index > N_CELLS) || (index < 0)) {
+    out.x = -1;
+    out.y = -1;
 
     return out;
   }
-
-  struct Neighbors GetNeighbors(struct Point pt) {
-    struct Neighbors out;
-
-    int cnt = 0;
-    for (int i =- 1; i < 2; i++) {
-      for (int j =- 1; j < 2; j++) {
-        if ((i == 0) && (j == 0)) {
-          continue;
-        }
-
-        out.v[cnt] = GetPoint(GetIndex(Point{(pt.x+i), (pt.y+j)}));
-
-        cnt++;
-      }
-    }
-
-    return out;
-  }
-
-  int InfiniteGetIndex(struct Point pt) {
-    if (pt.x >= LED_COLS) return -1;
-    if (pt.x < 0) return -1;
-
-    int v;
-    if (pt.y % 2 != 0) {
-      v = LED_COLS - 1 - pt.x + LED_COLS*pt.y;
-    } else {
-      v = pt.x + LED_COLS*pt.y;
-    }
-
-    return (v+N_CELLS)%N_CELLS;
-  }
-
-  struct Point InfiniteGetPoint(int index) {
-    Point out;
-
+  if (out.y % 2 != 0) {
+    out.x = (LED_COLS - 1) - (index % LED_COLS);
     out.y = index / LED_COLS;
 
-    index = index % N_CELLS;
-
-    if (out.y % 2 != 0) {
-      out.x = (LED_COLS - 1) - (index % LED_COLS);
-      // out.y = index / LED_COLS;
-    } else {
-      out.x = index % LED_COLS;
-      // out.y = index / LED_COLS;
-    }
-
-    return out;
+  } else {
+    out.x = index % LED_COLS;
+    out.y = index / LED_COLS;
   }
 
-  struct Neighbors InfiniteGetNeighbors(struct Point pt) {
-    struct Neighbors out;
+  return out;
+}
 
-    int cnt = 0;
-    for (int i =- 1; i < 2; i++) {
-      for (int j =- 1; j < 2; j++) {
-        if ((i == 0) && (j == 0)) {
-          continue;
-        }
+struct Neighbors GetNeighbors(struct Point pt) {
+  struct Neighbors out;
 
-        int index = InfiniteGetIndex(Point{(pt.x+i), (pt.y+j)});
-
-        // We have hit a wall
-        if ((index) < 0) {
-          out.v[cnt] = Point{-1, -1};
-        } else {
-          out.v[cnt] = InfiniteGetPoint(index);
-        }
-
-        cnt++;
+  int cnt = 0;
+  for (int i = -1; i < 2; i++) {
+    for (int j = -1; j < 2; j++) {
+      if ((i == 0) && (j == 0)) {
+        continue;
       }
+
+      out.v[cnt] = GetPoint(GetIndex(Point{(pt.x + i), (pt.y + j)}));
+
+      cnt++;
     }
-
-    return out;
   }
 
-  bool IsBottomRow(struct Point pt) {
-    return pt.y == 0;
+  return out;
+}
+
+int InfiniteGetIndex(struct Point pt) {
+  if (pt.x >= LED_COLS)
+    return -1;
+  if (pt.x < 0)
+    return -1;
+
+  int v;
+  if (pt.y % 2 != 0) {
+    v = LED_COLS - 1 - pt.x + LED_COLS * pt.y;
+  } else {
+    v = pt.x + LED_COLS * pt.y;
   }
 
-  bool IsTopRow(struct Point pt) {
-    return pt.y == (N_CELLS/LED_COLS-1);
-  }
-}  // namespace Grid
+  return (v + N_CELLS) % N_CELLS;
+}
 
-#endif  // BUILDER_LIBRARIES_SOULMATE_GRID_H_
+struct Point InfiniteGetPoint(int index) {
+  Point out;
+
+  out.y = index / LED_COLS;
+
+  index = index % N_CELLS;
+
+  if (out.y % 2 != 0) {
+    out.x = (LED_COLS - 1) - (index % LED_COLS);
+    // out.y = index / LED_COLS;
+  } else {
+    out.x = index % LED_COLS;
+    // out.y = index / LED_COLS;
+  }
+
+  return out;
+}
+
+struct Neighbors InfiniteGetNeighbors(struct Point pt) {
+  struct Neighbors out;
+
+  int cnt = 0;
+  for (int i = -1; i < 2; i++) {
+    for (int j = -1; j < 2; j++) {
+      if ((i == 0) && (j == 0)) {
+        continue;
+      }
+
+      int index = InfiniteGetIndex(Point{(pt.x + i), (pt.y + j)});
+
+      // We have hit a wall
+      if ((index) < 0) {
+        out.v[cnt] = Point{-1, -1};
+      } else {
+        out.v[cnt] = InfiniteGetPoint(index);
+      }
+
+      cnt++;
+    }
+  }
+
+  return out;
+}
+
+bool IsBottomRow(struct Point pt) { return pt.y == 0; }
+
+bool IsTopRow(struct Point pt) { return pt.y == (N_CELLS / LED_COLS - 1); }
+} // namespace Grid
+
+#endif // BUILDER_LIBRARIES_SOULMATE_GRID_H_

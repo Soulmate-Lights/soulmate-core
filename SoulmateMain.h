@@ -4,21 +4,24 @@
 #define BUILDER_LIBRARIES_SOULMATE_SOULMATEMAIN_H_
 
 #include <Arduino.h>
+
 #include <functional>
+
 #include "./ArduinoJson/ArduinoJson.h"
-#include "./SoulmateConfig.h"
 #include "./SoulmateBeatSin.h"
 #include "./SoulmateCircadian.h"
+#include "./SoulmateConfig.h"
 #include "./SoulmateFiles.h"
 #include "./SoulmateSettings.h"
 
 #define SOULMATE_VERSION "6.1.1"
 #define MAX_NUMBER_OF_ROUTINES 25
-void FastLEDshowTask(void* pvParameters);
+void FastLEDshowTask(void *pvParameters);
 
 class SoulmateLibrary {
- public:
-  SoulmateLibrary() {}
+public:
+  SoulmateLibrary() {
+  }
 
   // Overridden by config later
   String name = F("New Soulmate");
@@ -69,7 +72,7 @@ class SoulmateLibrary {
   bool wifiConnected();
   void disconnectWiFi();
   void reconnect();
-  void connectTo(const char* ssid, const char* pass);
+  void connectTo(const char *ssid, const char *pass);
 
   void lightPercentage();
 
@@ -80,8 +83,8 @@ class SoulmateLibrary {
 
   String status(bool showLANIP = true) {
     StaticJsonBuffer<2048> jsonBuffer;
-    JsonObject& message = jsonBuffer.createObject();
-    JsonArray& routinesArray = message.createNestedArray("Routines");
+    JsonObject &message = jsonBuffer.createObject();
+    JsonArray &routinesArray = message.createNestedArray("Routines");
     routinesArray.copyFrom(routineNames, routineCount);
 
     message["CurrentRoutine"] = currentRoutine;
@@ -97,7 +100,8 @@ class SoulmateLibrary {
     message["LANIP"] = false;
     message["homekit"] = true;
 
-    if (showLANIP) message["LANIP"] = ip();
+    if (showLANIP)
+      message["LANIP"] = ip();
 
 #ifdef ESP32
     uint64_t chipid = ESP.getEfuseMac();
@@ -139,7 +143,8 @@ class SoulmateLibrary {
     fill_solid(led_arr, N_LEDS, CRGB::Black);
     if (percentage < 1) {
       uint16_t ledsToFill = (float)N_LEDS * percentage;
-      if (N_LEDS > 100) ledsToFill = ledsToFill - ledsToFill % LED_COLS;
+      if (N_LEDS > 100)
+        ledsToFill = ledsToFill - ledsToFill % LED_COLS;
       fill_solid(led_arr, ledsToFill, CRGB::Green);
     } else {
       fill_solid(led_arr, N_LEDS, CRGB::Green);
@@ -151,12 +156,14 @@ class SoulmateLibrary {
   // Setup
 
   void setup() {
-    // Clear a line for reading after flashing. Everything before this is 78400 baud boot nonsense from the ESP.
+    // Clear a line for reading after flashing. Everything before this is 78400
+    // baud boot nonsense from the ESP.
     Serial.begin(115200);
     delay(500);
     Serial.println("");
     Serial.println("Booting Soulmate v" + String(SOULMATE_VERSION));
-    Serial.println("firmware=" + String(FIRMWARE_NAME) + " version=" + String(SOULMATE_VERSION));
+    Serial.println("firmware=" + String(FIRMWARE_NAME) +
+                   " version=" + String(SOULMATE_VERSION));
 
     lastCycle = millis();
 
@@ -170,7 +177,8 @@ class SoulmateLibrary {
 
     // Restore last brightness, and then we'll fade into it
     int savedBrightness = SoulmateSettings::savedBrightness();
-    if (savedBrightness) brightness = savedBrightness;
+    if (savedBrightness)
+      brightness = savedBrightness;
     FastLED.setBrightness(0);
     FastLED.setMaxPowerInVoltsAndMilliamps(5, SOULMATE_MILLIAMPS);
 
@@ -179,38 +187,45 @@ class SoulmateLibrary {
 
     // Restore last routine
     int savedRoutine = SoulmateSettings::savedRoutine();
-    if (savedRoutine && savedRoutine < routineCount) currentRoutine = savedRoutine;
+    if (savedRoutine && savedRoutine < routineCount)
+      currentRoutine = savedRoutine;
 
 // Set up FastLED
 #ifdef USE_WS2812B
-#ifdef SOULMATE_COLOR_ORDER
-    FastLED.addLeds<WS2812B, SOULMATE_DATA_PIN, SOULMATE_COLOR_ORDER>(led_arr, N_CELLS);
-#else
+  #ifdef SOULMATE_COLOR_ORDER
+    FastLED.addLeds<WS2812B, SOULMATE_DATA_PIN, SOULMATE_COLOR_ORDER>(led_arr,
+                                                                      N_CELLS);
+  #else
     FastLED.addLeds<WS2812B, SOULMATE_DATA_PIN, GRB>(led_arr, N_CELLS);
-#endif
+  #endif
 #else
-#ifdef CORE_TEENSY
-    FastLED.addLeds<LED_TYPE, SOULMATE_DATA_PIN, SOULMATE_CLOCK_PIN, BGR, DATA_RATE_MHZ(1)>(led_arr, N_CELLS);
-#else
-    FastLED.addLeds<LED_TYPE, SOULMATE_DATA_PIN, SOULMATE_CLOCK_PIN, BGR>(led_arr, N_CELLS);
-#endif
+  #ifdef CORE_TEENSY
+    FastLED.addLeds<LED_TYPE, SOULMATE_DATA_PIN, SOULMATE_CLOCK_PIN, BGR,
+                    DATA_RATE_MHZ(1)>(led_arr, N_CELLS);
+  #else
+    FastLED.addLeds<LED_TYPE, SOULMATE_DATA_PIN, SOULMATE_CLOCK_PIN, BGR>(
+        led_arr, N_CELLS);
+  #endif
 #endif
 
-#ifdef ESP32  // These are the latest known good configuration depending on strip type.
-#ifdef USE_WS2812B
-    xTaskCreatePinnedToCore(FastLEDshowTask, "FastLEDshowTask", 1024, NULL, 10, &FastLEDshowTaskHandle, 1);
-#else
-    xTaskCreatePinnedToCore(FastLEDshowTask, "FastLEDshowTask", 2048, NULL, 10, &FastLEDshowTaskHandle, 0);
-#endif
+#ifdef ESP32 // These are the latest known good configuration depending on strip
+             // type.
+  #ifdef USE_WS2812B
+    xTaskCreatePinnedToCore(FastLEDshowTask, "FastLEDshowTask", 1024, NULL, 10,
+                            &FastLEDshowTaskHandle, 1);
+  #else
+    xTaskCreatePinnedToCore(FastLEDshowTask, "FastLEDshowTask", 2048, NULL, 10,
+                            &FastLEDshowTaskHandle, 0);
+  #endif
 #endif
 
 #ifdef ESP32
     WifiSetup();
-#ifndef SKIP_BLUETOOTH
+  #ifndef SKIP_BLUETOOTH
     BluetoothSetup();
-#else  // Without BT it starts too fast to print
+  #else // Without BT it starts too fast to print
     delay(1000);
-#endif
+  #endif
 #endif
 
     // Important, the command line uses this!
@@ -219,7 +234,8 @@ class SoulmateLibrary {
 
   void nextRoutine() {
     int i = currentRoutine + 1;
-    if (i == routineCount) i = 0;
+    if (i == routineCount)
+      i = 0;
     chooseRoutine(i);
   }
 
@@ -228,8 +244,10 @@ class SoulmateLibrary {
       // Fade in: adjust brightness slowly
       // Once we're done getting bright, set startingFrames to a too-high number
       // so we don't fade any more.
-      if (startingFrames == brightness) startingFrames = 255;
-      if (startingFrames < brightness) FastLED.setBrightness(startingFrames);
+      if (startingFrames == brightness)
+        startingFrames = 255;
+      if (startingFrames < brightness)
+        FastLED.setBrightness(startingFrames);
 
       EVERY_N_MILLISECONDS(5) {
         if (startingFrames < brightness) {
@@ -259,7 +277,8 @@ class SoulmateLibrary {
   }
 
   void showPixels() {
-    if (isStopped()) return;
+    if (isStopped())
+      return;
 
     // This function is pinned to a core.
     // If you put anything with SPIFFS in here, it may crash
@@ -269,11 +288,14 @@ class SoulmateLibrary {
     uint32_t fadeMs = millis() - fadeStart;
 
     if (fadeMs < FADE_DURATION) {
-      uint8_t percentage = static_cast<float>(fadeMs) / static_cast<float>(FADE_DURATION) * 255;
+      uint8_t percentage =
+          static_cast<float>(fadeMs) / static_cast<float>(FADE_DURATION) * 255;
       int size = sizeof(led_arr);
       // Grab the last frame from the previous pattern and run with it
-      if (faded) memcpy(&led_arr, &previous_led_arr, size);
-      if (previousRoutine >= 0) routines[previousRoutine]();
+      if (faded)
+        memcpy(&led_arr, &previous_led_arr, size);
+      if (previousRoutine >= 0)
+        routines[previousRoutine]();
       memcpy(&previous_led_arr, &led_arr, size);
       // Put the next pattern's arrays into led_arr and run with it
       memcpy(&led_arr, &next_led_arr, size);
@@ -299,17 +321,17 @@ class SoulmateLibrary {
   void loop() {
     EVERY_N_SECONDS(5) {
       switch (Circadian::checkTime()) {
-        case Circadian::SHOULD_TURN_OFF:
-          turnOff();
-          break;
-        case Circadian::SHOULD_TURN_ON:
-          turnOn();
-          break;
+      case Circadian::SHOULD_TURN_OFF:
+        turnOff();
+        break;
+      case Circadian::SHOULD_TURN_ON:
+        turnOn();
+        break;
       }
     }
 
-// Only try to save brightness and routine every 5 seconds. Saves bashing SPIFFS,
-// and is much nicer on WS2812B strips because of the timing.
+// Only try to save brightness and routine every 5 seconds. Saves bashing
+// SPIFFS, and is much nicer on WS2812B strips because of the timing.
 #ifndef SOULMATE_DISABLE_SAVING
     EVERY_N_SECONDS(5) {
       if (brightnessDirty) {
@@ -331,7 +353,8 @@ class SoulmateLibrary {
     }
 
     adjustBrightness();
-    if (currentRoutine >= routineCount) chooseRoutine(0);
+    if (currentRoutine >= routineCount)
+      chooseRoutine(0);
 
 #ifndef SKIP_WIFI
     WifiLoop();
@@ -358,17 +381,21 @@ class SoulmateLibrary {
   }
 
   void chooseRoutine(int i) {
-    if (i == currentRoutine) return;
+    if (i == currentRoutine)
+      return;
     previousRoutine = currentRoutine;
-    if (millis() - fadeStart > FADE_DURATION) fadeStart = millis();
+    if (millis() - fadeStart > FADE_DURATION)
+      fadeStart = millis();
     currentRoutine = i;
     routineDirty = true;
   }
 
   void setBrightness(int b) {
     brightnessDirty = true;
-    if (startingFrames >= b) startingFrames = 255;
-    if (b > 0 && !on) on = true;
+    if (startingFrames >= b)
+      startingFrames = 255;
+    if (b > 0 && !on)
+      on = true;
     brightness = b;
   }
 
@@ -389,19 +416,21 @@ class SoulmateLibrary {
   }
 
   void setName(String n) {
-    if (n.length() == 0) return;
+    if (n.length() == 0)
+      return;
     SoulmateSettings::saveName(n);
     name = n;
   }
 
-  std::function<void(const JsonObject&)> _jsonCallback = NULL;
+  std::function<void(const JsonObject &)> _jsonCallback = NULL;
 
-  void onJSON(std::function<void(const JsonObject&)> callback) {
+  void onJSON(std::function<void(const JsonObject &)> callback) {
     _jsonCallback = callback;
   }
 
-  void consumeJson(const JsonObject& root) {
-    if (_jsonCallback != NULL) _jsonCallback(root);
+  void consumeJson(const JsonObject &root) {
+    if (_jsonCallback != NULL)
+      _jsonCallback(root);
 
     if (root.containsKey("time")) {
       float receivedSeconds = root.get<float>("time");
@@ -416,12 +445,16 @@ class SoulmateLibrary {
       lightPercentage(updatePercentage);
     }
 
-    if (root.containsKey("stop")) stop();
-    if (root.containsKey("reconnect")) reconnect();
-    if (root.containsKey("reset")) disconnectWiFi();
+    if (root.containsKey("stop"))
+      stop();
+    if (root.containsKey("reconnect"))
+      reconnect();
+    if (root.containsKey("reset"))
+      disconnectWiFi();
 
 #ifdef ESP32
-    if (root.containsKey("restart")) ESP.restart();
+    if (root.containsKey("restart"))
+      ESP.restart();
 #endif
 
     if (root.containsKey("cycle")) {
@@ -450,8 +483,8 @@ class SoulmateLibrary {
     }
 
     if (root.containsKey("SSID") && root.containsKey("WIFIPASS")) {
-      const char* ssid = root["SSID"].as<char*>();
-      const char* pass = root["WIFIPASS"].as<char*>();
+      const char *ssid = root["SSID"].as<char *>();
+      const char *pass = root["WIFIPASS"].as<char *>();
       connectTo(ssid, pass);
       // StopBluetooth();
     }
@@ -469,13 +502,15 @@ class SoulmateLibrary {
 SoulmateLibrary Soulmate;
 
 #ifdef SKIP_BLUETOOTH
-void SoulmateLibrary::StartBluetooth() {}
-void SoulmateLibrary::StopBluetooth() {}
+void SoulmateLibrary::StartBluetooth() {
+}
+void SoulmateLibrary::StopBluetooth() {
+}
 #endif
 
 // ESP32 dual-core task, pinned to a core
 #ifdef ESP32
-void FastLEDshowTask(void* pvParameters) {
+void FastLEDshowTask(void *pvParameters) {
   for (;;) {
     // Disable the Task watchdog checking for a second-core task!
     TIMERG0.wdt_wprotect = TIMG_WDT_WKEY_VALUE;
@@ -487,4 +522,4 @@ void FastLEDshowTask(void* pvParameters) {
 }
 #endif
 
-#endif  // BUILDER_LIBRARIES_SOULMATE_SOULMATEMAIN_H_
+#endif // BUILDER_LIBRARIES_SOULMATE_SOULMATEMAIN_H_

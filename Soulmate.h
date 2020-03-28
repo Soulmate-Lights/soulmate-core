@@ -15,9 +15,9 @@
   #include "./SoulmateTeensy.h"
 #endif
 
-#include "./SoulmateStats.h"
 #include "./SoulmateBeatSin.h"
 #include "./SoulmateFiles.h"
+#include "./SoulmateStats.h"
 
 #ifdef ESP32
   #include "./SoulmateWifi.h"
@@ -26,4 +26,4 @@
 #include "./SoulmateGrid.h"
 #include "./SoulmateMatrix.h"
 
-#endif  // BUILDER_LIBRARIES_SOULMATE_SOULMATE_H_
+#endif // BUILDER_LIBRARIES_SOULMATE_SOULMATE_H_

@@ -1,6 +1,6 @@
 // TODO(elliott): Notify Bluetooth when value changes (without crashing)
 
-#include <string.h>
+#include "./SoulmateMain.h"
 #include "driver/gpio.h"
 #include "esp_event_loop.h"
 #include "esp_log.h"
@@ -9,12 +9,12 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
 #include "freertos/task.h"
+#include "hap.h"
 #include "lwip/err.h"
 #include "lwip/sys.h"
 #include "nvs_flash.h"
-#include "./SoulmateMain.h"
-#include "hap.h"
 #include "rom/ets_sys.h"
+#include <string.h>
 
 #define MANUFACTURER_NAME "Soulmate"
 #define ARRAY_SIZE(array) (sizeof(array) / sizeof(array[0]))
@@ -37,7 +37,9 @@ static void *_brightness_handle;
 static void *_hue_handle;
 static void *_saturation_handle;
 
-void *identify_read(void *arg) { return (void *)true; }
+void *identify_read(void *arg) {
+  return (void *)true;
+}
 
 void *on_read(void *arg) {
   return (void *)Soulmate.on;
@@ -52,7 +54,8 @@ void on_write(void *arg, void *value, int len) {
   Serial.println("[Soulmate-Homekit] HomeKit write on!");
   led = (bool)value;
   Soulmate.on = (bool)value;
-  if (_on_handle) hap_event_response(acc, _on_handle, (void *)led);
+  if (_on_handle)
+    hap_event_response(acc, _on_handle, (void *)led);
   return;
 }
 
@@ -120,25 +123,34 @@ void hap_object_init(void *arg) {
   brightness = (float)Soulmate.brightness / 255.0 * 100.0;
 
   void *accessory_object = hap_accessory_add(acc);
-  char *soulmateName = const_cast<char*>(Soulmate.name.c_str());
+  char *soulmateName = const_cast<char *>(Soulmate.name.c_str());
 
   struct hap_characteristic cs[] = {
-    {HAP_CHARACTER_IDENTIFY, (void *)true, NULL, identify_read, NULL, NULL},
-    {HAP_CHARACTER_MANUFACTURER, (void *)MANUFACTURER_NAME, NULL, NULL, NULL, NULL},
-    {HAP_CHARACTER_MODEL, (void *)FIRMWARE_NAME, NULL, NULL, NULL, NULL},
-    {HAP_CHARACTER_NAME, (void *)soulmateName, NULL, NULL, NULL, NULL},
-    {HAP_CHARACTER_SERIAL_NUMBER, (void *)"0123456789", NULL, NULL, NULL, NULL},
-    {HAP_CHARACTER_FIRMWARE_REVISION, (void *)SOULMATE_VERSION, NULL, NULL, NULL, NULL},
+      {HAP_CHARACTER_IDENTIFY, (void *)true, NULL, identify_read, NULL, NULL},
+      {HAP_CHARACTER_MANUFACTURER, (void *)MANUFACTURER_NAME, NULL, NULL, NULL,
+       NULL},
+      {HAP_CHARACTER_MODEL, (void *)FIRMWARE_NAME, NULL, NULL, NULL, NULL},
+      {HAP_CHARACTER_NAME, (void *)soulmateName, NULL, NULL, NULL, NULL},
+      {HAP_CHARACTER_SERIAL_NUMBER, (void *)"0123456789", NULL, NULL, NULL,
+       NULL},
+      {HAP_CHARACTER_FIRMWARE_REVISION, (void *)SOULMATE_VERSION, NULL, NULL,
+       NULL, NULL},
   };
-  hap_service_and_characteristics_add(acc, accessory_object, HAP_SERVICE_ACCESSORY_INFORMATION, cs, ARRAY_SIZE(cs));
+  hap_service_and_characteristics_add(acc, accessory_object,
+                                      HAP_SERVICE_ACCESSORY_INFORMATION, cs,
+                                      ARRAY_SIZE(cs));
 
   struct hap_characteristic cc[] = {
-    {HAP_CHARACTER_ON, (void *)led, NULL, on_read, on_write, on_notify},
-    {HAP_CHARACTER_BRIGHTNESS, (void *)brightness, NULL, brightness_read, brightness_write, brightness_notify},
-    {HAP_CHARACTER_HUE, (void *)hue, NULL, led_hue_read, led_hue_write, led_hue_notify},
-    {HAP_CHARACTER_SATURATION, (void *)saturation, NULL, led_saturation_read, led_saturation_write, led_saturation_notify},
+      {HAP_CHARACTER_ON, (void *)led, NULL, on_read, on_write, on_notify},
+      {HAP_CHARACTER_BRIGHTNESS, (void *)brightness, NULL, brightness_read,
+       brightness_write, brightness_notify},
+      {HAP_CHARACTER_HUE, (void *)hue, NULL, led_hue_read, led_hue_write,
+       led_hue_notify},
+      {HAP_CHARACTER_SATURATION, (void *)saturation, NULL, led_saturation_read,
+       led_saturation_write, led_saturation_notify},
   };
-  hap_service_and_characteristics_add(acc, accessory_object, HAP_SERVICE_LIGHTBULB, cc, ARRAY_SIZE(cc));
+  hap_service_and_characteristics_add(
+      acc, accessory_object, HAP_SERVICE_LIGHTBULB, cc, ARRAY_SIZE(cc));
 }
 
 void teardownHomekit() {
@@ -166,22 +178,19 @@ void connectHomekit() {
     esp_wifi_get_mac(ESP_IF_WIFI_STA, mac);
 
     char accessory_id[32] = {
-      0,
+        0,
     };
-    sprintf(accessory_id, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+    sprintf(accessory_id, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1],
+            mac[2], mac[3], mac[4], mac[5]);
 
     hap_accessory_callback_t callback;
     callback.hap_object_init = hap_object_init;
 
-    acc = hap_accessory_register(
-      Soulmate.name.c_str(), // name
-      accessory_id, // id
-      (char *)"111-11-111", // pincode
-      (char *)MANUFACTURER_NAME, // vendor
-      HAP_ACCESSORY_CATEGORY_OTHER, // category
-      811,
-      1,
-      NULL,
-      &callback);
+    acc = hap_accessory_register(Soulmate.name.c_str(),        // name
+                                 accessory_id,                 // id
+                                 (char *)"111-11-111",         // pincode
+                                 (char *)MANUFACTURER_NAME,    // vendor
+                                 HAP_ACCESSORY_CATEGORY_OTHER, // category
+                                 811, 1, NULL, &callback);
   }
 }

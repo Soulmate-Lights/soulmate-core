@@ -4,23 +4,26 @@
 #ifdef ESP32
   #include "soc/timer_group_reg.h"
   #include "soc/timer_group_struct.h"
-  static TaskHandle_t FastLEDshowTaskHandle = 0;
+static TaskHandle_t FastLEDshowTaskHandle = 0;
 #endif
 
 // STD patches for newer C++ compiler for the Teensy compiler
 // that expects these things to exist.
 #ifdef CORE_TEENSY
-  namespace std {
-    void __throw_bad_function_call() {}
-    void __throw_length_error(char const*) {}
-    void __throw_out_of_range_fmt(char const* fmt, ...) {}
+namespace std {
+  void __throw_bad_function_call() {
   }
+  void __throw_length_error(char const *) {
+  }
+  void __throw_out_of_range_fmt(char const *fmt, ...) {
+  }
+} // namespace std
 #endif
 
 // Copyright 2019 Soulmate Lighting, LLC
 // FastLED configuration
 
-#define FASTLED_INTERNAL  // removes pragma marks
+#define FASTLED_INTERNAL // removes pragma marks
 
 #include <FastLED.h>
 
@@ -103,4 +106,4 @@
   #define BUTTON_ON_VALUE HIGH
 #endif
 
-#endif  // BUILDER_LIBRARIES_SOULMATE_CONFIG_H_
+#endif // BUILDER_LIBRARIES_SOULMATE_CONFIG_H_

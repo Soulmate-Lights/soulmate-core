@@ -6,11 +6,11 @@ namespace Stats {
   int rand_range(int min, int max) {
     return random(min, (max + 1));
   }
-}
+} // namespace Stats
 
 namespace Util {
   int rand_range(int min, int max) {
     return random(min, (max + 1));
   }
-}
+} // namespace Util
 #endif

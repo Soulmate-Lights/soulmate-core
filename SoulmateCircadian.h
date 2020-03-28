@@ -2,7 +2,7 @@
 #include "./SoulmateTime.h"
 
 #ifndef BUILDER_LIBRARIES_SOULMATE_CIRCADIAN_H_
-#define BUILDER_LIBRARIES_SOULMATE_CIRCADIAN_H_
+  #define BUILDER_LIBRARIES_SOULMATE_CIRCADIAN_H_
 
 namespace Circadian {
   const int SHOULD_TURN_OFF = 0;
@@ -24,21 +24,21 @@ namespace Circadian {
 
   double readSavedWakeTime() {
     String savedWakeTime = readFile("/wakeTime.txt");
-#ifndef CORE_TEENSY
+  #ifndef CORE_TEENSY
     if (!savedWakeTime.equals("")) {
       wakeTime = savedWakeTime.toDouble();
     }
-#endif
+  #endif
     return wakeTime;
   }
 
   double readSavedSleepTime() {
     String savedSleepTime = readFile("/sleepTime.txt");
-#ifndef CORE_TEENSY
+  #ifndef CORE_TEENSY
     if (!savedSleepTime.equals("")) {
       sleepTime = savedSleepTime.toDouble();
     }
-#endif
+  #endif
     return sleepTime;
   }
 
@@ -100,6 +100,6 @@ namespace Circadian {
     readSavedWakeTime();
     readSavedSleepTime();
   }
-}  // namespace Circadian
+} // namespace Circadian
 
 #endif

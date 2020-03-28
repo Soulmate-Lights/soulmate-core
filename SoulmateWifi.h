@@ -5,15 +5,16 @@
 #ifndef BUILDER_LIBRARIES_SOULMATE_SOULMATEWIFI_H_
 #define BUILDER_LIBRARIES_SOULMATE_SOULMATEWIFI_H_
 
-#include "./SoulmateTime.h"
 #include <ArduinoOTA.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <ESPmDNS.h>
 #include <Preferences.h>
 #include <WiFi.h>
+
 #include "./SoulmateHomekit.h"
 #include "./SoulmateSettings.h"
+#include "./SoulmateTime.h"
 
 Preferences preferences;
 
@@ -21,7 +22,7 @@ AsyncWebServer server(80);
 AsyncWebServer socketServer(81);
 AsyncWebSocket ws("/");
 
-void delayAndConnect(void * parameter) {
+void delayAndConnect(void *parameter) {
   Serial.println("[Soulmate-Wifi] delayAndConnect starting.");
   Serial.println("[Soulmate-Wifi] Disconnect WiFi...");
   WiFi.disconnect();
@@ -149,27 +150,27 @@ namespace SoulmateWifi {
     Serial.println("WiFiEvent");
     switch (event) {
       case SYSTEM_EVENT_WIFI_READY:
-          Serial.println(F("[Wifi] WiFi interface ready"));
-          break;
+        Serial.println(F("[Wifi] WiFi interface ready"));
+        break;
       case SYSTEM_EVENT_SCAN_DONE:
-          Serial.println(F("[Wifi] Completed scan for access points"));
-          break;
+        Serial.println(F("[Wifi] Completed scan for access points"));
+        break;
       case SYSTEM_EVENT_STA_START:
-          Serial.println(F("[Wifi] WiFi client started"));
-          break;
+        Serial.println(F("[Wifi] WiFi client started"));
+        break;
       case SYSTEM_EVENT_STA_STOP:
-          Serial.println(F("[Wifi] WiFi clients stopped"));
-          break;
+        Serial.println(F("[Wifi] WiFi clients stopped"));
+        break;
       case SYSTEM_EVENT_STA_CONNECTED:
-          Serial.println(F("[Wifi] Connected to access point"));
-          break;
+        Serial.println(F("[Wifi] Connected to access point"));
+        break;
       case SYSTEM_EVENT_STA_DISCONNECTED:
         Serial.println(F("[Soulmate-Wifi] Disconnected from WiFi access point"));
         // if (isConnected) {
-          teardownHomekit();
-          isConnected = false;
-          Serial.println("Was connected. Reconnect");
-          xTaskCreate(delayAndConnect, "DelayAndConnect", 10000, NULL, 0, NULL);
+        teardownHomekit();
+        isConnected = false;
+        Serial.println("Was connected. Reconnect");
+        xTaskCreate(delayAndConnect, "DelayAndConnect", 10000, NULL, 0, NULL);
         // } else {
         //   Serial.println(F("[Soulmate-Wifi] Spurious disconnect event"));
         // }
@@ -220,7 +221,8 @@ namespace SoulmateWifi {
       request->send(200, F("text/plain"), Soulmate.status());
     });
 
-    server.on("/ota", HTTP_POST, [](AsyncWebServerRequest *request) {
+    server.on(
+        "/ota", HTTP_POST, [](AsyncWebServerRequest *request) {
       AsyncWebServerResponse *response = request->beginResponse(200, F("text/plain"), "OK");
       response->addHeader("Connection", "close");
       request->send(response); }, [](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {

@@ -3,8 +3,8 @@
 
 String TIME_API = "http://worldtimeapi.org/api/ip";
 
-#include <WiFi.h>
 #include <HTTPClient.h>
+#include <WiFi.h>
 
 HTTPClient http;
 
@@ -20,8 +20,8 @@ long fetchTime() {
     JsonObject &root = jsonBuffer.parseObject(payload);
 
     if (root.containsKey("datetime")) {
-      const char *datetime = root.get<char*>("datetime");
-      int Year, Month, Day, Hour, Minute, Second ;
+      const char *datetime = root.get<char *>("datetime");
+      int Year, Month, Day, Hour, Minute, Second;
       sscanf(datetime, "%d-%d-%dT%d:%d:%d", &Year, &Month, &Day, &Hour, &Minute, &Second);
 
       seconds = Hour * 3600 + Minute * 60 + Second;
