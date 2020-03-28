@@ -3,27 +3,27 @@
 #ifndef BUILDER_LIBRARIES_SOULMATE_SOULMATE_H_
 #define BUILDER_LIBRARIES_SOULMATE_SOULMATE_H_
 
-#include "SoulmateMain.h"
+#include "./SoulmateMain.h"
 
 #ifdef ESP32
   #ifndef SKIP_BLUETOOTH
-    #include "ble.h"
+    #include "./SoulmateBLE.h"
   #endif
 #endif
 
 #ifdef CORE_TEENSY
-  #include "teensy.h"
+  #include "./SoulmateTeensy.h"
 #endif
 
-#include "./stats.h"
-#include "./beatsinfloat.h"
-#include "./files.h"
+#include "./SoulmateBeatSin.h"
+#include "./SoulmateFiles.h"
+#include "./SoulmateStats.h"
 
 #ifdef ESP32
-  #include "SoulmateWifi.h"
+  #include "./SoulmateWifi.h"
 #endif
 
-#include "Grid.h"
-#include "Matrix.h"
+#include "./SoulmateGrid.h"
+#include "./SoulmateMatrix.h"
 
-#endif  // BUILDER_LIBRARIES_SOULMATE_SOULMATE_H_
+#endif // BUILDER_LIBRARIES_SOULMATE_SOULMATE_H_
