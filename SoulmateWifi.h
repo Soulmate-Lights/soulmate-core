@@ -5,6 +5,7 @@
 #ifndef BUILDER_LIBRARIES_SOULMATE_SOULMATEWIFI_H_
 #define BUILDER_LIBRARIES_SOULMATE_SOULMATEWIFI_H_
 
+#include "./SoulmateTime.h"
 #include <ArduinoOTA.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
@@ -183,6 +184,13 @@ namespace SoulmateWifi {
           socketServer.addHandler(&ws);
           socketServer.begin();
           server.begin();
+
+          long receivedSeconds = fetchTime();
+          if (receivedSeconds > 0) {
+            unsigned long currentSeconds = millis() / 1000;
+            unsigned long startedSeconds = receivedSeconds - currentSeconds;
+            Circadian::startTrackingTime(startedSeconds);
+          }
 
           connectHomekit();
         } else {
