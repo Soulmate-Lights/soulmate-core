@@ -23,14 +23,14 @@ static EventGroupHandle_t wifi_event_group;
 const int WIFI_CONNECTED_BIT = BIT0;
 
 static void *acc;
-static SemaphoreHandle_t ev_mutex;
+// static SemaphoreHandle_t ev_mutex;
 
 int brightness = 10;
 int led = false;
 int hue = 128;
 int saturation = 128;
 
-static bool _identifed = false;
+// static bool _identifed = false;
 
 static void *_on_handle;
 static void *_brightness_handle;
