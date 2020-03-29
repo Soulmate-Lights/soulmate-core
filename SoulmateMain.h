@@ -14,7 +14,7 @@
 #include "./SoulmateFiles.h"
 #include "./SoulmateSettings.h"
 
-#define SOULMATE_VERSION "6.1.6"
+#define SOULMATE_VERSION "6.1.8"
 #define MAX_NUMBER_OF_ROUTINES 25
 void FastLEDshowTask(void *pvParameters);
 
@@ -456,6 +456,20 @@ public:
     if (root.containsKey("restart"))
       ESP.restart();
 #endif
+
+    if (root.containsKey("hue")) {
+      currentRoutine = -1;
+      int value = static_cast<int>(root["hue"]);
+      float newHue = (float)value + 180;
+      newHue = newHue / 360.0 * 255.0;
+      hue = newHue;
+    }
+
+    if (root.containsKey("saturation")) {
+      currentRoutine = -1;
+      int value = static_cast<int>(root["saturation"]);
+      saturation = (float)value / 100.0 * 255.0;
+    }
 
     if (root.containsKey("cycle")) {
       cycle = static_cast<bool>(root["cycle"]);
