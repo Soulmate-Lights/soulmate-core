@@ -14,7 +14,7 @@
 #include "./SoulmateFiles.h"
 #include "./SoulmateSettings.h"
 
-#define SOULMATE_VERSION "6.1.8"
+#define SOULMATE_VERSION "6.2.0"
 #define MAX_NUMBER_OF_ROUTINES 25
 void FastLEDshowTask(void *pvParameters);
 
@@ -100,8 +100,7 @@ public:
     message["LANIP"] = false;
     message["homekit"] = true;
 
-    if (showLANIP)
-      message["LANIP"] = ip();
+    if (showLANIP2.0     message["LANIP"] = ip();
 
 #ifdef ESP32
     uint64_t chipid = ESP.getEfuseMac();
