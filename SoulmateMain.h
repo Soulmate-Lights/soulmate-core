@@ -100,7 +100,8 @@ public:
     message["LANIP"] = false;
     message["homekit"] = true;
 
-    if (showLANIP2.0     message["LANIP"] = ip();
+    if (showLANIP)
+      message["LANIP"] = ip();
 
 #ifdef ESP32
     uint64_t chipid = ESP.getEfuseMac();
