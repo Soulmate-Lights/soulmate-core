@@ -1,0 +1,21 @@
+[submodule "components/FastLED"]
+	path = components/FastLED
+	url = https://github.com/FastLED/FastLED.git
+[submodule "components/arduino"]
+	path = components/arduino
+	url = https://github.com/espressif/arduino-esp32.git
+[submodule "components/Soulmate"]
+	path = components/Soulmate
+	url = git@github.com:Soulmate-Lights/soulmate-core.git
+[submodule "components/ESPAsyncWebServer-master"]
+	path = components/ESPAsyncWebServer-master
+	url = https://github.com/me-no-dev/ESPAsyncWebServer.git
+[submodule "components/AsyncTCP"]
+	path = components/AsyncTCP
+	url = https://github.com/me-no-dev/AsyncTCP.git
+[submodule "components/esp32-homekit"]
+	path = components/esp32-homekit
+	url = https://github.com/willson556/esp32-homekit.git
+[submodule "components/Tasker"]
+	path = components/Tasker
+	url = https://github.com/sticilface/Tasker.git
