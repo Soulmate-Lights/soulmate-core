@@ -1,0 +1,35 @@
+#! /usr/bin/ruby
+# frozen_string_literal: true
+
+require 'open3'
+
+port = Dir.glob('/dev/tty.wchusbserial*')[0]
+
+unless port
+  puts "Oops! I couldn't find an ESP32 at /dev/tty.wchusbserial*."
+  puts 'Check the docs for more info.'
+  exit
+end
+
+require 'etc'
+cores = Etc.nprocessors - 1
+
+puts "Compiling and uploading to #{port} with #{cores} threads."
+
+command = "IDF_PATH=~/esp/esp-idf PATH=$HOME/esp/xtensa-esp32-elf/bin:$PATH ESPPORT=#{port} make -j#{cores} flash"
+
+Open3.popen3(command) do |_stdin, stdout, stderr, thread|
+  putc '.' while stdout.gets
+
+  puts
+
+  if thread.value == 0
+    puts 'Your Soulmate is now online. Open your app to control it!'
+  else
+    puts 'Oops - something went wrong!'
+
+    stderr.each_line do |line|
+      puts line if line.include? 'error:'
+    end
+  end
+end
