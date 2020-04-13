@@ -19,3 +19,6 @@
 [submodule "components/Tasker"]
 	path = components/Tasker
 	url = https://github.com/sticilface/Tasker.git
+[submodule "components/ArduinoJson"]
+	path = components/ArduinoJson
+	url = https://github.com/bblanchon/ArduinoJson.git
