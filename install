@@ -29,7 +29,7 @@ system('tar -xzf ~/esp/xtensa-esp32-elf-osx-1.22.0-80-g6c4433a-5.2.0.tar.gz -C ~
 system('rm ~/esp/xtensa-esp32-elf-osx-1.22.0-80-g6c4433a-5.2.0.tar.gz')
 
 puts 'Installing Soulmate...'
-system('git clone -b reorg --recursive --recurse-submodules git@github.com:Soulmate-Lights/soulmate-core.git ~/esp/soulmate')
+system('git clone --recursive --recurse-submodules git@github.com:Soulmate-Lights/soulmate-core.git ~/esp/soulmate')
 
 puts 'Done!'
 puts 'To compile your Soulmate code, use ./run'
