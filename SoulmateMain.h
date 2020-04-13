@@ -7,7 +7,7 @@
 
 #include <functional>
 
-#include "./ArduinoJson/ArduinoJson.h"
+#include "./components/ArduinoJson/ArduinoJson.h"
 #include "./SoulmateBeatSin.h"
 #include "./SoulmateCircadian.h"
 #include "./SoulmateConfig.h"
