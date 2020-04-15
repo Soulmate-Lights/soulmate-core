@@ -7,12 +7,12 @@
 
 #include <functional>
 
-#include "./components/ArduinoJson/ArduinoJson.h"
 #include "./SoulmateBeatSin.h"
 #include "./SoulmateCircadian.h"
 #include "./SoulmateConfig.h"
 #include "./SoulmateFiles.h"
 #include "./SoulmateSettings.h"
+#include "./components/ArduinoJson/ArduinoJson.h"
 
 #define SOULMATE_VERSION "6.2.1"
 #define MAX_NUMBER_OF_ROUTINES 25
@@ -84,12 +84,11 @@ public:
   String status(bool showLANIP = true) {
     StaticJsonBuffer<2048> jsonBuffer;
     JsonObject &message = jsonBuffer.createObject();
-    JsonArray &routinesArray = message.createNestedArray("Routines");
+    JsonArray &routinesArray = message.createNestedArray("routines");
     routinesArray.copyFrom(routineNames, routineCount);
 
-    message["CurrentRoutine"] = currentRoutine;
-    message["routine"] = currentRoutine;
-    message["Name"] = name;
+    message["currentRoutine"] = currentRoutine;
+    message["name"] = name;
     message["on"] = on;
     message["brightness"] = brightness;
     message["version"] = SOULMATE_VERSION;
@@ -97,11 +96,10 @@ public:
     message["circadian"] = Circadian::circadian;
     message["wakeTime"] = Circadian::wakeTime;
     message["sleepTime"] = Circadian::sleepTime;
-    message["LANIP"] = false;
-    message["homekit"] = true;
+    message["lanip"] = false;
 
     if (showLANIP)
-      message["LANIP"] = ip();
+      message["lanip"] = ip();
 
 #ifdef ESP32
     uint64_t chipid = ESP.getEfuseMac();
@@ -115,7 +113,6 @@ public:
 
 #ifdef FIRMWARE_NAME
     message["firmwareName"] = FIRMWARE_NAME;
-    message["ota"] = true;
 #endif
 
 #ifdef USE_WS2812B
