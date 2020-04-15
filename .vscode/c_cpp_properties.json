@@ -11,7 +11,7 @@
                 "/Library/Frameworks"
             ],
             "intelliSenseMode": "gcc-x64",
-            "compilerPath": "/usr/bin/clang",
+            "compilerPath": "~/esp/xtensa-esp32-elf/bin/xtensa-esp32-elf-gcc",
             "cStandard": "c11",
             "cppStandard": "c++17",
             "defines": [
