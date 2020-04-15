@@ -3,7 +3,7 @@
         {
             "name": "Mac",
             "includePath": [
-                "components/**"
+                "./components/**"
             ],
             "forcedInclude": [],
             "macFrameworkPath": [
@@ -13,7 +13,10 @@
             "intelliSenseMode": "gcc-x64",
             "compilerPath": "~/esp/xtensa-esp32-elf/bin/xtensa-esp32-elf-gcc",
             "cStandard": "c11",
-            "cppStandard": "c++17"
+            "cppStandard": "c++17",
+            "defines": [
+                "ESP32=true"
+            ]
         }
     ],
     "version": 4
