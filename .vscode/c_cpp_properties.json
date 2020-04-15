@@ -3,16 +3,15 @@
         {
             "name": "Mac",
             "includePath": [
-                "/Users/elliott/Library/Arduino15/packages/esp8266/tools/**",
-                "/Users/elliott/Library/Arduino15/packages/esp8266/hardware/esp8266/2.4.1/**"
+                "components/**"
             ],
             "forcedInclude": [],
             "macFrameworkPath": [
                 "/System/Library/Frameworks",
                 "/Library/Frameworks"
             ],
-            "intelliSenseMode": "clang-x64",
-            "compilerPath": "/usr/bin/clang",
+            "intelliSenseMode": "gcc-x64",
+            "compilerPath": "~/esp/xtensa-esp32-elf/bin/xtensa-esp32-elf-gcc",
             "cStandard": "c11",
             "cppStandard": "c++17"
         }
