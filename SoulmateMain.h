@@ -104,21 +104,10 @@ public:
 #ifdef ESP32
     uint64_t chipid = ESP.getEfuseMac();
     message["chipId"] = (uint16_t)(chipid >> 32);
-    message["chip"] = "ESP32";
-#endif
-
-#ifdef CORE_TEENSY
-    message["chip"] = "teensy";
 #endif
 
 #ifdef FIRMWARE_NAME
     message["firmwareName"] = FIRMWARE_NAME;
-#endif
-
-#ifdef USE_WS2812B
-    message["strip"] = "WS2812B";
-#else
-    message["strip"] = "APA102";
 #endif
 
     String outputString;
