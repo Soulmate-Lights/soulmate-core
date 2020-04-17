@@ -510,6 +510,10 @@ public:
     if (root.containsKey("Name")) {
       setName(root["Name"]);
     }
+
+    if (root.containsKey("name")) {
+      setName(root["name"]);
+    }
   }
 };
 
