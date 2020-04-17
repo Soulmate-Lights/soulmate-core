@@ -14,7 +14,7 @@
 #include "./SoulmateSettings.h"
 #include "./components/ArduinoJson/ArduinoJson.h"
 
-#define SOULMATE_VERSION "6.2.1"
+#define SOULMATE_VERSION "6.2.7"
 #define MAX_NUMBER_OF_ROUTINES 25
 void FastLEDshowTask(void *pvParameters);
 
@@ -495,6 +495,10 @@ public:
 
     if (root.containsKey("Name")) {
       setName(root["Name"]);
+    }
+
+    if (root.containsKey("name")) {
+      setName(root["name"]);
     }
   }
 };
