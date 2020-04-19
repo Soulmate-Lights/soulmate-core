@@ -98,7 +98,7 @@ namespace Matrix {
   void print() {
     for (int z = 0; z < N_LEDS; z++) {
       // todo: return a variable instead of outputting directly here?
-      Soulmate.led_arr[z] = leds[mappedLeds[z]];
+      Soulmate.leds[z] = leds[mappedLeds[z]];
     }
   }
 } // namespace Matrix

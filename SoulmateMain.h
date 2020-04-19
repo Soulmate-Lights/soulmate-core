@@ -61,9 +61,9 @@ public:
   String routineNames[MAX_NUMBER_OF_ROUTINES];
 
   // 3 arrays of N_CELLS used for blending
-  CRGB led_arr[N_CELLS] PROGMEM;
-  CRGB previous_led_arr[N_CELLS] PROGMEM;
-  CRGB next_led_arr[N_CELLS] PROGMEM;
+  CRGB leds[N_CELLS] PROGMEM;
+  CRGB previousLeds[N_CELLS] PROGMEM;
+  CRGB nextLeds[N_CELLS] PROGMEM;
 
   String ip();
   void updateWifiClients();
@@ -126,14 +126,14 @@ public:
 
   // Light up a percentage of the panel to represent update status
   void lightPercentage(float percentage) {
-    fill_solid(led_arr, N_LEDS, CRGB::Black);
+    fill_solid(leds, N_LEDS, CRGB::Black);
     if (percentage < 1) {
       uint16_t ledsToFill = (float)N_LEDS * percentage;
       if (N_LEDS > 100)
         ledsToFill = ledsToFill - ledsToFill % LED_COLS;
-      fill_solid(led_arr, ledsToFill, CRGB::Green);
+      fill_solid(leds, ledsToFill, CRGB::Green);
     } else {
-      fill_solid(led_arr, N_LEDS, CRGB::Green);
+      fill_solid(leds, N_LEDS, CRGB::Green);
     }
     FastLED.setBrightness(128);
     FastLED.show();
@@ -179,18 +179,18 @@ public:
 // Set up FastLED
 #ifdef USE_WS2812B
   #ifdef SOULMATE_COLOR_ORDER
-    FastLED.addLeds<WS2812B, SOULMATE_DATA_PIN, SOULMATE_COLOR_ORDER>(led_arr,
+    FastLED.addLeds<WS2812B, SOULMATE_DATA_PIN, SOULMATE_COLOR_ORDER>(leds,
                                                                       N_CELLS);
   #else
-    FastLED.addLeds<WS2812B, SOULMATE_DATA_PIN, GRB>(led_arr, N_CELLS);
+    FastLED.addLeds<WS2812B, SOULMATE_DATA_PIN, GRB>(leds, N_CELLS);
   #endif
 #else
   #ifdef CORE_TEENSY
     FastLED.addLeds<LED_TYPE, SOULMATE_DATA_PIN, SOULMATE_CLOCK_PIN, BGR,
-                    DATA_RATE_MHZ(1)>(led_arr, N_CELLS);
+                    DATA_RATE_MHZ(1)>(leds, N_CELLS);
   #else
     FastLED.addLeds<LED_TYPE, SOULMATE_DATA_PIN, SOULMATE_CLOCK_PIN, BGR>(
-        led_arr, N_CELLS);
+        leds, N_CELLS);
   #endif
 #endif
 
@@ -256,7 +256,7 @@ public:
 
   void playCurrentRoutine() {
     if (currentRoutine == -1) {
-      fill_solid(led_arr, N_LEDS, CHSV(hue, saturation, 255));
+      fill_solid(leds, N_LEDS, CHSV(hue, saturation, 255));
     } else {
       routines[currentRoutine]();
     }
@@ -276,30 +276,30 @@ public:
     if (fadeMs < FADE_DURATION) {
       uint8_t percentage =
           static_cast<float>(fadeMs) / static_cast<float>(FADE_DURATION) * 255;
-      int size = sizeof(led_arr);
+      int size = sizeof(leds);
       // Grab the last frame from the previous pattern and run with it
       if (faded)
-        memcpy(&led_arr, &previous_led_arr, size);
+        memcpy(&leds, &previousLeds, size);
       if (previousRoutine >= 0)
         routines[previousRoutine]();
-      memcpy(&previous_led_arr, &led_arr, size);
-      // Put the next pattern's arrays into led_arr and run with it
-      memcpy(&led_arr, &next_led_arr, size);
+      memcpy(&previousLeds, &leds, size);
+      // Put the next pattern's arrays into leds and run with it
+      memcpy(&leds, &nextLeds, size);
       playCurrentRoutine();
-      memcpy(&next_led_arr, &led_arr, size);
+      memcpy(&nextLeds, &leds, size);
       // Blend the two together
       for (int i = 0; i < N_CELLS; i++) {
-        CRGB pixel = blend(CRGB::Black, previous_led_arr[i], 255 - percentage);
-        pixel = blend(pixel, led_arr[i], percentage);
-        led_arr[i] = pixel;
+        CRGB pixel = blend(CRGB::Black, previousLeds[i], 255 - percentage);
+        pixel = blend(pixel, leds[i], percentage);
+        leds[i] = pixel;
       }
       FastLED.show();
       faded = true;
     } else {
       playCurrentRoutine();
       FastLED.show();
-      fill_solid(previous_led_arr, N_LEDS, CRGB::Black);
-      fill_solid(next_led_arr, N_LEDS, CRGB::Black);
+      fill_solid(previousLeds, N_LEDS, CRGB::Black);
+      fill_solid(nextLeds, N_LEDS, CRGB::Black);
       faded = false;
     }
   }
@@ -363,7 +363,7 @@ public:
   }
 
   void setPixel(int index, CRGB color) {
-    led_arr[index] = color;
+    leds[index] = color;
   }
 
   void chooseRoutine(int i) {
