@@ -87,7 +87,7 @@ public:
     JsonArray &routinesArray = message.createNestedArray("routines");
     routinesArray.copyFrom(routineNames, routineCount);
 
-    message["routine"] = routine;
+    message["routine"] = currentRoutine;
     message["name"] = name;
     message["on"] = on;
     message["brightness"] = brightness;
