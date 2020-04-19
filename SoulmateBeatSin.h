@@ -4,7 +4,7 @@
 #include <FastLED.h>
 
 // like beatsin16, but it returns a float
-float beatsin16Float(float beats_per_minute, float lowest = 0,
+float beatsin16float(float beats_per_minute, float lowest = 0,
                      float highest = 65535, uint32_t timebase = 0,
                      uint16_t phase_offset = 0) {
   float multiplier = 1000.0;
