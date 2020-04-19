@@ -1,6 +1,8 @@
 #ifndef BUILDER_LIBRARIES_SOULMATE_CONFIG_H_
 #define BUILDER_LIBRARIES_SOULMATE_CONFIG_H_
 
+#include "./components/ArduinoJson/ArduinoJson.h"
+
 #ifdef ESP32
   #include "soc/timer_group_reg.h"
   #include "soc/timer_group_struct.h"
