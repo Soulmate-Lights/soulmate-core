@@ -107,46 +107,17 @@ uint16_t XY(uint8_t x, uint8_t y) {
   return Matrix::XY(x, y);
 }
 
-float beatsin16Float(float beats_per_minute, float lowest = 0,
-                     float highest = 65535, uint32_t timebase = 0,
-                     uint16_t phase_offset = 0) {
-  float multiplier = 1000;
-  float result =
-      (float)beatsin16(beats_per_minute * multiplier, lowest * multiplier,
-                       highest * multiplier, timebase, phase_offset);
-  return result / multiplier;
-}
-// accum88 beats_per_minute, uint16_t lowest = 0, uint16_t highest = 65535,
-//                              uint32_t timebase = 0, uint16_t phase_offset = 0
+// There are two gridIndex functions that work differently
+// depending on the layout of your matrix. It's confusing.
+// If your strips are vertical, use gridIndex, otherwise
+// use gridIndexHorizontal. If it looks weird, switch 'em.
 
-int16_t gridIndexHorizontal(int16_t x, int16_t y) {
-  if (y > LED_ROWS)
-    return -1;
-  if (x > LED_COLS)
-    return -1;
-  if (x < 0)
-    return -1;
-  if (y < 0)
-    return -1;
-
-  int16_t index = 0;
-  if (y % 2 == 1) {
-    index = y * LED_COLS + x;
-  } else {
-    index = y * LED_COLS + LED_COLS - 1 - x;
-  }
-  if (index > -1 && index < N_LEDS) {
-    return index;
-  } else {
-    return -1;
-  }
-}
-
-// TODO(elliott): Rename this to something about left-right-left
 int16_t gridIndex(int16_t x, int16_t y) {
-  if (x == 0 && y == 0) {
-    return 0;
-  }
+  if (y > LED_ROWS) return -1;
+  if (x > LED_COLS) return -1;
+  if (x < 0) return -1;
+  if (y < 0) return -1;
+  if (x == 0 && y == 0) return 0;
 
   int16_t index = 0;
   if (x % 2 == 0) {
@@ -154,6 +125,28 @@ int16_t gridIndex(int16_t x, int16_t y) {
   } else {
     index = x * LED_ROWS + LED_ROWS - 1 - y;
   }
+
+  if (index > -1 && index < N_LEDS) {
+    return index;
+  } else {
+    return -1;
+  }
+}
+
+int16_t gridIndexHorizontal(int16_t x, int16_t y) {
+  if (y > LED_ROWS) return -1;
+  if (x > LED_COLS) return -1;
+  if (x < 0) return -1;
+  if (y < 0) return -1;
+  if (x == 0 && y == 0) return 0;
+
+  int16_t index = 0;
+  if (y % 2 == 1) {
+    index = y * LED_COLS + x;
+  } else {
+    index = y * LED_COLS + LED_COLS - 1 - x;
+  }
+
   if (index > -1 && index < N_LEDS) {
     return index;
   } else {

@@ -3,12 +3,15 @@
 
 #include <FastLED.h>
 
-float multiplier = 100.0;
-
-float beatsin16float(uint16_t bpm, uint16_t min, uint16_t max) {
-  return (float)beatsin16(bpm, (float)min * multiplier,
-                          (float)max * multiplier) /
-         multiplier;
+// like beatsin16, but it returns a float
+float beatsin16Float(float beats_per_minute, float lowest = 0,
+                     float highest = 65535, uint32_t timebase = 0,
+                     uint16_t phase_offset = 0) {
+  float multiplier = 1000.0;
+  float result =
+      (float)beatsin16(beats_per_minute * multiplier, lowest * multiplier,
+                       highest * multiplier, timebase, phase_offset);
+  return result / multiplier;
 }
 
 #endif // BUILDER_LIBRARIES_SOULMATE_BEATSIN16_H_
