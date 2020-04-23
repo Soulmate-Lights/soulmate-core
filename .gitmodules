@@ -13,17 +13,13 @@
 [submodule "components/AsyncTCP"]
 	path = components/AsyncTCP
 	url = https://github.com/me-no-dev/AsyncTCP.git
-[submodule "components/esp32-homekit"]
-	path = components/esp32-homekit
-	url = https://github.com/willson556/esp32-homekit.git
 [submodule "components/Tasker"]
 	path = components/Tasker
 	url = https://github.com/sticilface/Tasker.git
 [submodule "components/ArduinoJson"]
 	path = components/ArduinoJson
 	url = https://github.com/bblanchon/ArduinoJson.git
-        branch = 5.x	
-
+    branch = 5.x	
 [submodule "example"]
 	path = example
 	url = git@github.com:Soulmate-Lights/soulmate-example.git
