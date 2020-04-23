@@ -191,6 +191,6 @@ void connectHomekit() {
                                  (char *)"111-11-111",         // pincode
                                  (char *)MANUFACTURER_NAME,    // vendor
                                  HAP_ACCESSORY_CATEGORY_OTHER, // category
-                                 811, 1, NULL, &callback);
+                                 811, 1, NULL, &callback, (char *)"QT69");
   }
 }
