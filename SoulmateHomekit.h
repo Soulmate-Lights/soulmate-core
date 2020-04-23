@@ -186,11 +186,11 @@ void connectHomekit() {
     hap_accessory_callback_t callback;
     callback.hap_object_init = hap_object_init;
 
-    acc = hap_accessory_register(Soulmate.name.c_str(),        // name
-                                 accessory_id,                 // id
-                                 (char *)"111-11-111",         // pincode
-                                 (char *)MANUFACTURER_NAME,    // vendor
-                                 HAP_ACCESSORY_CATEGORY_OTHER, // category
+    acc = hap_accessory_register((char *)Soulmate.name.c_str(), // name
+                                 accessory_id,                  // id
+                                 (char *)"111-11-111",          // pincode
+                                 (char *)MANUFACTURER_NAME,     // vendor
+                                 HAP_ACCESSORY_CATEGORY_OTHER,  // category
                                  811, 1, NULL, &callback, (char *)"QT69");
   }
 }
