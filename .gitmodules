@@ -23,6 +23,3 @@
 [submodule "example"]
 	path = example
 	url = git@github.com:Soulmate-Lights/soulmate-example.git
-[submodule "components/HAPsnap"]
-	path = components/HAPsnap
-	url = https://github.com/StefVos/HAPsnap.git
