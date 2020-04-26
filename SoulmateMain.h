@@ -3,7 +3,7 @@
 #ifndef BUILDER_LIBRARIES_SOULMATE_SOULMATEMAIN_H_
 #define BUILDER_LIBRARIES_SOULMATE_SOULMATEMAIN_H_
 
-#define SOULMATE_VERSION "6.3.0"
+#define SOULMATE_VERSION "6.0.0"
 
 #include <Arduino.h>
 #include <functional>
@@ -61,9 +61,9 @@ class SoulmateLibrary {
   String routineNames[MAX_NUMBER_OF_ROUTINES];
 
   // 3 arrays of N_CELLS used for blending
-  CRGB leds[N_CELLS] PROGMEM;
-  CRGB previousLeds[N_CELLS] PROGMEM;
-  CRGB nextLeds[N_CELLS] PROGMEM;
+  CRGB leds[N_CELLS];
+  CRGB previousLeds[N_CELLS];
+  CRGB nextLeds[N_CELLS];
 
   String ip();
   void updateWifiClients();
@@ -305,14 +305,17 @@ class SoulmateLibrary {
   }
 
   void loop() {
+
     #ifdef AUTOMATIC_OTA_UPDATES
       // This is something we use for our internal Soulmate lights!
-      EVERY_N_SECONDS(60) {
-        if (wifiConnected()) {
-          Serial.println("Checking for updates...");
-          SoulmateOTA::check();
+      // EVERY_N_SECONDS(300) {
+        if (wifiConnected()) { //  && !on
+          if (SoulmateOTA::shouldUpdate()) {
+            // stop();
+            SoulmateOTA::update();
+          }
         }
-      }
+      // }
     #endif
 
     EVERY_N_SECONDS(5) {
@@ -511,15 +514,55 @@ class SoulmateLibrary {
       setName(root["name"]);
     }
   }
+
+  void adjustFromButton() {
+    // #ifdef SOULMATE_BUTTON_PIN
+    //   EVERY_N_MILLISECONDS(10) {
+    //     bool buttonSignal = digitalRead(SOULMATE_BUTTON_PIN);
+    //     bool buttonIsCurrentlyDown = buttonSignal == BUTTON_ON_VALUE;
+
+    //     if (!buttonOn && buttonIsCurrentlyDown) { // Start pressing
+    //       buttonPressStart = millis();
+    //       newBrightness = brightness;
+    //     }
+
+    //     // Keep pressing
+    //     if (buttonIsCurrentlyDown && buttonOn) {
+    //       uint32_t buttonPressDuration = millis() - buttonPressStart;
+    //       if (buttonPressDuration > 500) {
+    //         newBrightness = newBrightness + (buttonIncreasingBrightness ? 1 : -1);
+    //         brightness = constrain(newBrightness, 0, 255);
+    //       }
+    //     }
+
+    //     // Finish pressing
+    //     if (buttonOn && !buttonIsCurrentlyDown) {
+    //       uint32_t buttonPressDuration = millis() - buttonPressStart;
+
+    //       if (buttonPressDuration < 1000) {
+    //         // If it's for less than a second, switch routine.
+    //         nextRoutine();
+    //       } else {
+    //         // Otherwise, Set whether we're increasing or decreasing the brightness.
+    //         buttonIncreasingBrightness = !buttonIncreasingBrightness;
+    //       }
+    //     }
+    //     buttonOn = buttonIsCurrentlyDown;
+    //   }
+    // }
+  }
+// pinMode(SOULMATE_BUTTON_PIN, INPUT_PULLDOWN);
+
+
 };
 
 SoulmateLibrary Soulmate;
 
 #ifdef SKIP_BLUETOOTH
-void SoulmateLibrary::StartBluetooth() {
-}
-void SoulmateLibrary::StopBluetooth() {
-}
+void SoulmateLibrary::StartBluetooth() {}
+void SoulmateLibrary::StopBluetooth() {}
+void SoulmateLibrary::BluetoothLoop() {}
+void SoulmateLibrary::BluetoothSetup() {}
 #endif
 
 // ESP32 dual-core task, pinned to a core

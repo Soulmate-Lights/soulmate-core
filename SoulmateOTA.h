@@ -6,7 +6,6 @@
 #include <HTTPClient.h>
 #include <HTTPUpdate.h>
 #include <time.h>
-#include "./SoulmateMain.h"
 #include "./SoulmateCircadian.h"
 
 int updateStartHour = 4;
@@ -15,15 +14,17 @@ namespace SoulmateOTA {
   int lastMinute = -1;
   int previousHour = -1;
   bool updating = false;
+  bool clockSet = false;
 
-  void updateFromURL() {
+  void update() {
     if (updating) return;
 
-    updating = true;
-    String url = "http://soulmate-server.herokuapp.com/stream/" + (String)FIRMWARE_NAME + "/" + (String)SOULMATE_VERSION;
-    WiFiClient client;
-    client.setTimeout(120 * 1000);
+    Serial.println("Starting OTA update...");
 
+    WiFiClient client;
+    client.setTimeout(360 * 1000);
+
+    String url = "http://soulmate-server.herokuapp.com/stream/" + (String)FIRMWARE_NAME + "/" + (String)SOULMATE_VERSION;
     t_httpUpdate_return ret = httpUpdate.update(client, url);
 
     switch (ret) {
@@ -42,18 +43,22 @@ namespace SoulmateOTA {
         Serial.println("HTTP_UPDATE_OK");
         break;
     }
+
+    updating = false;
   }
 
-  void check() {
-    if (updating) return;
+  bool shouldUpdate() {
+    if (updating) return false;
+
+    bool result;
+
     int currentHour = hourNow(Circadian::startedSeconds);
 
-    if (previousHour == updateStartHour - 1 && currentHour == updateStartHour) {
-      Serial.println("Go time.");
-      updateFromURL();
-    }
+    result = previousHour == updateStartHour - 1 && currentHour == updateStartHour;
 
     previousHour = currentHour;
+
+    return result;
   }
 }
 

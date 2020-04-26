@@ -12,6 +12,7 @@
     #include <Preferences.h>
     #include <WiFi.h>
 
+    #include "./SoulmateOTA.h"
     #include "./SoulmateHomekit.h"
     #include "./SoulmateSettings.h"
     #include "./SoulmateTime.h"

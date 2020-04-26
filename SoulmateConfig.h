@@ -66,7 +66,7 @@ namespace std {
 #ifdef CORE_TEENSY
   #define SOULMATE_DATA_PIN 18
   #define SOULMATE_CLOCK_PIN 23
-  #define SOULMATE_BUTTON_PIN 5
+  // #define SOULMATE_BUTTON_PIN 5
 #endif
 
 #ifdef ESP32
@@ -80,7 +80,7 @@ namespace std {
 
 #ifdef ESP32
   #ifndef SOULMATE_BUTTON_PIN
-    #define SOULMATE_BUTTON_PIN 5
+    // #define SOULMATE_BUTTON_PIN 5
   #endif
 #endif
 
