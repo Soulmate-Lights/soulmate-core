@@ -8,9 +8,10 @@
 #include <time.h>
 #include "./SoulmateCircadian.h"
 
-int updateStartHour = 4;
-
 namespace SoulmateOTA {
+  // What time of the day do we start updates?
+  static int updateStartHour = 4;
+
   int lastMinute = -1;
   int previousHour = -1;
   bool updating = false;
@@ -21,16 +22,18 @@ namespace SoulmateOTA {
 
     Serial.println("Starting OTA update...");
 
+    String server = "http://soulmate-server.herokuapp.com/stream/";
     WiFiClient client;
-    client.setTimeout(360 * 1000);
 
-    String url = "http://soulmate-server.herokuapp.com/stream/" + (String)FIRMWARE_NAME + "/" + (String)SOULMATE_VERSION;
+    client.setTimeout(360 * 1000);
+    String url = server + FIRMWARE_NAME + "/" + SOULMATE_VERSION;
     t_httpUpdate_return ret = httpUpdate.update(client, url);
 
     switch (ret) {
       case HTTP_UPDATE_FAILED:
         updating = false;
         Serial.printf("HTTP_UPDATE_FAILED Error (%d): %s\n", httpUpdate.getLastError(), httpUpdate.getLastErrorString().c_str());
+        ESP.restart();
         break;
 
       case HTTP_UPDATE_NO_UPDATES:

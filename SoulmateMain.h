@@ -157,6 +157,11 @@ class SoulmateLibrary {
     SPIFFS.begin(true);
 #endif
 
+    if (readFile("/start-off") == "true") {
+      on = false;
+      writeFile("/start-off", "false");
+    }
+
     Circadian::setup();
 
     cycle = SoulmateSettings::shouldCycle();
@@ -306,16 +311,17 @@ class SoulmateLibrary {
 
   void loop() {
 
+    // This is something we use for our internal Soulmate lights!
     #ifdef AUTOMATIC_OTA_UPDATES
-      // This is something we use for our internal Soulmate lights!
-      // EVERY_N_SECONDS(300) {
-        if (wifiConnected()) { //  && !on
-          if (SoulmateOTA::shouldUpdate()) {
-            // stop();
+      EVERY_N_SECONDS(300) {
+        if (wifiConnected()) {
+          if (!on && FastLED.getBrightness() == 0 && SoulmateOTA::shouldUpdate()) {
+            writeFile("/start-off", on ? "false" : "true");
+            stop();
             SoulmateOTA::update();
           }
         }
-      // }
+      }
     #endif
 
     EVERY_N_SECONDS(5) {
@@ -499,7 +505,6 @@ class SoulmateLibrary {
       const char *ssid = root["SSID"].as<char *>();
       const char *pass = root["WIFIPASS"].as<char *>();
       connectTo(ssid, pass);
-      // StopBluetooth();
     }
 
     if (root.containsKey("on")) {
@@ -514,46 +519,6 @@ class SoulmateLibrary {
       setName(root["name"]);
     }
   }
-
-  void adjustFromButton() {
-    // #ifdef SOULMATE_BUTTON_PIN
-    //   EVERY_N_MILLISECONDS(10) {
-    //     bool buttonSignal = digitalRead(SOULMATE_BUTTON_PIN);
-    //     bool buttonIsCurrentlyDown = buttonSignal == BUTTON_ON_VALUE;
-
-    //     if (!buttonOn && buttonIsCurrentlyDown) { // Start pressing
-    //       buttonPressStart = millis();
-    //       newBrightness = brightness;
-    //     }
-
-    //     // Keep pressing
-    //     if (buttonIsCurrentlyDown && buttonOn) {
-    //       uint32_t buttonPressDuration = millis() - buttonPressStart;
-    //       if (buttonPressDuration > 500) {
-    //         newBrightness = newBrightness + (buttonIncreasingBrightness ? 1 : -1);
-    //         brightness = constrain(newBrightness, 0, 255);
-    //       }
-    //     }
-
-    //     // Finish pressing
-    //     if (buttonOn && !buttonIsCurrentlyDown) {
-    //       uint32_t buttonPressDuration = millis() - buttonPressStart;
-
-    //       if (buttonPressDuration < 1000) {
-    //         // If it's for less than a second, switch routine.
-    //         nextRoutine();
-    //       } else {
-    //         // Otherwise, Set whether we're increasing or decreasing the brightness.
-    //         buttonIncreasingBrightness = !buttonIncreasingBrightness;
-    //       }
-    //     }
-    //     buttonOn = buttonIsCurrentlyDown;
-    //   }
-    // }
-  }
-// pinMode(SOULMATE_BUTTON_PIN, INPUT_PULLDOWN);
-
-
 };
 
 SoulmateLibrary Soulmate;
