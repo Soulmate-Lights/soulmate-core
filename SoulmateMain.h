@@ -3,23 +3,23 @@
 #ifndef BUILDER_LIBRARIES_SOULMATE_SOULMATEMAIN_H_
 #define BUILDER_LIBRARIES_SOULMATE_SOULMATEMAIN_H_
 
+#define SOULMATE_VERSION "6.3.0"
+
 #include <Arduino.h>
-
 #include <functional>
-
 #include "./SoulmateBeatSin.h"
 #include "./SoulmateCircadian.h"
 #include "./SoulmateConfig.h"
 #include "./SoulmateFiles.h"
 #include "./SoulmateSettings.h"
+#include "./SoulmateOTA.h"
 #include "./components/ArduinoJson/ArduinoJson.h"
 
-#define SOULMATE_VERSION "6.2.7"
 #define MAX_NUMBER_OF_ROUTINES 25
 void FastLEDshowTask(void *pvParameters);
 
 class SoulmateLibrary {
-public:
+ public:
   SoulmateLibrary() {
   }
 
@@ -305,6 +305,15 @@ public:
   }
 
   void loop() {
+    #ifdef AUTOMATIC_OTA_UPDATES
+      // This is something we use for our internal Soulmate lights!
+      EVERY_N_SECONDS(20) {
+        if (wifiConnected()) {
+          SoulmateOTA::check();
+        }
+      }
+    #endif
+
     EVERY_N_SECONDS(5) {
       switch (Circadian::checkTime()) {
       case Circadian::SHOULD_TURN_OFF:
