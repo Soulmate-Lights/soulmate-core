@@ -307,8 +307,9 @@ class SoulmateLibrary {
   void loop() {
     #ifdef AUTOMATIC_OTA_UPDATES
       // This is something we use for our internal Soulmate lights!
-      EVERY_N_SECONDS(20) {
+      EVERY_N_SECONDS(60) {
         if (wifiConnected()) {
+          Serial.println("Checking for updates...");
           SoulmateOTA::check();
         }
       }
