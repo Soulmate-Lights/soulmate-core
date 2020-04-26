@@ -3,7 +3,7 @@
 #ifndef BUILDER_LIBRARIES_SOULMATE_SOULMATEMAIN_H_
 #define BUILDER_LIBRARIES_SOULMATE_SOULMATEMAIN_H_
 
-#define SOULMATE_VERSION "6.0.0"
+#define SOULMATE_VERSION "6.4.0"
 
 #include <Arduino.h>
 #include <functional>
