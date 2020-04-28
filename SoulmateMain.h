@@ -60,6 +60,8 @@ class SoulmateLibrary {
   void (*routines[MAX_NUMBER_OF_ROUTINES])();
   String routineNames[MAX_NUMBER_OF_ROUTINES];
 
+  String selectedRoutines = "[0]";
+
   // 3 arrays of N_CELLS used for blending
   CRGB leds[N_CELLS];
   CRGB previousLeds[N_CELLS];
@@ -97,6 +99,8 @@ class SoulmateLibrary {
     message["wakeTime"] = Circadian::wakeTime;
     message["sleepTime"] = Circadian::sleepTime;
     message["lanip"] = false;
+
+    message["selectedroutines"] = jsonBuffer.parseArray(selectedRoutines.c_str());
 
     if (showLANIP)
       message["lanip"] = ip();
@@ -517,6 +521,12 @@ class SoulmateLibrary {
 
     if (root.containsKey("name")) {
       setName(root["name"]);
+    }
+
+    if (root.containsKey("selectedroutines")) {
+      String selectedRoutinesString;
+      root["selectedRoutines"].printTo(selectedRoutinesString);
+      selectedRoutines = selectedRoutinesString;
     }
   }
 };
