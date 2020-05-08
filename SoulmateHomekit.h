@@ -89,7 +89,7 @@ void *led_saturation_read(void *arg) {
 }
 
 void led_saturation_write(void *arg, void *value, int len) {
-  saturation = (int)value / 100;
+  saturation = (int)value;
   Soulmate.saturation = (float)saturation / 100.0 * 255.0;
   if (_saturation_handle) {
     hap_event_response(acc, _saturation_handle, (void *)((int)value));
@@ -106,7 +106,7 @@ void *led_hue_read(void *arg) {
 }
 
 void led_hue_write(void *arg, void *value, int len) {
-  hue = (int)value / 100;
+  hue = (int)value;
   Soulmate.hue = (float)hue / 360.0 * 255.0;
   Soulmate.currentRoutine = -1;
   if (_hue_handle) {
