@@ -38,6 +38,7 @@ void delayAndConnect(void *parameter) {
   if (!ssid.equals("")) {
     Serial.println("[Soulmate-Wifi] Set STA mode...");
     WiFi.mode(WIFI_STA);
+    WiFi.setSleep(false);
     vTaskDelay(1000 / portTICK_PERIOD_MS);
 
     Serial.println("[Soulmate-Wifi] WiFi.begin()...");
@@ -102,6 +103,7 @@ namespace SoulmateWifi {
   // WebSockets event received¡
   void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
                AwsEventType type, void *arg, uint8_t *data, size_t len) {
+
     if (type != WS_EVT_DATA)
       return;
 
@@ -272,6 +274,10 @@ namespace SoulmateWifi {
   }
 
   void loop() {
+    EVERY_N_SECONDS(1) {
+      ws.cleanupClients();
+    }
+
     if (restartRequired) {
       delay(500);
       ESP.restart();
