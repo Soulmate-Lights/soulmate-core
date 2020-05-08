@@ -85,6 +85,7 @@ void brightness_notify(void *arg, void *ev_handle, bool enable) {
 }
 
 void *led_saturation_read(void *arg) {
+  int saturation = (float)Soulmate.saturation / 255.0 * 100.0;
   return (void *)saturation;
 }
 
