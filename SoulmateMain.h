@@ -1,11 +1,15 @@
 // Copyright (2018) Soulmate Lighting, LLC
 
+
 #ifndef BUILDER_LIBRARIES_SOULMATE_SOULMATEMAIN_H_
 #define BUILDER_LIBRARIES_SOULMATE_SOULMATEMAIN_H_
 
 #define SOULMATE_VERSION "6.4.1"
 
+#define FASTLED_INTERNAL
+
 #include <Arduino.h>
+#include <FastLED.h>
 #include <functional>
 #include "./SoulmateBeatSin.h"
 #include "./SoulmateCircadian.h"
@@ -61,9 +65,12 @@ class SoulmateLibrary {
   String routineNames[MAX_NUMBER_OF_ROUTINES];
 
   // 3 arrays of N_CELLS used for blending
-  CRGB leds[N_CELLS];
-  CRGB previousLeds[N_CELLS];
-  CRGB nextLeds[N_CELLS];
+  CRGB *leds;
+  CRGB *previousLeds;
+  CRGB *nextLeds;
+  // CRGB leds[N_CELLS];
+  // CRGB previousLeds[N_CELLS];
+  // CRGB nextLeds[N_CELLS];
 
   String ip();
   void updateWifiClients();
@@ -142,6 +149,10 @@ class SoulmateLibrary {
   // Setup
 
   void setup() {
+    leds = (CRGB*)malloc(N_LEDS * sizeof(CRGB));
+    previousLeds = (CRGB*)malloc(N_LEDS * sizeof(CRGB));
+    nextLeds = (CRGB*)malloc(N_LEDS * sizeof(CRGB));
+
     // Clear a line for reading after flashing. Everything before this is 78400
     // baud boot nonsense from the ESP.
     Serial.begin(115200);
@@ -214,8 +225,10 @@ class SoulmateLibrary {
     WifiSetup();
   #ifndef SKIP_BLUETOOTH
     BluetoothSetup();
-  #else // Without BT it starts too fast to print
-    delay(1000);
+    // We used to use this for startup and printing to determine firmware
+    // #else
+    // Without BT it starts too fast to print
+    // delay(1000);
   #endif
 #endif
 
