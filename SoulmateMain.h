@@ -4,7 +4,7 @@
 #ifndef BUILDER_LIBRARIES_SOULMATE_SOULMATEMAIN_H_
 #define BUILDER_LIBRARIES_SOULMATE_SOULMATEMAIN_H_
 
-#define SOULMATE_VERSION "7.0.0"
+#define SOULMATE_VERSION "7.0.1"
 
 #define FASTLED_INTERNAL
 
@@ -65,12 +65,9 @@ class SoulmateLibrary {
   String routineNames[MAX_NUMBER_OF_ROUTINES];
 
   // 3 arrays of N_CELLS used for blending
-  CRGB *leds;
-  CRGB *previousLeds;
-  CRGB *nextLeds;
-  // CRGB leds[N_CELLS];
-  // CRGB previousLeds[N_CELLS];
-  // CRGB nextLeds[N_CELLS];
+  CRGB leds[N_CELLS];
+  CRGB previousLeds[N_CELLS];
+  CRGB nextLeds[N_CELLS];
 
   String ip();
   void updateWifiClients();
@@ -149,10 +146,6 @@ class SoulmateLibrary {
   // Setup
 
   void setup() {
-    leds = (CRGB*)malloc(N_LEDS * sizeof(CRGB));
-    previousLeds = (CRGB*)malloc(N_LEDS * sizeof(CRGB));
-    nextLeds = (CRGB*)malloc(N_LEDS * sizeof(CRGB));
-
     // Clear a line for reading after flashing. Everything before this is 78400
     // baud boot nonsense from the ESP.
     Serial.begin(115200);
