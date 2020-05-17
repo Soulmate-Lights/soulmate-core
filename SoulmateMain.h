@@ -4,7 +4,7 @@
 #ifndef BUILDER_LIBRARIES_SOULMATE_SOULMATEMAIN_H_
 #define BUILDER_LIBRARIES_SOULMATE_SOULMATEMAIN_H_
 
-#define SOULMATE_VERSION "6.4.1"
+#define SOULMATE_VERSION "7.0.0"
 
 #define FASTLED_INTERNAL
 
@@ -231,9 +231,6 @@ class SoulmateLibrary {
     // delay(1000);
   #endif
 #endif
-
-    // Important, the command line uses this!
-    Serial.println(this->status(false));
   }
 
   void nextRoutine() {

@@ -4,11 +4,7 @@
 #ifndef BUILDER_LIBRARIES_SOULMATE_BLE_H_
 #define BUILDER_LIBRARIES_SOULMATE_BLE_H_
 
-#include <BLE2902.h>
-#include <BLEDevice.h>
-#include <BLEServer.h>
-#include <BLEUtils.h>
-#include <Preferences.h>
+#include "NimBLEDevice.h"
 
 #include <string>
 
@@ -70,11 +66,18 @@ namespace BLE {
 
     pCharacteristic = pService->createCharacteristic(
         CHARACTERISTIC_UUID,
-        BLECharacteristic::PROPERTY_NOTIFY |
-            BLECharacteristic::PROPERTY_READ |
-            BLECharacteristic::PROPERTY_WRITE |
-            BLECharacteristic::PROPERTY_WRITE_NR);
-    pCharacteristic->addDescriptor(new BLE2902());
+        NIMBLE_PROPERTY::NOTIFY |
+            NIMBLE_PROPERTY::READ |
+            NIMBLE_PROPERTY::WRITE |
+            NIMBLE_PROPERTY::WRITE_NR);
+
+    pCharacteristic->createDescriptor(CHARACTERISTIC_UUID,
+      NIMBLE_PROPERTY::NOTIFY |
+      NIMBLE_PROPERTY::READ |
+      NIMBLE_PROPERTY::WRITE |
+      NIMBLE_PROPERTY::WRITE_NR,
+      25);
+
     pCharacteristic->setCallbacks(new MyCallbacks());
     pCharacteristic->setValue("{}");
 
@@ -93,7 +96,6 @@ namespace BLE {
     // BLEDevice::deinit(true);
     esp_bt_controller_mem_release(ESP_BT_MODE_BTDM);
     esp_bt_controller_mem_release(ESP_BT_MODE_BLE);
-    Serial.println("Released memory");
   }
 
   void notify() {
