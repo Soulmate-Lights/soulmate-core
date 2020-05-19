@@ -30,3 +30,6 @@
 [submodule "components/esp-nimble-cpp"]
 	path = components/esp-nimble-cpp
 	url = https://github.com/h2zero/esp-nimble-cpp.git
+[submodule "esp-idf"]
+	path = esp-idf
+	url = https://github.com/espressif/esp-idf.git
