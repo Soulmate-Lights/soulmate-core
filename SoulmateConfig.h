@@ -25,10 +25,6 @@ namespace std {
 // Copyright 2019 Soulmate Lighting, LLC
 // FastLED configuration
 
-#define FASTLED_INTERNAL // removes pragma marks
-
-#include <FastLED.h>
-
 // Soulmate configuration
 
 #ifndef LED_COLS
@@ -36,11 +32,11 @@ namespace std {
 #endif
 
 #ifndef LED_ROWS
-  #define LED_ROWS 13
+  #define LED_ROWS 1
 #endif
 
 #ifndef N_LEDS
-  #define N_LEDS 37
+  #define N_LEDS LED_COLS * LED_ROWS
 #endif
 
 #ifndef SOULMATE_MILLIAMPS

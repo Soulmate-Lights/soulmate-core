@@ -23,3 +23,13 @@
 [submodule "example"]
 	path = example
 	url = git@github.com:Soulmate-Lights/soulmate-example.git
+[submodule "components/esp-nimble-component"]
+	path = components/esp-nimble-component
+	url = https://github.com/h2zero/esp-nimble-component.git
+	branch = idf-v3.2
+[submodule "components/esp-nimble-cpp"]
+	path = components/esp-nimble-cpp
+	url = https://github.com/h2zero/esp-nimble-cpp.git
+[submodule "esp-idf"]
+	path = esp-idf
+	url = https://github.com/espressif/esp-idf.git

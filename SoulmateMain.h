@@ -1,11 +1,15 @@
 // Copyright (2018) Soulmate Lighting, LLC
 
+
 #ifndef BUILDER_LIBRARIES_SOULMATE_SOULMATEMAIN_H_
 #define BUILDER_LIBRARIES_SOULMATE_SOULMATEMAIN_H_
 
-#define SOULMATE_VERSION "6.4.1"
+#define SOULMATE_VERSION "7.0.2"
+
+#define FASTLED_INTERNAL
 
 #include <Arduino.h>
+#include <FastLED.h>
 #include <functional>
 #include "./SoulmateBeatSin.h"
 #include "./SoulmateCircadian.h"
@@ -214,13 +218,12 @@ class SoulmateLibrary {
     WifiSetup();
   #ifndef SKIP_BLUETOOTH
     BluetoothSetup();
-  #else // Without BT it starts too fast to print
-    delay(1000);
+    // We used to use this for startup and printing to determine firmware
+    // #else
+    // Without BT it starts too fast to print
+    // delay(1000);
   #endif
 #endif
-
-    // Important, the command line uses this!
-    Serial.println(this->status(false));
   }
 
   void nextRoutine() {
