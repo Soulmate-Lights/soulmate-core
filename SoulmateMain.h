@@ -4,7 +4,7 @@
 #ifndef BUILDER_LIBRARIES_SOULMATE_SOULMATEMAIN_H_
 #define BUILDER_LIBRARIES_SOULMATE_SOULMATEMAIN_H_
 
-#define SOULMATE_VERSION "7.0.2"
+#define SOULMATE_VERSION "7.0.3"
 
 #define FASTLED_INTERNAL
 
@@ -224,6 +224,9 @@ class SoulmateLibrary {
     // delay(1000);
   #endif
 #endif
+
+    pinMode(SOULMATE_BUTTON_PIN, INPUT_PULLDOWN);
+
   }
 
   void nextRoutine() {
@@ -312,7 +315,46 @@ class SoulmateLibrary {
     }
   }
 
+  void adjustFromButton() {
+    EVERY_N_MILLISECONDS(10) {
+      bool buttonSignal = digitalRead(SOULMATE_BUTTON_PIN);
+      bool buttonIsCurrentlyDown = buttonSignal == BUTTON_ON_VALUE;
+
+      if (!buttonOn && buttonIsCurrentlyDown) { // Start pressing
+        buttonPressStart = millis();
+        newBrightness = brightness;
+      }
+
+      // Keep pressing
+      if (buttonIsCurrentlyDown && buttonOn) {
+        uint32_t buttonPressDuration = millis() - buttonPressStart;
+        if (buttonPressDuration > 500) {
+          newBrightness = newBrightness + (buttonIncreasingBrightness ? 1 : -1);
+          brightness = constrain(newBrightness, 0, 255);
+        }
+      }
+
+      // Finish pressing
+      if (buttonOn && !buttonIsCurrentlyDown) {
+        uint32_t buttonPressDuration = millis() - buttonPressStart;
+
+        if (buttonPressDuration < 1000) {
+          // If it's for less than a second, switch routine.
+          nextRoutine();
+        } else {
+          // Otherwise, Set whether we're increasing or decreasing the brightness.
+          buttonIncreasingBrightness = !buttonIncreasingBrightness;
+        }
+      }
+      buttonOn = buttonIsCurrentlyDown;
+    }
+  }
+
   void loop() {
+
+    #ifdef SOULMATE_BUTTON_PIN
+      adjustFromButton();
+    #endif
 
     // This is something we use for our internal Soulmate lights!
     #ifdef AUTOMATIC_OTA_UPDATES
