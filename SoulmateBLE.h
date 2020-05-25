@@ -87,7 +87,6 @@ namespace BLE {
     pServer->getAdvertising()->setScanResponse(true);
     NimBLEAdvertisementData advertisementData;
     advertisementData.setName("Soulmate");
-    advertisementData.setShortName("Soulmate");
     pServer->getAdvertising()->setAdvertisementData(advertisementData);
     pServer->getAdvertising()->setMinPreferred(
         0x06); // functions that help with iPhone connections issue
