@@ -49,7 +49,7 @@ namespace BLE {
   double check = millis();
 
   void start() {
-    esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT);
+    // esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT);
     Serial.println(F("Start bluetooth"));
 
     // BLEDevice::setMTU(512);
@@ -79,13 +79,18 @@ namespace BLE {
       25);
 
     pCharacteristic->setCallbacks(new MyCallbacks());
-    pCharacteristic->setValue("{}");
+    pCharacteristic->setValue(Soulmate.status(false).c_str());
 
     btStart();
     pService->start();
 
     pServer->getAdvertising()->setScanResponse(true);
-    pServer->getAdvertising()->setMinPreferred(0x06);  // functions that help with iPhone connections issue
+    NimBLEAdvertisementData advertisementData;
+    advertisementData.setName("Soulmate");
+    advertisementData.setShortName("Soulmate");
+    pServer->getAdvertising()->setAdvertisementData(advertisementData);
+    pServer->getAdvertising()->setMinPreferred(
+        0x06); // functions that help with iPhone connections issue
     pServer->getAdvertising()->setMinPreferred(0x12);
     pServer->getAdvertising()->start();
   }
