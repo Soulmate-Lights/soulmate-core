@@ -21,9 +21,6 @@ File.write(component_mk_file, "COMPONENT_SRCDIRS := .")
 cores = Etc.nprocessors - 1
 
 make_args = 'flash'
-if ARGV.length > 0
-  make_args = ARGV.join(' ')
-end
 
 ports = ['/dev/tty.wchusbserial*', '/dev/cu.SLAB_USBtoUART', '/dev/tty.usbserial-*']
 port = ports.map { |p| Dir.glob(p) }.flatten.first
@@ -33,6 +30,10 @@ unless port
   puts "Compiling anyway..."
   # No flash command if we don't have a port
   make_args = ''
+end
+
+if ARGV.length > 0
+  make_args = ARGV.join(' ')
 end
 
 baud = '2000000'
@@ -55,7 +56,7 @@ Dir.chdir(builder_directory){
         puts "Soulmate code compiled."
       end
     else
-      puts 'Oops - something went wrong!'
+      puts 'Oops - something went wrong! Try running the command again.'
 
       stderr.each_line do |line|
         puts line if line.include? 'error:'
