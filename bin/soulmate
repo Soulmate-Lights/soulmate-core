@@ -12,7 +12,7 @@ end
 
 builder_directory = "#{ENV['HOME']}/soulmate/builder"
 destination = "#{builder_directory}/main"
-FileUtils.rm_r destination
+FileUtils.rm_r destination if File.exist?(destination)
 FileUtils.mkdir_p destination
 FileUtils.cp_r(Dir[Dir.pwd + '/*'], destination)
 component_mk_file = File.join(destination, "component.mk")
