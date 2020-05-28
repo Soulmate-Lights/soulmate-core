@@ -5,6 +5,10 @@ require 'fileutils'
 require 'open3'
 require 'etc'
 
+Dir.chdir("#{ENV['HOME']}/soulmate"){
+  system("git pull")
+}
+
 unless Dir.glob(File.join(Dir.pwd, 'main.cpp')).any?
   puts "Oops - no Soulmate code found in this folder!"
   exit
