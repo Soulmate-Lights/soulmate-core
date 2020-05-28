@@ -241,8 +241,6 @@ namespace SoulmateWifi {
           }
 
           if (!index) {
-            stopMDNS();
-            Soulmate.StopBluetooth();
             Soulmate.stop();
             SPIFFS.end();
 
