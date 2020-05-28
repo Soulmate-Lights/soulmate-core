@@ -149,7 +149,6 @@ class SoulmateLibrary {
     // Clear a line for reading after flashing. Everything before this is 78400
     // baud boot nonsense from the ESP.
     Serial.begin(115200);
-    delay(500);
     Serial.println("");
     Serial.println("Booting Soulmate v" + String(SOULMATE_VERSION));
     Serial.println("firmware=" + String(FIRMWARE_NAME) +
