@@ -204,13 +204,8 @@ class SoulmateLibrary {
 
 #ifdef ESP32 // These are the latest known good configuration depending on strip
              // type.
-  #ifdef USE_WS2812B
-    xTaskCreatePinnedToCore(FastLEDshowTask, "FastLEDshowTask", 1024, NULL, 10,
-                            &FastLEDshowTaskHandle, 1);
-  #else
     xTaskCreatePinnedToCore(FastLEDshowTask, "FastLEDshowTask", 2048, NULL, 10,
-                            &FastLEDshowTaskHandle, 0);
-  #endif
+                            &FastLEDshowTaskHandle, 1);
 #endif
 
 #ifdef ESP32
