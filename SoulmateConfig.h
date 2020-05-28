@@ -17,11 +17,11 @@ static TaskHandle_t FastLEDshowTaskHandle = 0;
 #endif
 
 #ifndef SOULMATE_COLOR_ORDER
-  #define SOULMATE_COLOR_ORDER GRB
+  #define SOULMATE_COLOR_ORDER BGR
 #endif
 
 #ifndef N_LEDS
-  #define N_LEDS LED_COLS *LED_ROWS
+  #define N_LEDS LED_COLS * LED_ROWS
 #endif
 
 #ifndef SOULMATE_MILLIAMPS

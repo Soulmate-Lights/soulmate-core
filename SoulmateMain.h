@@ -7,6 +7,9 @@
 
 #define FASTLED_INTERNAL
 
+#include <Arduino.h>
+#include <FastLED.h>
+#include <functional>
 #include "./SoulmateBeatSin.h"
 #include "./SoulmateCircadian.h"
 #include "./SoulmateConfig.h"
@@ -14,9 +17,6 @@
 #include "./SoulmateOTA.h"
 #include "./SoulmateSettings.h"
 #include "./components/ArduinoJson/ArduinoJson.h"
-#include <Arduino.h>
-#include <FastLED.h>
-#include <functional>
 
 #define MAX_NUMBER_OF_ROUTINES 20
 void FastLEDshowTask(void *pvParameters);
@@ -186,10 +186,15 @@ public:
                     SOULMATE_COLOR_ORDER>(leds, N_CELLS);
 #endif
 
+#ifdef USE_WS2812B
     // Previously we used core 0 for APA102
     // TODO: Check the flashing on BigBoy to see if it's core-related
     xTaskCreatePinnedToCore(FastLEDshowTask, "FastLEDshowTask", 2048, NULL, 10,
                             &FastLEDshowTaskHandle, 1);
+#else
+    xTaskCreatePinnedToCore(FastLEDshowTask, "FastLEDshowTask", 2048, NULL, 10,
+                            &FastLEDshowTaskHandle, 0);
+#endif
 
     WifiSetup();
 #ifndef SKIP_BLUETOOTH
@@ -386,8 +391,6 @@ public:
 #ifndef SKIP_BLUETOOTH
     BluetoothLoop();
 #endif
-
-    showPixels();
   }
 
   void addRoutine(String routineName, void (*routine)()) {
