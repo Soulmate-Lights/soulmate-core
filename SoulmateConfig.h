@@ -35,8 +35,12 @@ namespace std {
   #define LED_ROWS 1
 #endif
 
+#ifndef SOULMATE_COLOR_ORDER
+  #define SOULMATE_COLOR_ORDER GRB
+#endif
+
 #ifndef N_LEDS
-  #define N_LEDS LED_COLS * LED_ROWS
+  #define N_LEDS LED_COLS *LED_ROWS
 #endif
 
 #ifndef SOULMATE_MILLIAMPS
@@ -76,7 +80,7 @@ namespace std {
 
 #ifdef ESP32
   #ifndef SOULMATE_BUTTON_PIN
-    // #define SOULMATE_BUTTON_PIN 5
+  // #define SOULMATE_BUTTON_PIN 5
   #endif
 #endif
 
