@@ -1,16 +1,12 @@
+// Copyright 2019 Soulmate Lighting, LLC
+
 #ifndef BUILDER_LIBRARIES_SOULMATE_CONFIG_H_
 #define BUILDER_LIBRARIES_SOULMATE_CONFIG_H_
 
 #include "./components/ArduinoJson/ArduinoJson.h"
-
 #include "soc/timer_group_reg.h"
 #include "soc/timer_group_struct.h"
 static TaskHandle_t FastLEDshowTaskHandle = 0;
-
-// Copyright 2019 Soulmate Lighting, LLC
-// FastLED configuration
-
-// Soulmate configuration
 
 #ifndef LED_COLS
   #define LED_COLS 13
@@ -51,20 +47,9 @@ static TaskHandle_t FastLEDshowTaskHandle = 0;
 #ifndef SOULMATE_DATA_PIN
   #define SOULMATE_DATA_PIN 18
 #endif
+
 #ifndef SOULMATE_CLOCK_PIN
   #define SOULMATE_CLOCK_PIN 23
-#endif
-
-#ifndef BLUETOOTH_PIN
-  #define BLUETOOTH_PIN 14
-#endif
-
-#ifndef BLUETOOTH_MODULE_TX_PIN
-  #define BLUETOOTH_MODULE_TX_PIN 13
-#endif
-
-#ifndef BLUETOOTH_MODULE_RX_PIN
-  #define BLUETOOTH_MODULE_RX_PIN 12
 #endif
 
 #ifndef CYCLE_LENGTH_IN_MS
@@ -76,7 +61,7 @@ static TaskHandle_t FastLEDshowTaskHandle = 0;
 #endif
 
 #ifndef BUTTON_ON_VALUE
-  #define BUTTON_ON_VALUE HIGH
+  #define BUTTON_ON_VALUE LOW
 #endif
 
 #endif // BUILDER_LIBRARIES_SOULMATE_CONFIG_H_

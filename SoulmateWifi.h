@@ -1,21 +1,20 @@
 // Copyright 2019 Soulmate Lighting, LLC
 /* cpplint-ignore readability/casting */
 
-#ifdef ESP32
-  #ifndef BUILDER_LIBRARIES_SOULMATE_SOULMATEWIFI_H_
-    #define BUILDER_LIBRARIES_SOULMATE_SOULMATEWIFI_H_
+#ifndef BUILDER_LIBRARIES_SOULMATE_SOULMATEWIFI_H_
+#define BUILDER_LIBRARIES_SOULMATE_SOULMATEWIFI_H_
 
-    #include <ArduinoOTA.h>
-    #include <AsyncTCP.h>
-    #include <ESPAsyncWebServer.h>
-    #include <ESPmDNS.h>
-    #include <Preferences.h>
-    #include <WiFi.h>
+#include <ArduinoOTA.h>
+#include <AsyncTCP.h>
+#include <ESPAsyncWebServer.h>
+#include <ESPmDNS.h>
+#include <Preferences.h>
+#include <WiFi.h>
 
-    #include "./SoulmateOTA.h"
-    #include "./SoulmateHomekit.h"
-    #include "./SoulmateSettings.h"
-    #include "./SoulmateTime.h"
+#include "./SoulmateHomekit.h"
+#include "./SoulmateOTA.h"
+#include "./SoulmateSettings.h"
+#include "./SoulmateTime.h"
 
 Preferences preferences;
 
@@ -317,5 +316,4 @@ String SoulmateLibrary::ip() {
   return WiFi.localIP().toString();
 }
 
-  #endif
 #endif // BUILDER_LIBRARIES_SOULMATE_SOULMATEWIFI_H_

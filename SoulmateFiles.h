@@ -4,9 +4,7 @@
 #define BUILDER_LIBRARIES_SOULMATE_FILES_H_
 #include "FS.h"
 
-#ifdef ESP32
-  #include <SPIFFS.h>
-#endif
+#include <SPIFFS.h>
 
 // TODO(elliott): Change these to use "preferences" instead of SPIFFS
 

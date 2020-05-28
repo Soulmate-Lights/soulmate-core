@@ -1,6 +1,5 @@
 // Copyright 2019 Soulmate Lighting, LLC
 
-#ifdef ESP32
 #ifndef BUILDER_LIBRARIES_SOULMATE_BLE_H_
 #define BUILDER_LIBRARIES_SOULMATE_BLE_H_
 
@@ -65,18 +64,15 @@ namespace BLE {
     pService = pServer->createService(SERVICE_UUID);
 
     pCharacteristic = pService->createCharacteristic(
-        CHARACTERISTIC_UUID,
-        NIMBLE_PROPERTY::NOTIFY |
-            NIMBLE_PROPERTY::READ |
-            NIMBLE_PROPERTY::WRITE |
-            NIMBLE_PROPERTY::WRITE_NR);
+        CHARACTERISTIC_UUID, NIMBLE_PROPERTY::NOTIFY | NIMBLE_PROPERTY::READ |
+                                 NIMBLE_PROPERTY::WRITE |
+                                 NIMBLE_PROPERTY::WRITE_NR);
 
-    pCharacteristic->createDescriptor(CHARACTERISTIC_UUID,
-      NIMBLE_PROPERTY::NOTIFY |
-      NIMBLE_PROPERTY::READ |
-      NIMBLE_PROPERTY::WRITE |
-      NIMBLE_PROPERTY::WRITE_NR,
-      25);
+    pCharacteristic->createDescriptor(
+        CHARACTERISTIC_UUID,
+        NIMBLE_PROPERTY::NOTIFY | NIMBLE_PROPERTY::READ |
+            NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::WRITE_NR,
+        25);
 
     pCharacteristic->setCallbacks(new MyCallbacks());
     pCharacteristic->setValue(Soulmate.status(false).c_str());
@@ -121,7 +117,7 @@ namespace BLE {
       lastNotifiedAt = millis();
     }
   }
-}  // namespace BLE
+} // namespace BLE
 
 void SoulmateLibrary::BluetoothLoop() {
   BLE::loop();
@@ -139,5 +135,4 @@ void SoulmateLibrary::StopBluetooth() {
   BLE::stop();
 }
 
-#endif
 #endif
