@@ -5,23 +5,15 @@
 
 #include "./SoulmateMain.h"
 
-#ifdef ESP32
-  #ifndef SKIP_BLUETOOTH
-    #include "./SoulmateBLE.h"
-  #endif
-#endif
-
-#ifdef CORE_TEENSY
-  #include "./SoulmateTeensy.h"
+#ifndef SKIP_BLUETOOTH
+  #include "./SoulmateBLE.h"
 #endif
 
 #include "./SoulmateBeatSin.h"
 #include "./SoulmateFiles.h"
 #include "./SoulmateStats.h"
 
-#ifdef ESP32
-  #include "./SoulmateWifi.h"
-#endif
+#include "./SoulmateWifi.h"
 
 #include "./SoulmateGrid.h"
 #include "./SoulmateMatrix.h"

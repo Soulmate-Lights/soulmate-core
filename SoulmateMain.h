@@ -1,6 +1,5 @@
 // Copyright (2018) Soulmate Lighting, LLC
 
-
 #ifndef BUILDER_LIBRARIES_SOULMATE_SOULMATEMAIN_H_
 #define BUILDER_LIBRARIES_SOULMATE_SOULMATEMAIN_H_
 
@@ -8,22 +7,22 @@
 
 #define FASTLED_INTERNAL
 
-#include <Arduino.h>
-#include <FastLED.h>
-#include <functional>
 #include "./SoulmateBeatSin.h"
 #include "./SoulmateCircadian.h"
 #include "./SoulmateConfig.h"
 #include "./SoulmateFiles.h"
-#include "./SoulmateSettings.h"
 #include "./SoulmateOTA.h"
+#include "./SoulmateSettings.h"
 #include "./components/ArduinoJson/ArduinoJson.h"
+#include <Arduino.h>
+#include <FastLED.h>
+#include <functional>
 
-#define MAX_NUMBER_OF_ROUTINES 25
+#define MAX_NUMBER_OF_ROUTINES 20
 void FastLEDshowTask(void *pvParameters);
 
 class SoulmateLibrary {
- public:
+public:
   SoulmateLibrary() {
   }
 
@@ -77,9 +76,7 @@ class SoulmateLibrary {
   void disconnectWiFi();
   void reconnect();
   void connectTo(const char *ssid, const char *pass);
-
   void lightPercentage();
-
   void BluetoothSetup();
   void BluetoothLoop();
   void StartBluetooth();
@@ -105,10 +102,8 @@ class SoulmateLibrary {
     if (showLANIP)
       message["lanip"] = ip();
 
-#ifdef ESP32
     uint64_t chipid = ESP.getEfuseMac();
     message["chipId"] = (uint16_t)(chipid >> 32);
-#endif
 
 #ifdef FIRMWARE_NAME
     message["firmwareName"] = FIRMWARE_NAME;
@@ -156,9 +151,7 @@ class SoulmateLibrary {
 
     lastCycle = millis();
 
-#ifdef ESP32
     SPIFFS.begin(true);
-#endif
 
     if (readFile("/start-off") == "true") {
       on = false;
@@ -186,43 +179,26 @@ class SoulmateLibrary {
 
 // Set up FastLED
 #ifdef USE_WS2812B
-  #ifdef SOULMATE_COLOR_ORDER
     FastLED.addLeds<WS2812B, SOULMATE_DATA_PIN, SOULMATE_COLOR_ORDER>(leds,
                                                                       N_CELLS);
-  #else
-    FastLED.addLeds<WS2812B, SOULMATE_DATA_PIN, GRB>(leds, N_CELLS);
-  #endif
 #else
-  #ifdef CORE_TEENSY
-    FastLED.addLeds<LED_TYPE, SOULMATE_DATA_PIN, SOULMATE_CLOCK_PIN, BGR,
-                    DATA_RATE_MHZ(1)>(leds, N_CELLS);
-  #else
-    FastLED.addLeds<LED_TYPE, SOULMATE_DATA_PIN, SOULMATE_CLOCK_PIN, BGR>(
-        leds, N_CELLS);
-  #endif
+    FastLED.addLeds<LED_TYPE, SOULMATE_DATA_PIN, SOULMATE_CLOCK_PIN,
+                    SOULMATE_COLOR_ORDER>(leds, N_CELLS);
 #endif
 
-#ifdef ESP32 // These are the latest known good configuration depending on strip
-             // type.
+    // Previously we used core 0 for APA102
+    // TODO: Check the flashing on BigBoy to see if it's core-related
     xTaskCreatePinnedToCore(FastLEDshowTask, "FastLEDshowTask", 2048, NULL, 10,
                             &FastLEDshowTaskHandle, 1);
-#endif
 
-#ifdef ESP32
     WifiSetup();
-  #ifndef SKIP_BLUETOOTH
+#ifndef SKIP_BLUETOOTH
     BluetoothSetup();
-    // We used to use this for startup and printing to determine firmware
-    // #else
-    // Without BT it starts too fast to print
-    // delay(1000);
-  #endif
 #endif
 
 #ifdef SOULMATE_BUTTON_PIN
     pinMode(SOULMATE_BUTTON_PIN, INPUT_PULLDOWN);
 #endif
-
   }
 
   void nextRoutine() {
@@ -312,57 +288,59 @@ class SoulmateLibrary {
   }
 
   void adjustFromButton() {
-    #ifdef SOULMATE_BUTTON_PIN
-      EVERY_N_MILLISECONDS(10) {
-        bool buttonSignal = digitalRead(SOULMATE_BUTTON_PIN);
-        bool buttonIsCurrentlyDown = buttonSignal == BUTTON_ON_VALUE;
+#ifdef SOULMATE_BUTTON_PIN
+    EVERY_N_MILLISECONDS(10) {
+      bool buttonSignal = digitalRead(SOULMATE_BUTTON_PIN);
+      bool buttonIsCurrentlyDown = buttonSignal == BUTTON_ON_VALUE;
 
-        if (!buttonOn && buttonIsCurrentlyDown) { // Start pressing
-          buttonPressStart = millis();
-          newBrightness = brightness;
-        }
-
-        // Keep pressing
-        if (buttonIsCurrentlyDown && buttonOn) {
-          uint32_t buttonPressDuration = millis() - buttonPressStart;
-          if (buttonPressDuration > 500) {
-            newBrightness = newBrightness + (buttonIncreasingBrightness ? 1 : -1);
-            brightness = constrain(newBrightness, 0, 255);
-          }
-        }
-
-        // Finish pressing
-        if (buttonOn && !buttonIsCurrentlyDown) {
-          uint32_t buttonPressDuration = millis() - buttonPressStart;
-
-          if (buttonPressDuration < 1000) {
-            // If it's for less than a second, switch routine.
-            nextRoutine();
-          } else {
-            // Otherwise, Set whether we're increasing or decreasing the brightness.
-            buttonIncreasingBrightness = !buttonIncreasingBrightness;
-          }
-        }
-        buttonOn = buttonIsCurrentlyDown;
+      if (!buttonOn && buttonIsCurrentlyDown) { // Start pressing
+        buttonPressStart = millis();
+        newBrightness = brightness;
       }
-    #endif
+
+      // Keep pressing
+      if (buttonIsCurrentlyDown && buttonOn) {
+        uint32_t buttonPressDuration = millis() - buttonPressStart;
+        if (buttonPressDuration > 500) {
+          newBrightness = newBrightness + (buttonIncreasingBrightness ? 1 : -1);
+          brightness = constrain(newBrightness, 0, 255);
+        }
+      }
+
+      // Finish pressing
+      if (buttonOn && !buttonIsCurrentlyDown) {
+        uint32_t buttonPressDuration = millis() - buttonPressStart;
+
+        if (buttonPressDuration < 1000) {
+          // If it's for less than a second, switch routine.
+          nextRoutine();
+        } else {
+          // Otherwise, Set whether we're increasing or decreasing the
+          // brightness.
+          buttonIncreasingBrightness = !buttonIncreasingBrightness;
+        }
+      }
+      buttonOn = buttonIsCurrentlyDown;
+    }
+#endif
   }
 
   void loop() {
     adjustFromButton();
 
-    // This is something we use for our internal Soulmate lights!
-    #ifdef AUTOMATIC_OTA_UPDATES
-      EVERY_N_SECONDS(300) {
-        if (wifiConnected()) {
-          if (!on && FastLED.getBrightness() == 0 && SoulmateOTA::shouldUpdate()) {
-            writeFile("/start-off", on ? "false" : "true");
-            stop();
-            SoulmateOTA::update();
-          }
+// This is something we use for our internal Soulmate lights!
+#ifdef AUTOMATIC_OTA_UPDATES
+    EVERY_N_SECONDS(300) {
+      if (wifiConnected()) {
+        if (!on && FastLED.getBrightness() == 0 &&
+            SoulmateOTA::shouldUpdate()) {
+          writeFile("/start-off", on ? "false" : "true");
+          stop();
+          SoulmateOTA::update();
         }
       }
-    #endif
+    }
+#endif
 
     EVERY_N_SECONDS(5) {
       switch (Circadian::checkTime()) {
@@ -409,10 +387,7 @@ class SoulmateLibrary {
     BluetoothLoop();
 #endif
 
-// ESP32 has multi-tasking, others have to display in the loop
-#ifndef ESP32
     showPixels();
-#endif
   }
 
   void addRoutine(String routineName, void (*routine)()) {
@@ -497,10 +472,8 @@ class SoulmateLibrary {
     if (root.containsKey("reset"))
       disconnectWiFi();
 
-#ifdef ESP32
     if (root.containsKey("restart"))
       ESP.restart();
-#endif
 
     if (root.containsKey("hue")) {
       currentRoutine = -1;
@@ -564,14 +537,17 @@ class SoulmateLibrary {
 SoulmateLibrary Soulmate;
 
 #ifdef SKIP_BLUETOOTH
-void SoulmateLibrary::StartBluetooth() {}
-void SoulmateLibrary::StopBluetooth() {}
-void SoulmateLibrary::BluetoothLoop() {}
-void SoulmateLibrary::BluetoothSetup() {}
+void SoulmateLibrary::StartBluetooth() {
+}
+void SoulmateLibrary::StopBluetooth() {
+}
+void SoulmateLibrary::BluetoothLoop() {
+}
+void SoulmateLibrary::BluetoothSetup() {
+}
 #endif
 
 // ESP32 dual-core task, pinned to a core
-#ifdef ESP32
 void FastLEDshowTask(void *pvParameters) {
   for (;;) {
     // Disable the Task watchdog checking for a second-core task!
@@ -582,6 +558,5 @@ void FastLEDshowTask(void *pvParameters) {
     vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
-#endif
 
 #endif // BUILDER_LIBRARIES_SOULMATE_SOULMATEMAIN_H_

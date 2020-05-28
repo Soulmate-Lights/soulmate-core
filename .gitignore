@@ -1,2 +1,4 @@
 example/build
 .DS_Store
+builder/main
+builder/build

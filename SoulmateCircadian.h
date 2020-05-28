@@ -24,21 +24,17 @@ namespace Circadian {
 
   double readSavedWakeTime() {
     String savedWakeTime = readFile("/wakeTime.txt");
-  #ifndef CORE_TEENSY
     if (!savedWakeTime.equals("")) {
       wakeTime = savedWakeTime.toDouble();
     }
-  #endif
     return wakeTime;
   }
 
   double readSavedSleepTime() {
     String savedSleepTime = readFile("/sleepTime.txt");
-  #ifndef CORE_TEENSY
     if (!savedSleepTime.equals("")) {
       sleepTime = savedSleepTime.toDouble();
     }
-  #endif
     return sleepTime;
   }
 

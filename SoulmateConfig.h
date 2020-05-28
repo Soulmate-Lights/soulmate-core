@@ -1,31 +1,12 @@
+// Copyright 2019 Soulmate Lighting, LLC
+
 #ifndef BUILDER_LIBRARIES_SOULMATE_CONFIG_H_
 #define BUILDER_LIBRARIES_SOULMATE_CONFIG_H_
 
 #include "./components/ArduinoJson/ArduinoJson.h"
-
-#ifdef ESP32
-  #include "soc/timer_group_reg.h"
-  #include "soc/timer_group_struct.h"
+#include "soc/timer_group_reg.h"
+#include "soc/timer_group_struct.h"
 static TaskHandle_t FastLEDshowTaskHandle = 0;
-#endif
-
-// STD patches for newer C++ compiler for the Teensy compiler
-// that expects these things to exist.
-#ifdef CORE_TEENSY
-namespace std {
-  void __throw_bad_function_call() {
-  }
-  void __throw_length_error(char const *) {
-  }
-  void __throw_out_of_range_fmt(char const *fmt, ...) {
-  }
-} // namespace std
-#endif
-
-// Copyright 2019 Soulmate Lighting, LLC
-// FastLED configuration
-
-// Soulmate configuration
 
 #ifndef LED_COLS
   #define LED_COLS 13
@@ -35,8 +16,12 @@ namespace std {
   #define LED_ROWS 1
 #endif
 
+#ifndef SOULMATE_COLOR_ORDER
+  #define SOULMATE_COLOR_ORDER GRB
+#endif
+
 #ifndef N_LEDS
-  #define N_LEDS LED_COLS * LED_ROWS
+  #define N_LEDS LED_COLS *LED_ROWS
 #endif
 
 #ifndef SOULMATE_MILLIAMPS
@@ -59,37 +44,12 @@ namespace std {
   #define LED_TYPE SK9822
 #endif
 
-#ifdef CORE_TEENSY
+#ifndef SOULMATE_DATA_PIN
   #define SOULMATE_DATA_PIN 18
+#endif
+
+#ifndef SOULMATE_CLOCK_PIN
   #define SOULMATE_CLOCK_PIN 23
-  // #define SOULMATE_BUTTON_PIN 5
-#endif
-
-#ifdef ESP32
-  #ifndef SOULMATE_DATA_PIN
-    #define SOULMATE_DATA_PIN 18
-  #endif
-  #ifndef SOULMATE_CLOCK_PIN
-    #define SOULMATE_CLOCK_PIN 23
-  #endif
-#endif
-
-#ifdef ESP32
-  #ifndef SOULMATE_BUTTON_PIN
-    // #define SOULMATE_BUTTON_PIN 5
-  #endif
-#endif
-
-#ifndef BLUETOOTH_PIN
-  #define BLUETOOTH_PIN 14
-#endif
-
-#ifndef BLUETOOTH_MODULE_TX_PIN
-  #define BLUETOOTH_MODULE_TX_PIN 13
-#endif
-
-#ifndef BLUETOOTH_MODULE_RX_PIN
-  #define BLUETOOTH_MODULE_RX_PIN 12
 #endif
 
 #ifndef CYCLE_LENGTH_IN_MS
@@ -101,7 +61,7 @@ namespace std {
 #endif
 
 #ifndef BUTTON_ON_VALUE
-  #define BUTTON_ON_VALUE HIGH
+  #define BUTTON_ON_VALUE LOW
 #endif
 
 #endif // BUILDER_LIBRARIES_SOULMATE_CONFIG_H_
