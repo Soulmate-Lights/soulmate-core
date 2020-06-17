@@ -186,9 +186,15 @@ public:
                     SOULMATE_COLOR_ORDER>(leds, N_CELLS);
 #endif
 
+#ifdef SOULMATE_BUTTON_PIN
+    pinMode(SOULMATE_BUTTON_PIN, INPUT_PULLDOWN);
+#endif
+
 #ifdef USE_WS2812B
     // Previously we used core 0 for APA102
     // TODO: Check the flashing on BigBoy to see if it's core-related
+    // NOTE: Now Wifi runs on Core 1 (Jun 17) so this may all want to be on Core 0.
+    // TODO: Test on WS2812B lights
     xTaskCreatePinnedToCore(FastLEDshowTask, "FastLEDshowTask", 2048, NULL, 10,
                             &FastLEDshowTaskHandle, 1);
 #else
@@ -199,10 +205,6 @@ public:
     WifiSetup();
 #ifndef SKIP_BLUETOOTH
     BluetoothSetup();
-#endif
-
-#ifdef SOULMATE_BUTTON_PIN
-    pinMode(SOULMATE_BUTTON_PIN, INPUT_PULLDOWN);
 #endif
   }
 

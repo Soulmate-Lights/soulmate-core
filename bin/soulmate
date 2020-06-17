@@ -6,6 +6,7 @@ require 'open3'
 require 'etc'
 
 Dir.chdir("#{ENV['HOME']}/soulmate"){
+  puts "Updating soulmate..."
   system("git pull")
 }
 
@@ -44,6 +45,8 @@ baud = '2000000'
 # Special M5Atom baud rate
 baud = '1500000' if port and port.start_with? '/dev/tty.usbserial-'
 command = "ESPBAUD=#{baud} IDF_PATH=#{ENV['HOME']}/soulmate/esp-idf PATH=#{ENV['HOME']}/soulmate/xtensa-esp32-elf/bin:$PATH ESPPORT=#{port} make -j#{cores} #{make_args}"
+
+puts command
 
 print "Compiling #{port && "and uploading to #{port}"}"
 
