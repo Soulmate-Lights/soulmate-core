@@ -102,6 +102,9 @@ public:
     if (showLANIP)
       message["lanip"] = ip();
 
+    message["rows"] = LED_ROWS;
+    message["cols"] = LED_COLS;
+
     uint64_t chipid = ESP.getEfuseMac();
     message["chipId"] = (uint16_t)(chipid >> 32);
 
