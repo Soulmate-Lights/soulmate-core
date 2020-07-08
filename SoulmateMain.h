@@ -127,7 +127,7 @@ public:
   // Light up a percentage of the panel to represent update status
   void lightPercentage(float percentage) {
     fill_solid(leds, N_LEDS, CRGB::Black);
-    if (percentage < 1) {
+    if (percentage < 0.9) {
       uint16_t ledsToFill = (float)N_LEDS * percentage;
       if (N_LEDS > 100)
         ledsToFill = ledsToFill - ledsToFill % LED_COLS;
