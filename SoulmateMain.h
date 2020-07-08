@@ -55,8 +55,6 @@ public:
   bool faded;
 
   // Used for saving
-  bool brightnessDirty = false;
-  bool routineDirty = false;
 
   // Routines - we use a max number to initalize this array
   int routineCount = 0;
@@ -165,20 +163,11 @@ public:
 
     cycle = SoulmateSettings::shouldCycle();
 
-    // Restore last brightness, and then we'll fade into it
-    int savedBrightness = SoulmateSettings::savedBrightness();
-    if (savedBrightness)
-      brightness = savedBrightness;
     FastLED.setBrightness(0);
     FastLED.setMaxPowerInVoltsAndMilliamps(5, SOULMATE_MILLIAMPS);
 
     // Restore lamp name
     name = SoulmateSettings::readSavedName();
-
-    // Restore last routine
-    int savedRoutine = SoulmateSettings::savedRoutine();
-    if (savedRoutine && savedRoutine < routineCount)
-      currentRoutine = savedRoutine;
 
 // Set up FastLED
 #ifdef USE_WS2812B
@@ -363,22 +352,6 @@ public:
       }
     }
 
-// Only try to save brightness and routine every 5 seconds. Saves bashing
-// SPIFFS, and is much nicer on WS2812B strips because of the timing.
-#ifndef SOULMATE_DISABLE_SAVING
-    EVERY_N_SECONDS(5) {
-      if (brightnessDirty) {
-        SoulmateSettings::saveBrightness(brightness);
-        brightnessDirty = false;
-      }
-
-      if (routineDirty) {
-        SoulmateSettings::saveRoutine(currentRoutine);
-        routineDirty = false;
-      }
-    }
-#endif
-
     bool needsToCycle = millis() - lastCycle > CYCLE_LENGTH_IN_MS;
     if (cycle && needsToCycle) {
       nextRoutine();
@@ -415,11 +388,9 @@ public:
     if (millis() - fadeStart > FADE_DURATION)
       fadeStart = millis();
     currentRoutine = i;
-    routineDirty = true;
   }
 
   void setBrightness(int b) {
-    brightnessDirty = true;
     if (startingFrames >= b)
       startingFrames = 255;
     if (b > 0 && !on)
