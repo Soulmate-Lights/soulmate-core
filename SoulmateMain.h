@@ -7,9 +7,6 @@
 
 #define FASTLED_INTERNAL
 
-#include <Arduino.h>
-#include <FastLED.h>
-#include <functional>
 #include "./SoulmateBeatSin.h"
 #include "./SoulmateCircadian.h"
 #include "./SoulmateConfig.h"
@@ -17,6 +14,9 @@
 #include "./SoulmateOTA.h"
 #include "./SoulmateSettings.h"
 #include "./components/ArduinoJson/ArduinoJson.h"
+#include <Arduino.h>
+#include <FastLED.h>
+#include <functional>
 
 #define MAX_NUMBER_OF_ROUTINES 20
 void FastLEDshowTask(void *pvParameters);
@@ -154,10 +154,10 @@ public:
 
     SPIFFS.begin(true);
 
-    if (readFile("/start-off") == "true") {
-      on = false;
-      writeFile("/start-off", "false");
-    }
+    // if (readFile("/start-off") == "true") {
+    //   on = false;
+    //   writeFile("/start-off", "false");
+    // }
 
     Circadian::setup();
 
@@ -185,7 +185,8 @@ public:
 #ifdef USE_WS2812B
     // Previously we used core 0 for APA102
     // TODO: Check the flashing on BigBoy to see if it's core-related
-    // NOTE: Now Wifi runs on Core 1 (Jun 17) so this may all want to be on Core 0.
+    // NOTE: Now Wifi runs on Core 1 (Jun 17) so this may all want to be on Core
+    // 0.
     // TODO: Test on WS2812B lights
     xTaskCreatePinnedToCore(FastLEDshowTask, "FastLEDshowTask", 2048, NULL, 10,
                             &FastLEDshowTaskHandle, 1);
@@ -327,19 +328,19 @@ public:
   void loop() {
     adjustFromButton();
 
-// This is something we use for our internal Soulmate lights!
-#ifdef AUTOMATIC_OTA_UPDATES
-    EVERY_N_SECONDS(300) {
-      if (wifiConnected()) {
-        if (!on && FastLED.getBrightness() == 0 &&
-            SoulmateOTA::shouldUpdate()) {
-          writeFile("/start-off", on ? "false" : "true");
-          stop();
-          SoulmateOTA::update();
-        }
-      }
-    }
-#endif
+    // // This is something we use for our internal Soulmate lights!
+    // #ifdef AUTOMATIC_OTA_UPDATES
+    //     EVERY_N_SECONDS(300) {
+    //       if (wifiConnected()) {
+    //         if (!on && FastLED.getBrightness() == 0 &&
+    //             SoulmateOTA::shouldUpdate()) {
+    //           writeFile("/start-off", on ? "false" : "true");
+    //           stop();
+    //           SoulmateOTA::update();
+    //         }
+    //       }
+    //     }
+    // #endif
 
     EVERY_N_SECONDS(5) {
       switch (Circadian::checkTime()) {
