@@ -13,10 +13,6 @@ namespace SoulmateSettings {
     return readFile("/startInWifiMode.txt") == "true";
   }
 
-  void setStartInWifiMode(bool shouldStartInWifiMode) {
-    writeFile("/startInWifiMode.txt", stringValue(shouldStartInWifiMode));
-  }
-
   bool shouldCycle() {
   #ifdef SOULMATE_DISABLE_CYCLE
     return false
