@@ -164,14 +164,14 @@ namespace SoulmateWifi {
       break;
     case SYSTEM_EVENT_STA_DISCONNECTED:
       Serial.println(F("[Soulmate-Wifi] Disconnected from WiFi access point"));
-      // if (isConnected) {
-      teardownHomekit();
-      isConnected = false;
-      Serial.println("Was connected. Reconnect");
-      xTaskCreate(delayAndConnect, "DelayAndConnect", 10000, NULL, 0, NULL);
-      // } else {
-      //   Serial.println(F("[Soulmate-Wifi] Spurious disconnect event"));
-      // }
+      if (isConnected) {
+        teardownHomekit();
+        isConnected = false;
+        Serial.println("Was connected. Reconnect");
+        xTaskCreate(delayAndConnect, "DelayAndConnect", 10000, NULL, 0, NULL);
+      } else {
+        Serial.println(F("[Soulmate-Wifi] Spurious disconnect event"));
+      }
       break;
     case SYSTEM_EVENT_STA_GOT_IP:
       if (!isConnected) {
