@@ -45,6 +45,8 @@ baud = '2000000'
 baud = '1500000' if port and port.start_with? '/dev/tty.usbserial-'
 command = "ESPBAUD=#{baud} IDF_PATH=#{ENV['HOME']}/soulmate/esp-idf PATH=#{ENV['HOME']}/soulmate/xtensa-esp32-elf/bin:$PATH ESPPORT=#{port} make -j#{cores} #{make_args}"
 
+puts command
+
 print "Compiling #{port && "and uploading to #{port}"}"
 
 Dir.chdir(builder_directory){
