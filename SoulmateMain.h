@@ -7,9 +7,6 @@
 
 #define FASTLED_INTERNAL
 
-#include <Arduino.h>
-#include <FastLED.h>
-#include <functional>
 #include "./SoulmateBeatSin.h"
 #include "./SoulmateCircadian.h"
 #include "./SoulmateConfig.h"
@@ -17,6 +14,9 @@
 #include "./SoulmateOTA.h"
 #include "./SoulmateSettings.h"
 #include "./components/ArduinoJson/ArduinoJson.h"
+#include <Arduino.h>
+#include <FastLED.h>
+#include <functional>
 
 #define MAX_NUMBER_OF_ROUTINES 20
 void FastLEDshowTask(void *pvParameters);
@@ -55,8 +55,6 @@ public:
   bool faded;
 
   // Used for saving
-  bool brightnessDirty = false;
-  bool routineDirty = false;
 
   // Routines - we use a max number to initalize this array
   int routineCount = 0;
@@ -102,6 +100,9 @@ public:
     if (showLANIP)
       message["lanip"] = ip();
 
+    message["rows"] = LED_ROWS;
+    message["cols"] = LED_COLS;
+
     uint64_t chipid = ESP.getEfuseMac();
     message["chipId"] = (uint16_t)(chipid >> 32);
 
@@ -126,7 +127,7 @@ public:
   // Light up a percentage of the panel to represent update status
   void lightPercentage(float percentage) {
     fill_solid(leds, N_LEDS, CRGB::Black);
-    if (percentage < 1) {
+    if (percentage < 0.9) {
       uint16_t ledsToFill = (float)N_LEDS * percentage;
       if (N_LEDS > 100)
         ledsToFill = ledsToFill - ledsToFill % LED_COLS;
@@ -153,29 +154,20 @@ public:
 
     SPIFFS.begin(true);
 
-    if (readFile("/start-off") == "true") {
-      on = false;
-      writeFile("/start-off", "false");
-    }
+    // if (readFile("/start-off") == "true") {
+    //   on = false;
+    //   writeFile("/start-off", "false");
+    // }
 
     Circadian::setup();
 
     cycle = SoulmateSettings::shouldCycle();
 
-    // Restore last brightness, and then we'll fade into it
-    int savedBrightness = SoulmateSettings::savedBrightness();
-    if (savedBrightness)
-      brightness = savedBrightness;
     FastLED.setBrightness(0);
     FastLED.setMaxPowerInVoltsAndMilliamps(5, SOULMATE_MILLIAMPS);
 
     // Restore lamp name
     name = SoulmateSettings::readSavedName();
-
-    // Restore last routine
-    int savedRoutine = SoulmateSettings::savedRoutine();
-    if (savedRoutine && savedRoutine < routineCount)
-      currentRoutine = savedRoutine;
 
 // Set up FastLED
 #ifdef USE_WS2812B
@@ -186,9 +178,16 @@ public:
                     SOULMATE_COLOR_ORDER>(leds, N_CELLS);
 #endif
 
+#ifdef SOULMATE_BUTTON_PIN
+    pinMode(SOULMATE_BUTTON_PIN, INPUT_PULLDOWN);
+#endif
+
 #ifdef USE_WS2812B
     // Previously we used core 0 for APA102
     // TODO: Check the flashing on BigBoy to see if it's core-related
+    // NOTE: Now Wifi runs on Core 1 (Jun 17) so this may all want to be on Core
+    // 0.
+    // TODO: Test on WS2812B lights
     xTaskCreatePinnedToCore(FastLEDshowTask, "FastLEDshowTask", 2048, NULL, 10,
                             &FastLEDshowTaskHandle, 1);
 #else
@@ -199,10 +198,6 @@ public:
     WifiSetup();
 #ifndef SKIP_BLUETOOTH
     BluetoothSetup();
-#endif
-
-#ifdef SOULMATE_BUTTON_PIN
-    pinMode(SOULMATE_BUTTON_PIN, INPUT_PULLDOWN);
 #endif
   }
 
@@ -333,19 +328,19 @@ public:
   void loop() {
     adjustFromButton();
 
-// This is something we use for our internal Soulmate lights!
-#ifdef AUTOMATIC_OTA_UPDATES
-    EVERY_N_SECONDS(300) {
-      if (wifiConnected()) {
-        if (!on && FastLED.getBrightness() == 0 &&
-            SoulmateOTA::shouldUpdate()) {
-          writeFile("/start-off", on ? "false" : "true");
-          stop();
-          SoulmateOTA::update();
-        }
-      }
-    }
-#endif
+    // // This is something we use for our internal Soulmate lights!
+    // #ifdef AUTOMATIC_OTA_UPDATES
+    //     EVERY_N_SECONDS(300) {
+    //       if (wifiConnected()) {
+    //         if (!on && FastLED.getBrightness() == 0 &&
+    //             SoulmateOTA::shouldUpdate()) {
+    //           writeFile("/start-off", on ? "false" : "true");
+    //           stop();
+    //           SoulmateOTA::update();
+    //         }
+    //       }
+    //     }
+    // #endif
 
     EVERY_N_SECONDS(5) {
       switch (Circadian::checkTime()) {
@@ -357,22 +352,6 @@ public:
         break;
       }
     }
-
-// Only try to save brightness and routine every 5 seconds. Saves bashing
-// SPIFFS, and is much nicer on WS2812B strips because of the timing.
-#ifndef SOULMATE_DISABLE_SAVING
-    EVERY_N_SECONDS(5) {
-      if (brightnessDirty) {
-        SoulmateSettings::saveBrightness(brightness);
-        brightnessDirty = false;
-      }
-
-      if (routineDirty) {
-        SoulmateSettings::saveRoutine(currentRoutine);
-        routineDirty = false;
-      }
-    }
-#endif
 
     bool needsToCycle = millis() - lastCycle > CYCLE_LENGTH_IN_MS;
     if (cycle && needsToCycle) {
@@ -410,11 +389,9 @@ public:
     if (millis() - fadeStart > FADE_DURATION)
       fadeStart = millis();
     currentRoutine = i;
-    routineDirty = true;
   }
 
   void setBrightness(int b) {
-    brightnessDirty = true;
     if (startingFrames >= b)
       startingFrames = 255;
     if (b > 0 && !on)
