@@ -19,11 +19,12 @@ long fetchTime() {
     String payload = http.getString();
     DynamicJsonDocument jsonBuffer(1024);
     deserializeJson(jsonBuffer, payload);
-    JsonObject root = doc.as<JsonObject>();
+    JsonObject root = jsonBuffer.as<JsonObject>();
     // JsonObject root = jsonBuffer.parseObject(payload);
 
     if (root.containsKey("datetime")) {
-      const char *datetime = root.get<char *>("datetime");
+      // const char *datetime = root.get<char *>("datetime");
+      const char *datetime = root["datetime"];
       int Year, Month, Day, Hour, Minute, Second;
       sscanf(datetime, "%d-%d-%dT%d:%d:%d", &Year, &Month, &Day, &Hour, &Minute,
              &Second);

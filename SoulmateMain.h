@@ -81,10 +81,11 @@ public:
   void StopBluetooth();
 
   String status(bool showLANIP = true) {
-    StaticJsonDocument<2048> jsonBuffer;
-    JsonObject message = jsonBuffer.createObject();
+    StaticJsonDocument<2048> message;
+    // JsonObject message = jsonBuffer.createObject();
     JsonArray routinesArray = message.createNestedArray("routines");
-    routinesArray.copyFrom(routineNames, routineCount);
+    // routinesArray.copyFrom(routineNames, routineCount);
+    copyArray(routineNames, routinesArray);
 
     message["routine"] = currentRoutine;
     message["name"] = name;
@@ -112,7 +113,7 @@ public:
 
     String outputString;
     // message.printTo(outputString);
-    serializeJson(jsonBuffer, message);
+    serializeJson(message, outputString);
     return outputString;
   }
 
@@ -434,7 +435,8 @@ public:
       _jsonCallback(root);
 
     if (root.containsKey("time")) {
-      float receivedSeconds = root.get<float>("time");
+      // float receivedSeconds = root.get<float>("time");
+      float receivedSeconds = root["time"];
       unsigned long currentSeconds = millis() / 1000;
       unsigned long startedSeconds = receivedSeconds - currentSeconds;
       Circadian::startTrackingTime(startedSeconds);

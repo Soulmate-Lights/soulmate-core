@@ -35,7 +35,7 @@ class MyCallbacks : public BLECharacteristicCallbacks {
     StaticJsonDocument<200> jsonBuffer;
     // JsonObject root = jsonBuffer.parseObject(input);
     deserializeJson(jsonBuffer, input);
-    JsonObject root = doc.as<JsonObject>();
+    JsonObject root = jsonBuffer.as<JsonObject>();
     Soulmate.consumeJson(root);
 
     BLE::willNotify = true;
