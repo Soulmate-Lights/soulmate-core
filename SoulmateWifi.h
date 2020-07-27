@@ -271,9 +271,7 @@ namespace SoulmateWifi {
   }
 
   void loop() {
-    EVERY_N_SECONDS(1) {
-      ws.cleanupClients();
-    }
+    ws.cleanupClients();
 
     if (restartRequired) {
       delay(500);
