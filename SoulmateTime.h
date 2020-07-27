@@ -17,8 +17,10 @@ long fetchTime() {
 
   if (httpCode == 200) {
     String payload = http.getString();
-    DynamicJsonBuffer jsonBuffer;
-    JsonObject &root = jsonBuffer.parseObject(payload);
+    DynamicJsonDocument jsonBuffer(1024);
+    deserializeJson(jsonBuffer, payload);
+    JsonObject root = doc.as<JsonObject>();
+    // JsonObject root = jsonBuffer.parseObject(payload);
 
     if (root.containsKey("datetime")) {
       const char *datetime = root.get<char *>("datetime");

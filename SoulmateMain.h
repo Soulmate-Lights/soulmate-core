@@ -81,9 +81,9 @@ public:
   void StopBluetooth();
 
   String status(bool showLANIP = true) {
-    StaticJsonBuffer<2048> jsonBuffer;
-    JsonObject &message = jsonBuffer.createObject();
-    JsonArray &routinesArray = message.createNestedArray("routines");
+    StaticJsonDocument<2048> jsonBuffer;
+    JsonObject message = jsonBuffer.createObject();
+    JsonArray routinesArray = message.createNestedArray("routines");
     routinesArray.copyFrom(routineNames, routineCount);
 
     message["routine"] = currentRoutine;
@@ -111,7 +111,8 @@ public:
 #endif
 
     String outputString;
-    message.printTo(outputString);
+    // message.printTo(outputString);
+    serializeJson(jsonBuffer, message);
     return outputString;
   }
 
@@ -422,13 +423,13 @@ public:
     name = n;
   }
 
-  std::function<void(const JsonObject &)> _jsonCallback = NULL;
+  std::function<void(const JsonObject)> _jsonCallback = NULL;
 
-  void onJSON(std::function<void(const JsonObject &)> callback) {
+  void onJSON(std::function<void(const JsonObject)> callback) {
     _jsonCallback = callback;
   }
 
-  void consumeJson(const JsonObject &root) {
+  void consumeJson(const JsonObject root) {
     if (_jsonCallback != NULL)
       _jsonCallback(root);
 

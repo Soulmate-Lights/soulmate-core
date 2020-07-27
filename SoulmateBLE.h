@@ -32,8 +32,10 @@ class MyCallbacks : public BLECharacteristicCallbacks {
     std::string value = pCharacteristic->getValue();
     String input = value.c_str();
 
-    StaticJsonBuffer<200> jsonBuffer;
-    JsonObject &root = jsonBuffer.parseObject(input);
+    StaticJsonDocument<200> jsonBuffer;
+    // JsonObject root = jsonBuffer.parseObject(input);
+    deserializeJson(jsonBuffer, input);
+    JsonObject root = doc.as<JsonObject>();
     Soulmate.consumeJson(root);
 
     BLE::willNotify = true;
