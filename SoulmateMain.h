@@ -426,13 +426,23 @@ public:
     name = n;
   }
 
-  std::function<void(const JsonObject)> _jsonCallback = NULL;
+  std::function<void(const StaticJsonDocument<512>)> _jsonCallback = NULL;
 
-  void onJSON(std::function<void(const JsonObject)> callback) {
+  void onJSON(std::function<void(const StaticJsonDocument<512>)> callback) {
     _jsonCallback = callback;
   }
 
-  void consumeJson(const JsonObject root) {
+  void consumeJson(const char* json) {
+    StaticJsonDocument<512> root;
+    // JsonObject root = jsonDocument.as<JsonObject>();
+    // Serial.println(String(reinterpret_cast<char *>(data)));
+    auto error = deserializeJson(root, json);
+    if (error) {
+      Serial.println(F("[Soulmate-Wifi] Invalid JSON object received:"));
+      return;
+    }
+
+    // TODO: This JSON callback we might want
     if (_jsonCallback != NULL)
       _jsonCallback(root);
 

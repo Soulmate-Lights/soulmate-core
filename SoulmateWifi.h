@@ -110,20 +110,9 @@ namespace SoulmateWifi {
 
     // Final frame
     if ((info->index + len) == info->len) {
-      StaticJsonDocument<200> jsonBuffer;
-      auto error = deserializeJson(jsonBuffer, reinterpret_cast<char *>(data));
-      JsonObject root = jsonBuffer.as<JsonObject>();
-      // JsonObject root = jsonBuffer.parseObject(reinterpret_cast<char
-      // *>(data));
-
-      if (error) {
-        Serial.println(F("[Soulmate-Wifi] Invalid JSON object received:"));
-        Serial.println(String(reinterpret_cast<char *>(data)));
-        Serial.println(error.c_str());
-      } else {
-        Soulmate.consumeJson(root);
-        updateWifiClients();
-      }
+      const char* json = reinterpret_cast<char *>(data);
+      Soulmate.consumeJson(json);
+      updateWifiClients();
     }
   }
 
