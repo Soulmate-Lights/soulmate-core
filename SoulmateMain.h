@@ -81,31 +81,33 @@ public:
   void StopBluetooth();
 
   String status(bool showLANIP = true) {
-    StaticJsonDocument<2048> message;
-    // JsonObject message = jsonBuffer.createObject();
+    StaticJsonDocument<1024> message;
     JsonArray routinesArray = message.createNestedArray("routines");
-    // routinesArray.copyFrom(routineNames, routineCount);
-    copyArray(routineNames, routinesArray);
+    for (int i = 0; i < routineCount; i++) {
+      routinesArray.add(routineNames[i]);
+    }
 
-    message["routine"] = currentRoutine;
     message["name"] = name;
+    message["routine"] = currentRoutine;
+    message["cycle"] = cycle;
+
     message["on"] = on;
     message["brightness"] = brightness;
-    message["version"] = SOULMATE_VERSION;
-    message["cycle"] = cycle;
+
     message["circadian"] = Circadian::circadian;
     message["wakeTime"] = Circadian::wakeTime;
     message["sleepTime"] = Circadian::sleepTime;
-    message["lanip"] = false;
-
-    if (showLANIP)
-      message["lanip"] = ip();
 
     message["rows"] = LED_ROWS;
     message["cols"] = LED_COLS;
 
+    message["lanip"] = false;
+    if (showLANIP) message["lanip"] = ip();
+
     uint64_t chipid = ESP.getEfuseMac();
     message["chipId"] = (uint16_t)(chipid >> 32);
+
+    message["version"] = SOULMATE_VERSION;
 
 #ifdef FIRMWARE_NAME
     message["firmwareName"] = FIRMWARE_NAME;
