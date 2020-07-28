@@ -114,7 +114,6 @@ public:
 #endif
 
     String outputString;
-    // message.printTo(outputString);
     serializeJson(message, outputString);
     return outputString;
   }
@@ -434,20 +433,17 @@ public:
 
   void consumeJson(const char* json) {
     StaticJsonDocument<512> root;
-    // JsonObject root = jsonDocument.as<JsonObject>();
-    // Serial.println(String(reinterpret_cast<char *>(data)));
     auto error = deserializeJson(root, json);
     if (error) {
       Serial.println(F("[Soulmate-Wifi] Invalid JSON object received:"));
       return;
     }
 
-    // TODO: This JSON callback we might want
+    // TODO(elliott): This JSON callback we might want
     if (_jsonCallback != NULL)
       _jsonCallback(root);
 
     if (root.containsKey("time")) {
-      // float receivedSeconds = root.get<float>("time");
       float receivedSeconds = root["time"];
       unsigned long currentSeconds = millis() / 1000;
       unsigned long startedSeconds = receivedSeconds - currentSeconds;
