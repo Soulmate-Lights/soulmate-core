@@ -16,6 +16,7 @@ long fetchTime() {
   int httpCode = http.GET();
 
   if (httpCode == 200) {
+    // TODO(elliott): No String here
     String payload = http.getString();
     DynamicJsonDocument jsonBuffer(1024);
     deserializeJson(jsonBuffer, payload);

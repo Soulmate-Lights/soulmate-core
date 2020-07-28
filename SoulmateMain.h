@@ -80,8 +80,11 @@ public:
   void StartBluetooth();
   void StopBluetooth();
 
-  String status(bool showLANIP = true) {
+  char outputString[1024];
+
+  char* status(bool showLANIP = true) {
     StaticJsonDocument<1024> message;
+
     JsonArray routinesArray = message.createNestedArray("routines");
     for (int i = 0; i < routineCount; i++) {
       routinesArray.add(routineNames[i]);
@@ -90,31 +93,26 @@ public:
     message["name"] = name;
     message["routine"] = currentRoutine;
     message["cycle"] = cycle;
-
     message["on"] = on;
     message["brightness"] = brightness;
-
     message["circadian"] = Circadian::circadian;
     message["wakeTime"] = Circadian::wakeTime;
     message["sleepTime"] = Circadian::sleepTime;
-
     message["rows"] = LED_ROWS;
     message["cols"] = LED_COLS;
-
     message["lanip"] = false;
     if (showLANIP) message["lanip"] = ip();
-
     uint64_t chipid = ESP.getEfuseMac();
     message["chipId"] = (uint16_t)(chipid >> 32);
-
     message["version"] = SOULMATE_VERSION;
 
 #ifdef FIRMWARE_NAME
     message["firmwareName"] = FIRMWARE_NAME;
 #endif
 
-    String outputString;
-    serializeJson(message, outputString);
+    size_t outputSize = measureJson(message);
+    // char* outputString[outputSize];
+    serializeJson(message, outputString, outputSize + 1);
     return outputString;
   }
 
@@ -330,20 +328,6 @@ public:
 
   void loop() {
     adjustFromButton();
-
-    // // This is something we use for our internal Soulmate lights!
-    // #ifdef AUTOMATIC_OTA_UPDATES
-    //     EVERY_N_SECONDS(300) {
-    //       if (wifiConnected()) {
-    //         if (!on && FastLED.getBrightness() == 0 &&
-    //             SoulmateOTA::shouldUpdate()) {
-    //           writeFile("/start-off", on ? "false" : "true");
-    //           stop();
-    //           SoulmateOTA::update();
-    //         }
-    //       }
-    //     }
-    // #endif
 
     EVERY_N_SECONDS(5) {
       switch (Circadian::checkTime()) {

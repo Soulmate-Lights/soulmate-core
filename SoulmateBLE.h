@@ -70,7 +70,7 @@ namespace BLE {
         25);
 
     pCharacteristic->setCallbacks(new MyCallbacks());
-    pCharacteristic->setValue(Soulmate.status(false).c_str());
+    pCharacteristic->setValue(Soulmate.status(false));
 
     btStart();
     pService->start();
@@ -79,8 +79,8 @@ namespace BLE {
     NimBLEAdvertisementData advertisementData;
     advertisementData.setName("Soulmate");
     pServer->getAdvertising()->setAdvertisementData(advertisementData);
-    pServer->getAdvertising()->setMinPreferred(
-        0x06); // functions that help with iPhone connections issue
+    // functions that help with iPhone connections issue
+    pServer->getAdvertising()->setMinPreferred(0x06);
     pServer->getAdvertising()->setMinPreferred(0x12);
     pServer->getAdvertising()->start();
   }
@@ -94,8 +94,8 @@ namespace BLE {
   }
 
   void notify() {
-    String status = Soulmate.status(false);
-    pCharacteristic->setValue(status.c_str());
+    char* status = Soulmate.status(false);
+    pCharacteristic->setValue(status);
     pCharacteristic->notify();
   }
 
