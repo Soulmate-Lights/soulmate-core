@@ -29,4 +29,8 @@ String readFile(String name) {
   return ret;
 }
 
+void deleteAllFiles() {
+  SPIFFS.format();
+}
+
 #endif // BUILDER_LIBRARIES_SOULMATE_FILES_H_

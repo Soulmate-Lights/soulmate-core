@@ -245,6 +245,12 @@ public:
     }
   }
 
+  void factoryReset() {
+    deleteAllFiles();
+    disconnectWiFi();
+    ESP.restart();
+  }
+
   void showPixels() {
     if (isStopped())
       return;
@@ -304,6 +310,11 @@ public:
         if (buttonPressDuration > 500) {
           newBrightness = newBrightness + (buttonIncreasingBrightness ? 1 : -1);
           brightness = constrain(newBrightness, 0, 255);
+        }
+
+        // Factory reset! 10 seconds.
+        if (buttonPressDuration > 10000) {
+          factoryReset();
         }
       }
 
