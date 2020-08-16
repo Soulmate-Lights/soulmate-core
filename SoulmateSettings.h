@@ -18,9 +18,10 @@ namespace SoulmateSettings {
     return false
   #endif
   #ifdef FORCE_CYCLE
-        return true;
+    return true;
   #endif
-    return readFile("/cycle.txt") == "true";
+    // Cycle patterns by default
+    return readFile("/cycle.txt") != "false";
   }
 
   void setShouldCycle(bool shouldCycle) {

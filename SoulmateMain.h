@@ -32,7 +32,7 @@ public:
   int hue = 0;
   int saturation = 0;
   bool on = true;
-  bool cycle = false;
+  bool cycle = true;
 
   // Cycle timer
   uint32_t lastCycle = millis();
