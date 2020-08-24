@@ -103,10 +103,6 @@
   // }
 // } // namespace Matrix
 
-uint16_t XY(uint8_t x, uint8_t y) {
-  return (y * LED_COLS) + x;
-}
-
 // There are two gridIndex functions that work differently
 // depending on the layout of your matrix. It's confusing.
 // If your strips are vertical, use gridIndex, otherwise
@@ -151,6 +147,11 @@ int16_t gridIndexHorizontal(int16_t x, int16_t y) {
   } else {
     return -1;
   }
+}
+
+uint16_t XY(uint8_t x, uint8_t y) {
+  // return (y * LED_COLS) + x;
+  return gridIndexHorizontal(x, y);
 }
 
 #endif // BUILDER_LIBRARIES_SOULMATE_MATRIX_H_
