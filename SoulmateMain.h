@@ -526,6 +526,7 @@ public:
 };
 
 SoulmateLibrary Soulmate;
+CRGB* leds = Soulmate.leds;
 
 #ifdef SKIP_BLUETOOTH
 void SoulmateLibrary::StartBluetooth() {
