@@ -135,10 +135,11 @@ int16_t gridIndexHorizontal(int16_t x, int16_t y) {
   if (x < 0) return -1;
   if (y < 0) return -1;
 
+  int16_t index = 0;
+
   if (SOULMATE_SERPENTINE) {
     index = y * LED_COLS + x;
   } else {
-    int16_t index = 0;
     if (y % 2 == 1) {
       index = y * LED_COLS + x;
     } else {
