@@ -24,6 +24,10 @@ static TaskHandle_t FastLEDshowTaskHandle = 0;
   #define N_LEDS LED_COLS * LED_ROWS
 #endif
 
+#ifndef SOULMATE_SERPENTINE
+  #define SOULMATE_SERPENTINE true
+#endif
+
 #ifndef SOULMATE_MILLIAMPS
   #define SOULMATE_MILLIAMPS 600
 #endif
