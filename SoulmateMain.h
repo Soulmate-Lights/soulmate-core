@@ -100,8 +100,23 @@ public:
     if (showLANIP)
       message["lanip"] = ip();
 
+    // These paraemters are for flash config
     message["rows"] = LED_ROWS;
     message["cols"] = LED_COLS;
+    // This might want to say APA102?
+    #ifdef USE_WS2812B
+      message["ledType"] = "WS2812B";
+    #else
+      message["ledType"] = "SK9822";
+    #endif
+    message["serpentine"] = SOULMATE_SERPENTINE;
+    message["data"] = SOULMATE_DATA_PIN;
+    message["clock"] = SOULMATE_CLOCK_PIN;
+    // End app config
+
+    #ifdef SOULMATE_BUTTON_PIN
+      message["button"] = SOULMATE_BUTTON_PIN;
+    #endif
 
     uint64_t chipid = ESP.getEfuseMac();
     message["chipId"] = (uint16_t)(chipid >> 32);
