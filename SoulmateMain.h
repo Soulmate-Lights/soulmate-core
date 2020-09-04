@@ -110,6 +110,7 @@ public:
       message["ledType"] = "SK9822";
     #endif
     message["serpentine"] = SOULMATE_SERPENTINE;
+    message["milliamps"] = SOULMATE_MILLIAMPS;
     message["data"] = SOULMATE_DATA_PIN;
     message["clock"] = SOULMATE_CLOCK_PIN;
     // End app config
