@@ -336,7 +336,23 @@ public:
 #endif
   }
 
+  String inputString = "";
+  boolean stringComplete = false;
+
   void loop() {
+
+    while (Serial.available()) {
+      char inChar = (char)Serial.read();
+      inputString += inChar;
+      if (inChar == '\n') {
+        stringComplete = true;
+        StaticJsonBuffer<200> jsonBuffer;
+        JsonObject &root = jsonBuffer.parseObject(inputString);
+        consumeJson(root);
+        inputString = "";
+      }
+    }
+
     adjustFromButton();
 
     // // This is something we use for our internal Soulmate lights!
@@ -462,6 +478,9 @@ public:
       reconnect();
     if (root.containsKey("reset"))
       disconnectWiFi();
+
+    if (root.containsKey("status"))
+      Serial.println(status(true));
 
     if (root.containsKey("restart"))
       ESP.restart();
