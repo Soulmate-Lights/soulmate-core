@@ -144,6 +144,8 @@ namespace SoulmateWifi {
     connectToSavedWifi();
   }
 
+  int spuriousCount = 0;
+
   void WiFiEvent(WiFiEvent_t event) {
     Serial.println("WiFiEvent");
     switch (event) {
@@ -170,6 +172,14 @@ namespace SoulmateWifi {
         Serial.println("Was connected. Reconnect");
         xTaskCreate(delayAndConnect, "DelayAndConnect", 10000, NULL, 0, NULL);
       } else {
+        ESP_LOGI(TAG, "disconnect reason: %d", event->event_info.disconnected.reason);
+
+        spuriousCount++;
+        Serial.println(spuriousCount);
+        // if (spuriousCount > 5) {
+          // Serial.println("Disconnecting, too many spurious reconnects");
+          // WiFi.disconnect();
+        // }
         Serial.println(F("[Soulmate-Wifi] Spurious disconnect event"));
       }
       break;
