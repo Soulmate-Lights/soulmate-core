@@ -146,7 +146,7 @@ namespace SoulmateWifi {
 
   int spuriousCount = 0;
 
-  void WiFiEvent(WiFiEvent_t event) {
+  void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info) {
     Serial.println("WiFiEvent");
     switch (event) {
     case SYSTEM_EVENT_WIFI_READY:
@@ -173,7 +173,7 @@ namespace SoulmateWifi {
         xTaskCreate(delayAndConnect, "DelayAndConnect", 10000, NULL, 0, NULL);
       } else {
         Serial.println("disconnect reason:");
-        Serial.println(event->event_info.disconnected.reason);
+        Serial.println(info.disconnected.reason);
 
         spuriousCount++;
         Serial.println(spuriousCount);
