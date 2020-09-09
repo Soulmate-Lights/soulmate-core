@@ -172,7 +172,8 @@ namespace SoulmateWifi {
         Serial.println("Was connected. Reconnect");
         xTaskCreate(delayAndConnect, "DelayAndConnect", 10000, NULL, 0, NULL);
       } else {
-        ESP_LOGI(TAG, "disconnect reason: %d", event->event_info.disconnected.reason);
+        Serial.println("disconnect reason:");
+        Serial.println(event->event_info.disconnected.reason);
 
         spuriousCount++;
         Serial.println(spuriousCount);
