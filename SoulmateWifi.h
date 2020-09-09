@@ -47,6 +47,31 @@ void delayAndConnect(void *parameter) {
   vTaskDelete(NULL);
 }
 
+void delayAndConnectWayLater(void *parameter) {
+  Serial.println("[Soulmate-Wifi] delayAndConnectWayLater starting.");
+  Serial.println("[Soulmate-Wifi] Disconnect WiFi...");
+  WiFi.disconnect();
+  vTaskDelay(20000 / portTICK_PERIOD_MS);
+
+  Serial.println("[Soulmate-Wifi] Read credentials...");
+  preferences.begin("Wifi", false);
+  String ssid = preferences.getString("ssid", "");
+  String pass = preferences.getString("pass", "");
+  preferences.end();
+
+  if (!ssid.equals("")) {
+    Serial.println("[Soulmate-Wifi] Set STA mode...");
+    WiFi.mode(WIFI_STA);
+    WiFi.setSleep(false);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+
+    Serial.println("[Soulmate-Wifi] WiFi.begin()...");
+    WiFi.begin(ssid.c_str(), pass.c_str());
+  }
+
+  vTaskDelete(NULL);
+}
+
 namespace SoulmateWifi {
 
   bool connected = false;
@@ -172,16 +197,18 @@ namespace SoulmateWifi {
         Serial.println("Was connected. Reconnect");
         xTaskCreate(delayAndConnect, "DelayAndConnect", 10000, NULL, 0, NULL);
       } else {
-        Serial.println("disconnect reason:");
-        Serial.println(info.disconnected.reason);
-
-        spuriousCount++;
-        Serial.println(spuriousCount);
-        // if (spuriousCount > 5) {
-          // Serial.println("Disconnecting, too many spurious reconnects");
-          // WiFi.disconnect();
-        // }
-        Serial.println(F("[Soulmate-Wifi] Spurious disconnect event"));
+        if (info.disconnected.reason == WIFI_REASON_NO_AP_FOUND) {
+          spuriousCount++;
+          Serial.println("The access point wasn't found. We can probably stop after a while.");
+          if (spuriousCount > 5) {
+            Serial.println("That's it, disconnect Wifi");
+            spuriousCount = 0;
+            WiFi.disconnect();
+            xTaskCreate(delayAndConnectWayLater, "DelayAndConnectWayLater", 10000, NULL, 0, NULL);
+          }
+        } else {
+          Serial.println(F("[Soulmate-Wifi] Spurious disconnect event"));
+        }
       }
       break;
     case SYSTEM_EVENT_STA_GOT_IP:
