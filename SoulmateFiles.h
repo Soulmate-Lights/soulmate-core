@@ -24,6 +24,17 @@ String readFile(String name) {
   if (!f)
     return "";
   ret = f.readString();
+
+  String newString;
+  for (int i = 0; i < ret.length(); i++) {
+    char inchar = ret[i];
+    if ((' ' <= inchar) && (inchar <= '~')) newString += inchar;
+  }
+
+  Serial.println(ret);
+  Serial.println(newString);
+  ret = newString;
+
   f.close();
 #endif
   return ret;
