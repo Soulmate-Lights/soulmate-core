@@ -155,7 +155,6 @@ public:
       fill_solid(leds, N_LEDS, CRGB::Green);
     }
     FastLED.setBrightness(128);
-    FastLED.setDither(0);
     FastLED.show();
   }
 
