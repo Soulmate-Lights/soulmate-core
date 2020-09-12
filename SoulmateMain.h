@@ -302,7 +302,9 @@ public:
         leds[i] = pixel;
       }
       EVERY_N_MILLISECONDS(1000 / 60) {
+        spi_flash_op_lock();
         FastLED.show();
+        spi_flash_op_unlock();
       }
       faded = true;
     } else {
@@ -543,7 +545,6 @@ public:
 
     if (root.containsKey("brightness")) {
       int brightness = static_cast<int>(root["brightness"]);
-      SoulmateSettings::saveBrightness(brightness);
       setBrightness(brightness);
     }
 
