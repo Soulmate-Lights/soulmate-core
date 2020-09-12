@@ -420,19 +420,19 @@ public:
 
 // Only try to save brightness and routine every 5 seconds. Saves bashing
 // SPIFFS, and is much nicer on WS2812B strips because of the timing.
-#ifndef SOULMATE_DISABLE_SAVING
-    EVERY_N_SECONDS(5) {
-      if (brightnessDirty) {
-        SoulmateSettings::saveBrightness(brightness);
-        brightnessDirty = false;
-      }
+// #ifndef SOULMATE_DISABLE_SAVING
+//     EVERY_N_SECONDS(5) {
+//       if (brightnessDirty) {
+//         SoulmateSettings::saveBrightness(brightness);
+//         brightnessDirty = false;
+//       }
 
-      if (routineDirty) {
-        SoulmateSettings::saveRoutine(currentRoutine);
-        routineDirty = false;
-      }
-    }
-#endif
+//       if (routineDirty) {
+//         SoulmateSettings::saveRoutine(currentRoutine);
+//         routineDirty = false;
+//       }
+//     }
+// #endif
 
     bool needsToCycle = millis() - lastCycle > CYCLE_LENGTH_IN_MS;
     if (cycle && needsToCycle) {
@@ -574,6 +574,7 @@ public:
 
     if (root.containsKey("brightness")) {
       int brightness = static_cast<int>(root["brightness"]);
+      SoulmateSettings::saveBrightness(brightness);
       setBrightness(brightness);
     }
 
