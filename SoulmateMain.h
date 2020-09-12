@@ -21,9 +21,6 @@
 #include <FastLED.h>
 #include <functional>
 
-#include <Preferences.h>
-Preferences preferences;
-
 #define MAX_NUMBER_OF_ROUTINES 20
 void FastLEDshowTask(void *pvParameters);
 
