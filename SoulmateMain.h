@@ -547,7 +547,7 @@ public:
 
       Preferences preferences;
       preferences.begin("testing", false);
-      preferences.putInt("brightness", brightness)
+      preferences.putInt("brightness", brightness);
       preferences.end();
     }
 
