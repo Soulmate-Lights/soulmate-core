@@ -308,7 +308,9 @@ public:
     } else {
       playCurrentRoutine();
       EVERY_N_MILLISECONDS(1000 / 60) {
+        spi_flash_op_lock();
         FastLED.show();
+        spi_flash_op_unlock();
       }
       fill_solid(previousLeds, N_LEDS, CRGB::Black);
       fill_solid(nextLeds, N_LEDS, CRGB::Black);
