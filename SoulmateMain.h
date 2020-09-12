@@ -574,6 +574,7 @@ public:
 
     if (root.containsKey("brightness")) {
       int brightness = static_cast<int>(root["brightness"]);
+      SoulmateSettings::saveBrightness(brightness);
       setBrightness(brightness);
     }
 
