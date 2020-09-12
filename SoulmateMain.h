@@ -21,6 +21,9 @@
 #include <FastLED.h>
 #include <functional>
 
+#include <Preferences.h>
+Preferences preferences;
+
 #define MAX_NUMBER_OF_ROUTINES 20
 void FastLEDshowTask(void *pvParameters);
 
@@ -542,7 +545,11 @@ public:
     if (root.containsKey("brightness")) {
       int brightness = static_cast<int>(root["brightness"]);
       setBrightness(brightness);
-      SoulmateSettings::saveBrightness(brightness);
+      // SoulmateSettings::saveBrightness(brightness);
+
+      preferences.begin("testing", false);
+      preferences.Int("brightness", brightness)
+      preferences.end();
     }
 
     if (root.containsKey("routine")) {
