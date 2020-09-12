@@ -540,7 +540,9 @@ public:
     }
 
     if (root.containsKey("brightness")) {
-      setBrightness(static_cast<int>(root["brightness"]));
+      int brightness = static_cast<int>(root["brightness"]);
+      setBrightness(brightness);
+      SoulmateSettings::saveBrightness(brightness);
     }
 
     if (root.containsKey("routine")) {
