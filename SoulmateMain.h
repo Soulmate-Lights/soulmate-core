@@ -10,6 +10,7 @@
 #define FASTLED_INTERRUPT_RETRY_COUNT 1
 #define FASTLED_INTERNAL
 
+#include <Preferences.h>
 #include "./SoulmateBeatSin.h"
 #include "./SoulmateCircadian.h"
 #include "./SoulmateConfig.h"
