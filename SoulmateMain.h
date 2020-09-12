@@ -9,9 +9,7 @@
 // #define FASTLED_RMT_BUILTIN_DRIVER 1
 #define FASTLED_INTERRUPT_RETRY_COUNT 1
 #define FASTLED_INTERNAL
-#define FASTLED_ESP32_I2S 1
 
-#include <Preferences.h>
 #include "./SoulmateBeatSin.h"
 #include "./SoulmateCircadian.h"
 #include "./SoulmateConfig.h"
@@ -544,12 +542,6 @@ public:
     if (root.containsKey("brightness")) {
       int brightness = static_cast<int>(root["brightness"]);
       setBrightness(brightness);
-      // SoulmateSettings::saveBrightness(brightness);
-
-      Preferences preferences;
-      preferences.begin("testing", false);
-      preferences.putInt("brightness", brightness);
-      preferences.end();
     }
 
     if (root.containsKey("routine")) {
