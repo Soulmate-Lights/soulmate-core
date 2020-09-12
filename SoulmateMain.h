@@ -285,6 +285,8 @@ public:
     if (isStopped())
       return;
 
+    spi_flash_op_lock();
+
     // This function is pinned to a core.
     // If you put anything with SPIFFS in here, it may crash
     // with Stack canary watchpoint triggered (FastLEDshowTask)
@@ -313,22 +315,20 @@ public:
         leds[i] = pixel;
       }
       EVERY_N_MILLISECONDS(1000 / 60) {
-        spi_flash_op_lock();
         FastLED.show();
-        spi_flash_op_unlock();
       }
       faded = true;
     } else {
       playCurrentRoutine();
       EVERY_N_MILLISECONDS(1000 / 60) {
-        spi_flash_op_lock();
         FastLED.show();
-        spi_flash_op_unlock();
       }
       fill_solid(previousLeds, N_LEDS, CRGB::Black);
       fill_solid(nextLeds, N_LEDS, CRGB::Black);
       faded = false;
     }
+
+    spi_flash_op_unlock();
   }
 
   void adjustFromButton() {
