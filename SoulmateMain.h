@@ -301,11 +301,15 @@ public:
         pixel = blend(pixel, leds[i], percentage);
         leds[i] = pixel;
       }
-      FastLED.show();
+      EVERY_N_MILLISECONDS(1000 / 60) {
+        FastLED.show();
+      }
       faded = true;
     } else {
       playCurrentRoutine();
-      FastLED.show();
+      EVERY_N_MILLISECONDS(1000 / 60) {
+        FastLED.show();
+      }
       fill_solid(previousLeds, N_LEDS, CRGB::Black);
       fill_solid(nextLeds, N_LEDS, CRGB::Black);
       faded = false;
