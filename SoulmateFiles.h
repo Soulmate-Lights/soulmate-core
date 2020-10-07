@@ -33,8 +33,6 @@ String readFile(String name) {
     if ((' ' <= inchar) && (inchar <= '~')) newString += inchar;
   }
 
-  Serial.println(ret);
-  Serial.println(newString);
   ret = newString;
 
   f.close();
