@@ -32,4 +32,4 @@
 	url = https://github.com/espressif/esp-idf.git
 [submodule "components/FastLED"]
 	path = components/FastLED
-	url = git@github.com:samguyer/FastLED.git
+	url = https://github.com/samguyer/FastLED.git
