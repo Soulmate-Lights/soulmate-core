@@ -1,6 +1,3 @@
-[submodule "components/FastLED"]
-	path = components/FastLED
-	url = https://github.com/FastLED/FastLED.git
 [submodule "components/arduino"]
 	path = components/arduino
 	url = https://github.com/espressif/arduino-esp32.git
@@ -33,3 +30,6 @@
 [submodule "esp-idf"]
 	path = esp-idf
 	url = https://github.com/espressif/esp-idf.git
+[submodule "components/FastLED"]
+	path = components/FastLED
+	url = git@github.com:samguyer/FastLED.git

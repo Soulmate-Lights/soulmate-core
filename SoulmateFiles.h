@@ -10,12 +10,10 @@
 
 void writeFile(String name, String contents) {
 #if defined(ESP32) || defined(ESP8266)
-#ifndef USE_WS2812B
   File f = SPIFFS.open(name, "w");
   f.print(contents);
   f.flush();
   f.close();
-#endif
 #endif
 }
 

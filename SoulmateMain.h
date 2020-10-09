@@ -57,10 +57,6 @@ public:
   int32_t fadeStart;
   bool faded;
 
-  // Used for saving
-  bool brightnessDirty = false;
-  bool routineDirty = false;
-
   // Routines - we use a max number to initalize this array
   int routineCount = 0;
   void (*routines[MAX_NUMBER_OF_ROUTINES])();
@@ -418,22 +414,6 @@ public:
       }
     }
 
-// Only try to save brightness and routine every 5 seconds. Saves bashing
-// SPIFFS, and is much nicer on WS2812B strips because of the timing.
-// #ifndef SOULMATE_DISABLE_SAVING
-//     EVERY_N_SECONDS(5) {
-//       if (brightnessDirty) {
-//         SoulmateSettings::saveBrightness(brightness);
-//         brightnessDirty = false;
-//       }
-
-//       if (routineDirty) {
-//         SoulmateSettings::saveRoutine(currentRoutine);
-//         routineDirty = false;
-//       }
-//     }
-// #endif
-
     bool needsToCycle = millis() - lastCycle > CYCLE_LENGTH_IN_MS;
     if (cycle && needsToCycle) {
       nextRoutine();
@@ -470,11 +450,9 @@ public:
     if (millis() - fadeStart > FADE_DURATION)
       fadeStart = millis();
     currentRoutine = i;
-    routineDirty = true;
   }
 
   void setBrightness(int b) {
-    brightnessDirty = true;
     if (startingFrames >= b)
       startingFrames = 255;
     if (b > 0 && !on)
@@ -580,6 +558,7 @@ public:
 
     if (root.containsKey("routine")) {
       chooseRoutine(static_cast<int>(root["routine"]));
+      SoulmateSettings::saveRoutine(currentRoutine);
     }
 
     if (root.containsKey("SSID") && root.containsKey("WIFIPASS")) {
