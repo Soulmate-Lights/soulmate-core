@@ -450,6 +450,7 @@ public:
     if (millis() - fadeStart > FADE_DURATION)
       fadeStart = millis();
     currentRoutine = i;
+    SoulmateSettings::saveRoutine(currentRoutine);
   }
 
   void setBrightness(int b) {
@@ -558,7 +559,6 @@ public:
 
     if (root.containsKey("routine")) {
       chooseRoutine(static_cast<int>(root["routine"]));
-      SoulmateSettings::saveRoutine(currentRoutine);
     }
 
     if (root.containsKey("SSID") && root.containsKey("WIFIPASS")) {
