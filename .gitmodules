@@ -32,4 +32,5 @@
 	url = https://github.com/espressif/esp-idf.git
 [submodule "components/FastLED"]
 	path = components/FastLED
-	url = https://github.com/samguyer/FastLED.git
+	url = https://github.com/elliottkember/FastLED.git
+        branch = elliott/component.mk
