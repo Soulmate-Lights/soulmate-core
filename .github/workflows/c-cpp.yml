@@ -10,7 +10,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      IDF_PATH: /home/runner/work/soulmate-core/soulmate-core/esp-idf
+      IDF_PATH: /home/runner/esp/esp-idf
       SOULMATE_PATH: /home/runner/work/soulmate-core/soulmate-core
 
     steps:
@@ -29,7 +29,7 @@ jobs:
       - name: install esp-idf
         run: |
           mkdir -p /home/runner/esp
-          git clone -b release/v3.3 --recursive https://github.com/espressif/esp-idf.git /home/runner/esp/esp-idf
+          git clone -b v3.3.2 --recursive https://github.com/espressif/esp-idf.git /home/runner/esp/esp-idf
           /home/runner/esp/esp-idf/install.sh
       - name: pip
         run: python -m pip install --user -r /home/runner/esp/esp-idf/requirements.txt
@@ -39,7 +39,7 @@ jobs:
         run: |
           . /home/runner/esp/esp-idf/export.sh
           make -C /home/runner/work/soulmate-core/soulmate-core/builder clean
-          make -C /home/runner/work/soulmate-core/soulmate-core/builder all
+          PATH="/home/runner/esp/xtensa-esp32-elf/bin:$PATH" make -C /home/runner/work/soulmate-core/soulmate-core/builder all
         env:
           IDF_PATH: /home/runner/esp/esp-idf
           SOULMATE_PATH: /home/runner/work/soulmate-core/soulmate-core
