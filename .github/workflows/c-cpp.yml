@@ -39,9 +39,10 @@ jobs:
       - name: export
         run: |
           . /home/runner/esp/esp-idf/export.sh
+      - name: add path
+        run: echo "/home/runner/esp/xtensa-esp32-elf/bin" >> $GITHUB_PATH
       - name: make
         run: make -C /home/runner/work/soulmate-core/soulmate-core/builder all
         env:
           IDF_PATH: /home/runner/esp/esp-idf
           SOULMATE_PATH: /home/runner/work/soulmate-core/soulmate-core
-          PATH: /home/runner/esp/xtensa-esp32-elf/bin:$PATH
