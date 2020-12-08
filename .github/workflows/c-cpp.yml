@@ -25,7 +25,7 @@ jobs:
         run: |
           sudo apt-get install gcc git wget make libncurses-dev flex bison gperf python python-serial
           wget https://dl.espressif.com/dl/xtensa-esp32-elf-linux64-1.22.0-97-gc752ad5-5.2.0.tar.gz
-          tar -xzf ~/Downloads/xtensa-esp32-elf-linux64-1.22.0-97-gc752ad5-5.2.0.tar.gz -C /home/runner/esp
+          tar -xzf xtensa-esp32-elf-linux64-1.22.0-97-gc752ad5-5.2.0.tar.gz -C /home/runner/esp
       - name: install esp-idf
         run: |
           mkdir -p /home/runner/esp
