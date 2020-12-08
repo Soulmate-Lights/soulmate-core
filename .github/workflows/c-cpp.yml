@@ -24,7 +24,7 @@ jobs:
       - name: install esp-idf
         run: |
           mkdir -p /home/runner/esp
-          git clone --recursive https://github.com/espressif/esp-idf.git /home/runner/esp/esp-idf
+          git clone -b release/v3.3 --recursive https://github.com/espressif/esp-idf.git /home/runner/esp/esp-idf
           /home/runner/esp/esp-idf/install.sh
       - name: pip
         run: python -m pip install --user -r /home/runner/esp/esp-idf/requirements.txt
