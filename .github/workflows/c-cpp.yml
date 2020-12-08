@@ -21,6 +21,8 @@ jobs:
         with:
           python-version: "3.x" # Version range or exact version of a Python version to use, using SemVer's version range syntax
           architecture: "x64" # optional x64 or x86. Defaults to x64 if not specified
+      - name: mkdir -p /home/runner/esp
+        run: mkdir -p /home/runner/esp
       - name: install toolchain
         run: |
           sudo apt-get install gcc git wget make libncurses-dev flex bison gperf python python-serial
@@ -28,7 +30,6 @@ jobs:
           tar -xzf xtensa-esp32-elf-linux64-1.22.0-97-gc752ad5-5.2.0.tar.gz -C /home/runner/esp
       - name: install esp-idf
         run: |
-          mkdir -p /home/runner/esp
           git clone -b v3.3.2 --recursive https://github.com/espressif/esp-idf.git /home/runner/esp/esp-idf
           /home/runner/esp/esp-idf/install.sh
       - name: pip
