@@ -2,25 +2,28 @@ name: C/C++ CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [master, elliott/builds]
   pull_request:
-    branches: [ master ]
+    branches: [master, elliott/builds]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: install esp-idf
-      run: |
-        mkdir -p ~/esp
-        git clone --recursive https://github.com/espressif/esp-idf.git ~/esp/esp-idf
-        ~/esp/esp-idf/install.sh
-    - name: copy main.cpp
-      run: cp builder/_main.cpp builder/main/main.cpp
-    - name: make
-      run: |
-        . $HOME/esp/esp-idf/export.sh
-        make -C builder
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.x" # Version range or exact version of a Python version to use, using SemVer's version range syntax
+          architecture: "x64" # optional x64 or x86. Defaults to x64 if not specified
+      - name: install esp-idf
+        run: |
+          mkdir -p ~/esp
+          git clone --recursive https://github.com/espressif/esp-idf.git ~/esp/esp-idf
+          ~/esp/esp-idf/install.sh
+      - name: copy main.cpp
+        run: cp builder/_main.cpp builder/main/main.cpp
+      - name: make
+        run: |
+          . $HOME/esp/esp-idf/export.sh
+          make -C builder
