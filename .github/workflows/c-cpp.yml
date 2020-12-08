@@ -17,6 +17,15 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: recursive
+
+      - uses: actions/cache@v2
+        with:
+          path: |
+            builder/build
+          key: ${{ runner.os }}-build-${{ hashFiles('builder/sdkconfig') }}
+          restore-keys: |
+            ${{ runner.os }}-build-
+
       - uses: actions/setup-python@v2
         with:
           python-version: "3.x" # Version range or exact version of a Python version to use, using SemVer's version range syntax
