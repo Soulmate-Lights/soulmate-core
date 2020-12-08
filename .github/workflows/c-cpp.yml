@@ -18,6 +18,8 @@ jobs:
         mkdir -p ~/esp
         git clone --recursive https://github.com/espressif/esp-idf.git ~/esp/esp-idf
         ~/esp/esp-idf/install.sh
+    - name: copy main.cpp
+      run: cp builder/_main.cpp builder/main/main.cpp
     - name: make
       run: |
         . $HOME/esp/esp-idf/export.sh
