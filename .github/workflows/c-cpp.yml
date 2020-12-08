@@ -10,7 +10,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      IDF_PATH: ~/esp/esp-idf
+      IDF_PATH: $HOME/esp/esp-idf
 
     steps:
       - uses: actions/checkout@v2
@@ -20,14 +20,14 @@ jobs:
           architecture: "x64" # optional x64 or x86. Defaults to x64 if not specified
       - name: install esp-idf
         run: |
-          mkdir -p ~/esp
-          git clone --recursive https://github.com/espressif/esp-idf.git ~/esp/esp-idf
-          ~/esp/esp-idf/install.sh
+          mkdir -p $HOME/esp
+          git clone --recursive https://github.com/espressif/esp-idf.git $HOME/esp/esp-idf
+          $HOME/esp/esp-idf/install.sh
       - name: pip
-        run: python -m pip install --user -r ~/esp/esp-idf/requirements.txt
+        run: python -m pip install --user -r $HOME/esp/esp-idf/requirements.txt
       - name: copy main.cpp
         run: cp builder/_main.cpp builder/main/main.cpp
       - name: make
         run: |
-          . ~/esp/esp-idf/export.sh
+          . $HOME/esp/esp-idf/export.sh
           make -C builder
