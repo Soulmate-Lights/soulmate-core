@@ -35,4 +35,7 @@ jobs:
       - name: make
         run: |
           . /home/runner/esp/esp-idf/export.sh
-          make -C builder
+          make -C /home/runner/work/soulmate-core/soulmate-core/builder
+        env:
+          IDF_PATH: /home/runner/esp/esp-idf
+          SOULMATE_PATH: /home/runner/work/soulmate-core/soulmate-core
