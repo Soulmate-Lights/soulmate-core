@@ -10,7 +10,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      IDF_PATH: /home/runner/esp/esp-idf
+      IDF_PATH: /home/runner/work/soulmate-core/soulmate-core/esp-idf
       SOULMATE_PATH: /home/runner/work/soulmate-core/soulmate-core
 
     steps:
