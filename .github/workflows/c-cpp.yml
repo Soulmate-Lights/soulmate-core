@@ -22,7 +22,10 @@ jobs:
           python-version: "3.x" # Version range or exact version of a Python version to use, using SemVer's version range syntax
           architecture: "x64" # optional x64 or x86. Defaults to x64 if not specified
       - name: install toolchain
-        run: sudo apt-get install gcc git wget make libncurses-dev flex bison gperf python python-serial
+        run: |
+          sudo apt-get install gcc git wget make libncurses-dev flex bison gperf python python-serial
+          wget https://dl.espressif.com/dl/xtensa-esp32-elf-linux64-1.22.0-97-gc752ad5-5.2.0.tar.gz
+          tar -xzf ~/Downloads/xtensa-esp32-elf-linux64-1.22.0-97-gc752ad5-5.2.0.tar.gz -C /home/runner/esp
       - name: install esp-idf
         run: |
           mkdir -p /home/runner/esp
@@ -40,3 +43,4 @@ jobs:
         env:
           IDF_PATH: /home/runner/esp/esp-idf
           SOULMATE_PATH: /home/runner/work/soulmate-core/soulmate-core
+          PATH: home/runner/esp/xtensa-esp32-elf/bin:$PATH
