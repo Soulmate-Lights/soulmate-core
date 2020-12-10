@@ -264,7 +264,9 @@ public:
   }
 
   void playCurrentRoutine() {
-    if (currentRoutine == -1) {
+    if (currentRoutine == -2) {
+      // Don't do anything we're good
+    } else if (currentRoutine == -1) {
       fill_solid(leds, N_LEDS, CHSV(hue, saturation, 255));
     } else {
       routines[currentRoutine]();

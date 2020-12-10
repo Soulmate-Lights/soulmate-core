@@ -132,6 +132,22 @@ namespace SoulmateWifi {
       return;
 
     AwsFrameInfo *info = reinterpret_cast<AwsFrameInfo *>(arg);
+    if (info->opcode == WS_BINARY) {
+      int px = 0;
+
+      for (uint16_t i = 0; i < len; i += 3) {
+
+        uint8_t red = data[i];
+        uint8_t green = data[i+1];
+        uint8_t blue = data[i+2];
+
+        Soulmate.currentRoutine = -2;
+        Soulmate.leds[px] = CRGB(red, green, blue);
+        px++;
+      }
+
+      return;
+    }
 
     // Final frame
     if ((info->index + len) == info->len) {
@@ -309,7 +325,9 @@ namespace SoulmateWifi {
   }
 
   void loop() {
-    ws.cleanupClients();
+    EVERY_N_SECONDS(1) {
+      ws.cleanupClients();
+    }
 
     if (restartRequired) {
       delay(500);
