@@ -228,6 +228,7 @@ public:
   }
 
   void nextRoutine() {
+    if (currentRoutine < 0) return;
     int i = currentRoutine + 1;
     if (i == routineCount)
       i = 0;
