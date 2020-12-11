@@ -332,7 +332,10 @@ namespace SoulmateWifi {
 
   void loop() {
     EVERY_N_SECONDS(1) {
-      if (millis() - lastFrameReceived > 3000) {
+      if (
+        Soulmate.currentRoutine == -2 &&
+        millis() - lastFrameReceived > 3000
+      ) {
         Soulmate.currentRoutine = 0;
       }
     }
