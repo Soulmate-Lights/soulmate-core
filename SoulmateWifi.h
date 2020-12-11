@@ -334,7 +334,7 @@ namespace SoulmateWifi {
     EVERY_N_SECONDS(1) {
       if (
         Soulmate.currentRoutine == -2 &&
-        millis() - lastFrameReceived > 3000
+        millis() - lastFrameReceived > 500
       ) {
         Soulmate.currentRoutine = 0;
       }
