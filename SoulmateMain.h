@@ -146,8 +146,12 @@ public:
     fill_solid(leds, N_LEDS, CRGB::Black);
     if (percentage < 0.9) {
       uint16_t ledsToFill = (float)N_LEDS * percentage;
-      if (N_LEDS > 100)
+
+      // 2D
+      if (LED_ROWS > 1 && LED_COLS > 1) {
         ledsToFill = ledsToFill - ledsToFill % LED_COLS;
+      }
+
       fill_solid(leds, ledsToFill, CRGB::Green);
     } else {
       fill_solid(leds, N_LEDS, CRGB::Green);
