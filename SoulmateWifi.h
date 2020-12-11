@@ -124,6 +124,8 @@ namespace SoulmateWifi {
     ws.textAll(Soulmate.status());
   }
 
+  uint16_t streamedPixelIndex = 0;
+
   // WebSockets event received¡
   void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
                AwsEventType type, void *arg, uint8_t *data, size_t len) {
@@ -132,18 +134,20 @@ namespace SoulmateWifi {
       return;
 
     AwsFrameInfo *info = reinterpret_cast<AwsFrameInfo *>(arg);
+
+    // Streaming pixels
     if (info->opcode == WS_BINARY) {
-      int px = 0;
-
-      for (uint16_t i = 0; i < len; i += 3) {
-
-        uint8_t red = data[i];
-        uint8_t green = data[i+1];
-        uint8_t blue = data[i+2];
+      for (uint16_t i = 0; i < len; i += 4) {
+        bool isFirst = data[i] == 1;
+        uint8_t red = data[i+1];
+        uint8_t green = data[i+2];
+        uint8_t blue = data[i+3];
 
         Soulmate.currentRoutine = -2;
-        Soulmate.leds[px] = CRGB(red, green, blue);
-        px++;
+        if (isFirst) streamedPixelIndex = 0;
+        Soulmate.leds[streamedPixelIndex] = CRGB(red, green, blue);
+
+        streamedPixelIndex++;
       }
 
       return;
