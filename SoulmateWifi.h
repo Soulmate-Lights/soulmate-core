@@ -145,7 +145,10 @@ namespace SoulmateWifi {
 
         Soulmate.currentRoutine = -2;
         if (isFirst) streamedPixelIndex = 0;
-        Soulmate.leds[streamedPixelIndex] = CRGB(red, green, blue);
+
+        if (streamedPixelIndex < N_LEDS) {
+          Soulmate.leds[streamedPixelIndex] = CRGB(red, green, blue);
+        }
 
         streamedPixelIndex++;
       }
