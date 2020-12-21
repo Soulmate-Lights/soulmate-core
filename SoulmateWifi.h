@@ -125,6 +125,7 @@ namespace SoulmateWifi {
   }
 
   uint16_t streamedPixelIndex = 0;
+  double lastFrameReceived;
 
   // WebSockets event received¡
   void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
@@ -137,6 +138,7 @@ namespace SoulmateWifi {
 
     // Streaming pixels
     if (info->opcode == WS_BINARY) {
+      lastFrameReceived = millis();
       for (uint16_t i = 0; i < len; i += 4) {
         bool isFirst = data[i] == 1;
         uint8_t red = data[i+1];
@@ -332,6 +334,15 @@ namespace SoulmateWifi {
   }
 
   void loop() {
+    EVERY_N_SECONDS(1) {
+      if (
+        Soulmate.currentRoutine == -2 &&
+        millis() - lastFrameReceived > 500
+      ) {
+        Soulmate.currentRoutine = 0;
+      }
+    }
+
     EVERY_N_SECONDS(1) {
       ws.cleanupClients();
     }

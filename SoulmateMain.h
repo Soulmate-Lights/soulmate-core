@@ -3,7 +3,7 @@
 #ifndef BUILDER_LIBRARIES_SOULMATE_SOULMATEMAIN_H_
 #define BUILDER_LIBRARIES_SOULMATE_SOULMATEMAIN_H_
 
-#define SOULMATE_VERSION "7.2.2"
+#define SOULMATE_VERSION "8.0.2"
 
 // #define FASTLED_RMT_MAX_CHANNELS 1
 // #define FASTLED_RMT_BUILTIN_DRIVER 1
@@ -146,8 +146,12 @@ public:
     fill_solid(leds, N_LEDS, CRGB::Black);
     if (percentage < 0.9) {
       uint16_t ledsToFill = (float)N_LEDS * percentage;
-      if (N_LEDS > 100)
+
+      // 2D
+      if (LED_ROWS > 1 && LED_COLS > 1) {
         ledsToFill = ledsToFill - ledsToFill % LED_COLS;
+      }
+
       fill_solid(leds, ledsToFill, CRGB::Green);
     } else {
       fill_solid(leds, N_LEDS, CRGB::Green);
