@@ -229,6 +229,8 @@ public:
 #ifndef SKIP_BLUETOOTH
     BluetoothSetup();
 #endif
+
+    Serial.println(status(true));
   }
 
   void nextRoutine() {
