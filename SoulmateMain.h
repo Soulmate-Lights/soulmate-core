@@ -213,11 +213,6 @@ public:
 #endif
 
 #ifdef USE_WS2812B
-    // Previously we used core 0 for APA102
-    // TODO: Check the flashing on BigBoy to see if it's core-related
-    // NOTE: Now Wifi runs on Core 1 (Jun 17) so this may all want to be on Core
-    // 0.
-    // TODO: Test on WS2812B lights
     xTaskCreatePinnedToCore(FastLEDshowTask, "FastLEDshowTask", 2048, NULL, 10,
                             &FastLEDshowTaskHandle, 1);
 #else
@@ -286,6 +281,28 @@ public:
     ESP.restart();
   }
 
+  void reverseLeds() {
+    uint8_t left = 0;
+    uint8_t right = STRIP_SIZE-1;
+    while (left < right) {
+      CRGB temp = leds[left];
+      leds[left++] = leds[right];
+      leds[right--] = temp;
+    }
+  }
+
+  void fastLedShow() {
+    EVERY_N_MILLISECONDS(1000 / 60) {
+    #ifdef SOULMATE_REVERSE
+      reverseLeds();
+    #endif
+    FastLED.show();
+    #ifdef SOULMATE_REVERSE
+      reverseLeds();
+    #endif
+    }
+  }
+
   void showPixels() {
     if (isStopped())
       return;
@@ -319,15 +336,11 @@ public:
         pixel = blend(pixel, leds[i], percentage);
         leds[i] = pixel;
       }
-      EVERY_N_MILLISECONDS(1000 / 60) {
-        FastLED.show();
-      }
+      fastLedShow();
       faded = true;
     } else {
       playCurrentRoutine();
-      EVERY_N_MILLISECONDS(1000 / 60) {
-        FastLED.show();
-      }
+      fastLedShow();
       fill_solid(previousLeds, N_LEDS, CRGB::Black);
       fill_solid(nextLeds, N_LEDS, CRGB::Black);
       faded = false;
