@@ -101,6 +101,10 @@ public:
     if (showLANIP)
       message["lanip"] = ip();
 
+    #ifdef SOULMATE_REVERSE
+      message['reverse'] = true;
+    #endif
+
     // These paraemters are for flash config
     message["rows"] = LED_ROWS;
     message["cols"] = LED_COLS;
