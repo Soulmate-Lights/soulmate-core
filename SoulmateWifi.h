@@ -375,6 +375,9 @@ void SoulmateLibrary::reconnect() {
 void SoulmateLibrary::disconnectWiFi() {
   SoulmateWifi::disconnect();
 }
+bool SoulmateLibrary::isStreaming() {
+  return SoulmateWifi::isStreaming();
+}
 
 void SoulmateLibrary::connectTo(const char *ssid, const char *pass) {
   preferences.begin("Wifi", false);

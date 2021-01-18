@@ -74,6 +74,7 @@ public:
   bool wifiConnected();
   void disconnectWiFi();
   void reconnect();
+  bool isStreaming();
   void connectTo(const char *ssid, const char *pass);
   void lightPercentage();
   void BluetoothSetup();
@@ -311,7 +312,7 @@ public:
     if (isStopped())
       return;
 
-    if (SoulmateWifi.isStreaming())
+    if (isStreaming())
       return;
 
     spi_flash_op_lock();
