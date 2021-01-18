@@ -102,10 +102,6 @@ public:
     if (showLANIP)
       message["lanip"] = ip();
 
-    #ifdef SOULMATE_REVERSE
-      message["reverse"] = true;
-    #endif
-
     // These paraemters are for flash config
     message["rows"] = LED_ROWS;
     message["cols"] = LED_COLS;
@@ -115,6 +111,8 @@ public:
     #else
       message["ledType"] = "SK9822";
     #endif
+    message["reverse"] = SOULMATE_REVERSE;
+    message["mirror"] = SOULMATE_MIRROR;
     message["serpentine"] = SOULMATE_SERPENTINE;
     message["milliamps"] = SOULMATE_MILLIAMPS;
     message["data"] = SOULMATE_DATA_PIN;
@@ -298,13 +296,13 @@ public:
 
   void fastLedShow() {
     EVERY_N_MILLISECONDS(1000 / 60) {
-    #ifdef SOULMATE_REVERSE
-      reverseLeds();
-    #endif
-    FastLED.show();
-    #ifdef SOULMATE_REVERSE
-      reverseLeds();
-    #endif
+      if (SOULMATE_REVERSE) {
+        reverseLeds();
+        FastLED.show();
+        reverseLeds();
+      } else {
+        FastLED.show();
+      }
     }
   }
 

@@ -28,6 +28,16 @@ static TaskHandle_t FastLEDshowTaskHandle = 0;
   #define SOULMATE_SERPENTINE true
 #endif
 
+// Upside down
+#ifndef SOULMATE_REVERSE
+  #define SOULMATE_REVERSE false
+#endif
+
+// Left to right flip
+#ifndef SOULMATE_MIRROR
+  #define SOULMATE_MIRROR false
+#endif
+
 #ifndef SOULMATE_MILLIAMPS
   #define SOULMATE_MILLIAMPS 600
 #endif

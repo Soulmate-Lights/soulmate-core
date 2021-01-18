@@ -135,17 +135,20 @@ int16_t gridIndexHorizontal(int16_t x, int16_t y) {
   if (x < 0) return -1;
   if (y < 0) return -1;
 
-  int16_t index = 0;
+  int16_t xIndex = x;
 
-  if (SOULMATE_SERPENTINE) {
-    if (y % 2 == 1) {
-      index = y * LED_COLS + x;
-    } else {
-      index = y * LED_COLS + LED_COLS - 1 - x;
-    }
-  } else {
-    index = y * LED_COLS + x;
+  // Serpentine row
+  bool oddRow = y % 2 != 1;
+  if (SOULMATE_SERPENTINE && oddRow) {
+    xIndex = LED_COLS - 1 - xIndex;
   }
+
+  // Mirrored left-to-right
+  if (SOULMATE_MIRROR) {
+    xIndex = LED_COLS - 1 - xIndex;
+  }
+
+  int16_t index = y * LED_COLS + xIndex
 
   if (index > -1 && index < N_LEDS) {
     return index;
