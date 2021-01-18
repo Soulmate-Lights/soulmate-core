@@ -102,7 +102,7 @@ public:
       message["lanip"] = ip();
 
     #ifdef SOULMATE_REVERSE
-      message['reverse'] = true;
+      message["reverse"] = true;
     #endif
 
     // These paraemters are for flash config
@@ -287,7 +287,7 @@ public:
 
   void reverseLeds() {
     uint8_t left = 0;
-    uint8_t right = STRIP_SIZE-1;
+    uint8_t right = N_LEDS-1;
     while (left < right) {
       CRGB temp = leds[left];
       leds[left++] = leds[right];
