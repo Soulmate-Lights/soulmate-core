@@ -298,13 +298,13 @@ public:
 
   void fastLedShow() {
     EVERY_N_MILLISECONDS(1000 / 60) {
-    #ifdef SOULMATE_REVERSE
+    // #ifdef SOULMATE_REVERSE
       reverseLeds();
-    #endif
+    // #endif
     FastLED.show();
-    #ifdef SOULMATE_REVERSE
+    // #ifdef SOULMATE_REVERSE
       reverseLeds();
-    #endif
+    // #endif
     }
   }
 
