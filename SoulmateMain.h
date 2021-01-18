@@ -311,6 +311,9 @@ public:
     if (isStopped())
       return;
 
+    if (SoulmateWifi.isStreaming())
+      return;
+
     spi_flash_op_lock();
 
     // This function is pinned to a core.

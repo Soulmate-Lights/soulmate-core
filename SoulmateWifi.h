@@ -127,6 +127,10 @@ namespace SoulmateWifi {
   uint16_t streamedPixelIndex = 0;
   double lastFrameReceived;
 
+  bool isStreaming() {
+    return (millis() - lastFrameReceived) < 500;
+  }
+
   // WebSockets event received¡
   void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
                AwsEventType type, void *arg, uint8_t *data, size_t len) {
@@ -146,7 +150,10 @@ namespace SoulmateWifi {
         uint8_t blue = data[i+3];
 
         Soulmate.currentRoutine = -2;
-        if (isFirst) streamedPixelIndex = 0;
+        if (isFirst) {
+          streamedPixelIndex = 0;
+          Soulmate.fastLedShow();
+        }
 
         if (streamedPixelIndex < N_LEDS) {
           Soulmate.leds[streamedPixelIndex] = CRGB(red, green, blue);
@@ -336,8 +343,7 @@ namespace SoulmateWifi {
   void loop() {
     EVERY_N_SECONDS(1) {
       if (
-        Soulmate.currentRoutine == -2 &&
-        millis() - lastFrameReceived > 500
+        Soulmate.currentRoutine == -2 && !isStreaming()
       ) {
         Soulmate.currentRoutine = 0;
       }
