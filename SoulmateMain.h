@@ -297,15 +297,15 @@ public:
   }
 
   void fastLedShow() {
-    // EVERY_N_MILLISECONDS(1000 / 60) {
-    // #ifdef SOULMATE_REVERSE
-    //   reverseLeds();
-    // #endif
-    // FastLED.show();
-    // #ifdef SOULMATE_REVERSE
-    //   reverseLeds();
-    // #endif
-    // }
+    EVERY_N_MILLISECONDS(1000 / 60) {
+    #ifdef SOULMATE_REVERSE
+      reverseLeds();
+    #endif
+    FastLED.show();
+    #ifdef SOULMATE_REVERSE
+      reverseLeds();
+    #endif
+    }
   }
 
   void showPixels() {
