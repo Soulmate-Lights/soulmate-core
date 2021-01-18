@@ -287,8 +287,8 @@ public:
   }
 
   void reverseLeds() {
-    uint8_t left = 0;
-    uint8_t right = N_LEDS-1;
+    uint16_t left = 0;
+    uint16_t right = N_LEDS-1;
     while (left < right) {
       CRGB temp = leds[left];
       leds[left++] = leds[right];
