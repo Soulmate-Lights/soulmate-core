@@ -148,13 +148,13 @@ int16_t gridIndexHorizontal(int16_t x, int16_t y) {
     xIndex = LED_COLS - 1 - xIndex;
   }
 
-  int16_t index = y * LED_COLS + xIndex
+  int16_t index = y * LED_COLS + xIndex;
 
   if (index > -1 && index < N_LEDS) {
     return index;
-  } else {
-    return -1;
   }
+
+  return -1;
 }
 
 uint16_t XY(uint8_t x, uint8_t y) {
