@@ -16,6 +16,8 @@
 #include "./SoulmateSettings.h"
 #include "./SoulmateTime.h"
 
+#include <GeneralUtils.h>
+
 Preferences preferences;
 
 AsyncWebServer server(80);
@@ -241,6 +243,7 @@ namespace SoulmateWifi {
             xTaskCreate(delayAndConnectWayLater, "DelayAndConnectWayLater", 10000, NULL, 0, NULL);
           }
         } else {
+          Serial.println(GeneralUtils::wifiErrorToString(info.disconnected.reason));
           Serial.println(F("[Soulmate-Wifi] Spurious disconnect event"));
         }
       }
