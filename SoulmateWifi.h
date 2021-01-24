@@ -242,9 +242,35 @@ namespace SoulmateWifi {
             WiFi.disconnect();
             xTaskCreate(delayAndConnectWayLater, "DelayAndConnectWayLater", 10000, NULL, 0, NULL);
           }
+        } else if (info.disconnected.reason == WIFI_REASON_AUTH_EXPIRE) {
+          Serial.println("Auth expired. We'll try again.");
         } else {
-          Serial.println(info.disconnected.reason); // system_event_info_t
-          Serial.println(F("[Soulmate-Wifi] Spurious disconnect event"));
+          // WIFI_REASON_UNSPECIFIED              = 1,
+          // WIFI_REASON_AUTH_EXPIRE              = 2,
+          // WIFI_REASON_AUTH_LEAVE               = 3,
+          // WIFI_REASON_ASSOC_EXPIRE             = 4,
+          // WIFI_REASON_ASSOC_TOOMANY            = 5,
+          // WIFI_REASON_NOT_AUTHED               = 6,
+          // WIFI_REASON_NOT_ASSOCED              = 7,
+          // WIFI_REASON_ASSOC_LEAVE              = 8,
+          // WIFI_REASON_ASSOC_NOT_AUTHED         = 9,
+          // WIFI_REASON_DISASSOC_PWRCAP_BAD      = 10,
+          // WIFI_REASON_DISASSOC_SUPCHAN_BAD     = 11,
+          // WIFI_REASON_IE_INVALID               = 13,
+          // WIFI_REASON_MIC_FAILURE              = 14,
+          // WIFI_REASON_4WAY_HANDSHAKE_TIMEOUT   = 15,
+          // WIFI_REASON_GROUP_KEY_UPDATE_TIMEOUT = 16,
+          // WIFI_REASON_IE_IN_4WAY_DIFFERS       = 17,
+          // WIFI_REASON_GROUP_CIPHER_INVALID     = 18,
+          // WIFI_REASON_PAIRWISE_CIPHER_INVALID  = 19,
+          // WIFI_REASON_AKMP_INVALID             = 20,
+          // WIFI_REASON_UNSUPP_RSN_IE_VERSION    = 21,
+          // WIFI_REASON_INVALID_RSN_IE_CAP       = 22,
+          // WIFI_REASON_802_1X_AUTH_FAILED       = 23,
+          // WIFI_REASON_CIPHER_SUITE_REJECTED    = 24,
+          Serial.println(F("[Soulmate-Wifi] Spurious disconnect event. Disconnect code:"));
+          Serial.println(info.disconnected.reason);
+          Serial.println(F("[Soulmate-Wifi] See https://github.com/Soulmate-Lights/soulmate-core/blob/master/SoulmateMain.h#L246 for error code."));
         }
       }
       break;
