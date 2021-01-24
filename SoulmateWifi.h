@@ -41,6 +41,7 @@ void delayAndConnect(void *parameter) {
     vTaskDelay(1000 / portTICK_PERIOD_MS);
 
     Serial.println("[Soulmate-Wifi] WiFi.begin()...");
+    Serial.println(ssid.c_str());
     WiFi.begin(ssid.c_str(), pass.c_str());
   }
 
