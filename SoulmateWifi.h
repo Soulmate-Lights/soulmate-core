@@ -43,6 +43,7 @@ void delayAndConnect(void *parameter) {
     Serial.println("[Soulmate-Wifi] WiFi.begin()...");
     Serial.println(ssid.c_str());
     WiFi.begin(ssid.c_str(), pass.c_str());
+    WiFi.setTxPower(WIFI_POWER_19_5dBm);
   }
 
   vTaskDelete(NULL);
