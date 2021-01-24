@@ -244,6 +244,7 @@ namespace SoulmateWifi {
           }
         } else {
           Serial.println(GeneralUtils::wifiErrorToString(info.disconnected.reason));
+          Serial.println(info.disonnected.reason);
           Serial.println(F("[Soulmate-Wifi] Spurious disconnect event"));
         }
       }
