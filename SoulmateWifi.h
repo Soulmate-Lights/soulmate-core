@@ -270,7 +270,7 @@ namespace SoulmateWifi {
           // WIFI_REASON_CIPHER_SUITE_REJECTED    = 24,
           Serial.println(F("[Soulmate-Wifi] Spurious disconnect event. Disconnect code:"));
           Serial.println(info.disconnected.reason);
-          Serial.println(F("[Soulmate-Wifi] See https://github.com/Soulmate-Lights/soulmate-core/blob/master/SoulmateMain.h#L246 for error code."));
+          Serial.println(F("[Soulmate-Wifi] See https://github.com/Soulmate-Lights/soulmate-core/blob/master/SoulmateWifi.h#L246 for error code."));
         }
       }
       break;
