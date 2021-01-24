@@ -590,7 +590,9 @@ public:
     }
 
     if (root.containsKey("SSID") && root.containsKey("WIFIPASS")) {
+      Serial.println("Saving SSID:");
       const char *ssid = root["SSID"].as<char *>();
+      Serial.println(ssid);
       const char *pass = root["WIFIPASS"].as<char *>();
       connectTo(ssid, pass);
     }
