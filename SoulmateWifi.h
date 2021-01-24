@@ -243,7 +243,6 @@ namespace SoulmateWifi {
             xTaskCreate(delayAndConnectWayLater, "DelayAndConnectWayLater", 10000, NULL, 0, NULL);
           }
         } else {
-          Serial.println(GeneralUtils::wifiErrorToString(info.disconnected.reason));
           Serial.println(info.disconnected.reason); // system_event_info_t
           Serial.println(F("[Soulmate-Wifi] Spurious disconnect event"));
         }
