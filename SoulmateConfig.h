@@ -6,7 +6,6 @@
 #include "./components/ArduinoJson/ArduinoJson.h"
 #include "soc/timer_group_reg.h"
 #include "soc/timer_group_struct.h"
-static TaskHandle_t FastLEDshowTaskHandle = 0;
 
 #ifndef LED_COLS
   #define LED_COLS 13

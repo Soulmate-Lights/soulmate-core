@@ -6,13 +6,14 @@
 #include <HTTPClient.h>
 #include <HTTPUpdate.h>
 #include <time.h>
-#include "./SoulmateCircadian.h"
+// #include "./SoulmateCircadian.h"
+#include "./SoulmateTime.h"
 
 namespace SoulmateOTA {
   // What time of the day do we start updates?
   static int updateStartHour = 4;
 
-  int lastMinute = -1;
+  // int lastMinute = -1;
   int previousHour = -1;
   bool updating = false;
   bool clockSet = false;
