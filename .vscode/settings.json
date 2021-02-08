@@ -16,5 +16,13 @@
     "system_error": "cpp",
     "tuple": "cpp",
     "type_traits": "cpp"
+  },
+  "files.exclude": {
+    ".github": true,
+    "builder/build": true,
+    "components": true,
+    "drivers": true,
+    "esp-idf": true,
+    "xtensa-esp32-elf": true
   }
 }

@@ -6,40 +6,26 @@
 
 #include <SPIFFS.h>
 
-// TODO(elliott): Change these to use "preferences" instead of SPIFFS
+#include <Preferences.h>
+Preferences filesPreferences;
 
 void writeFile(String name, String contents) {
-#if defined(ESP32) || defined(ESP8266)
-  File f = SPIFFS.open(name, "w");
-  f.print(contents);
-  f.flush();
-  f.close();
-#endif
+  filesPreferences.begin("settings", false);
+  filesPreferences.putString(name.c_str(), String(contents));
+  filesPreferences.end();
 }
 
 String readFile(String name) {
-  String ret;
-#if defined(ESP32) || defined(ESP8266)
-  File f = SPIFFS.open(name, "r");
-  if (!f)
-    return "";
-  ret = f.readString();
-
-  String newString;
-  for (int i = 0; i < ret.length(); i++) {
-    char inchar = ret[i];
-    if ((' ' <= inchar) && (inchar <= '~')) newString += inchar;
-  }
-
-  ret = newString;
-
-  f.close();
-#endif
-  return ret;
+  filesPreferences.begin("settings", false);
+  String value = filesPreferences.getString(name.c_str(), "");
+  filesPreferences.end();
+  return value;
 }
 
 void deleteAllFiles() {
-  SPIFFS.format();
+  filesPreferences.begin("settings", false);
+  filesPreferences.clear();
+  filesPreferences.end();
 }
 
 #endif // BUILDER_LIBRARIES_SOULMATE_FILES_H_

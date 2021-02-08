@@ -268,9 +268,14 @@ namespace SoulmateWifi {
           // WIFI_REASON_INVALID_RSN_IE_CAP       = 22,
           // WIFI_REASON_802_1X_AUTH_FAILED       = 23,
           // WIFI_REASON_CIPHER_SUITE_REJECTED    = 24,
+          // WIFI_REASON_BEACON_TIMEOUT           = 200,
+          // WIFI_REASON_NO_AP_FOUND              = 201,
+          // WIFI_REASON_AUTH_FAIL                = 202,
+          // WIFI_REASON_ASSOC_FAIL               = 203,
+          // WIFI_REASON_HANDSHAKE_TIMEOUT        = 204,
           Serial.println(F("[Soulmate-Wifi] Spurious disconnect event. Disconnect code:"));
           Serial.println(info.disconnected.reason);
-          Serial.println(F("[Soulmate-Wifi] See https://github.com/Soulmate-Lights/soulmate-core/blob/master/SoulmateMain.h#L246 for error code."));
+          Serial.println(F("[Soulmate-Wifi] See https://github.com/Soulmate-Lights/soulmate-core/blob/master/SoulmateWifi.h#L246 for error code."));
         }
       }
       break;
