@@ -13,8 +13,6 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: recursive
-      - name: pip
-        run: python -m pip install --user -r /home/runner/esp/esp-idf/requirements.txt
       - name: build
         run: docker build --tag soulmate-dev .
       - name: make
