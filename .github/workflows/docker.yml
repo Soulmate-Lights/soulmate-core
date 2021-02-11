@@ -1,7 +1,9 @@
-name: C/C++ CI
+name: Push Docker image
 
 on:
-  tags: "v*"
+  push:
+    tags:
+      - "v*"
 
 jobs:
   build:
