@@ -23,11 +23,7 @@ function execAsync(cmd) {
   });
 }
 
-// try {
-//   child_process.execSync("git pull");
-// } catch {
-//   console.log("Pulling failed");
-// }
+var cached = false;
 
 const compile = async (code) => {
   const id = v4();
@@ -49,6 +45,12 @@ const compile = async (code) => {
 
   const binFile = path.join(sketchDir, "build", `soulmate.bin`);
   const builtBinFile = `/${id}.bin`;
+  if (!cached) {
+    console.log("=== Not cached yet! Caching...");
+    execSync(`rm -rf ./builder/build`);
+    execSync(`cp -r ${sketchDir}/build ./builder`);
+    cached = true;
+  }
   execSync(`cp ${binFile} ${builtBinFile}`);
   execSync(`rm -rf ${sketchDir}`);
   return { stdout, binFile: builtBinFile };
@@ -66,4 +68,17 @@ app.post("/build", cors(), async (req, res) => {
   }
 });
 
-app.listen(port, () => console.log("App ready, listening on port", port));
+const sampleApp =
+  "#define FIRMWARE_NAME soulmate \n #include <Soulmate.h> \n void setup(){} \n void loop(){}";
+
+console.log("=== Compiling sample app to get started...");
+compile(sampleApp).then(() => {
+  console.log("=== Compiled sample app. Copying cache.");
+  app.listen(port, () => console.log("App ready, listening on port", port));
+});
+
+// try {
+//   child_process.execSync("git pull");
+// } catch {
+//   console.log("Pulling failed");
+// }
