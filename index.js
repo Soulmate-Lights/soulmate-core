@@ -32,12 +32,11 @@ function execAsync(cmd) {
 const compile = async (code) => {
   const id = v4();
   const sketchDir = path.join(__dirname, "output", id);
-  const mainDir = path.join(sketchDir, "main");
-
   execSync(`cp -r ./builder ${sketchDir}`);
+  const mainDir = path.join(sketchDir, "main");
   await fs.writeFile(path.join(mainDir, "main.cpp"), code, { encoding });
 
-  const command = `make -j${jobs} -C ${sketchDir}`;
+  const command = `make -j${jobs} -C ${sketchDir} app`;
   console.time(command);
   const { error, stderr, stdout } = await execAsync(command);
   console.timeEnd(command);
@@ -56,7 +55,7 @@ const compile = async (code) => {
 };
 
 app.post("/build", cors(), async (req, res) => {
-  const { error, binFile } = await compile(req.body.sketch);
+  const { error, stderr, binFile } = await compile(req.body.sketch);
 
   if (error) {
     res.status(500).send(stderr);

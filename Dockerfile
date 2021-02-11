@@ -8,13 +8,13 @@ RUN apt-get install -y nodejs
 RUN npm install -g yarn --unsafe-perm
 RUN yarn global add nodemon
 
-COPY . project
+COPY . /project
 WORKDIR /project
 ENV SOULMATE_PATH=/project
 ENV IDF_PATH=/opt/esp/idf
 RUN mkdir /project/output
-RUN mkdir /project/build
-RUN tar -xvf /project/build.tar.gz -C /project/build
+# This ZIP file has to be compiled in the same location as it's being extracted.
+RUN tar xvf /project/build.tgz -C /project/builder
 RUN yarn
 EXPOSE 8081
 CMD ["nodemon", "index.js"]
