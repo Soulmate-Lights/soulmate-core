@@ -18,4 +18,4 @@ RUN rm -rf /project/builder/build
 RUN tar xvf /project/build.tgz -C /project/builder
 RUN yarn
 EXPOSE 8081
-CMD ["nodemon", "index.js"]
+CMD ["node", "index.js"]
