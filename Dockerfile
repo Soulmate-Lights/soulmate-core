@@ -13,6 +13,7 @@ WORKDIR /project
 ENV SOULMATE_PATH=/project
 ENV IDF_PATH=/opt/esp/idf
 RUN mkdir /project/output
+RUN rm -rf /project/builder/build
 # This ZIP file has to be compiled in the same location as it's being extracted.
 RUN tar xvf /project/build.tgz -C /project/builder
 RUN yarn
