@@ -13,6 +13,9 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: recursive
+      - uses: satackey/action-docker-layer-caching@v0.0.11
+        # Ignore the failure of a step and avoid terminating the job.
+        continue-on-error: true
       - name: build
         run: docker build --tag soulmate-dev .
       - name: make
