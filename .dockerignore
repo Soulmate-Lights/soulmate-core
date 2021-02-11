@@ -1,0 +1,10 @@
+node_modules
+npm-debug.log
+.git
+esp-idf
+xtensa-esp32-elf
+drivers
+build
+output
+builder/build
+builder/main/build

@@ -1,0 +1,19 @@
+{
+  "name": "soulmate-builder-server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Elliott Kember <elliott.kember@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^0.20.0",
+    "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "rimraf": "^3.0.2",
+    "uuid": "^8.3.2",
+    "uuidv4": "^6.2.6"
+  },
+  "scripts": {
+    "start": "node index.js"
+  }
+}
