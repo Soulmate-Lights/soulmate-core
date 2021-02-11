@@ -68,7 +68,7 @@ app.post("/build", cors(), async (req, res) => {
   }
 });
 
-const sampleApp = `#define "FIRMWARE_NAME" soulmate \n #include <Soulmate.h> \n void setup(){} \n void loop(){}`;
+const sampleApp = `#define FIRMWARE_NAME "soulmate" \n #include <Soulmate.h> \n void setup(){} \n void loop(){}`;
 
 console.log("=== Compiling sample app to get started...");
 compile(sampleApp).then(() => {
