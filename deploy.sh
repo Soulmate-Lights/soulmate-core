@@ -1,1 +1,1 @@
-docker build --tag elliottkember/soulmate-builder && docker push elliottkember/soulmate-builder
+docker build --tag elliottkember/soulmate-builder-new && docker push elliottkember/soulmate-builder-new
