@@ -10,7 +10,7 @@ const cors = require("cors");
 const { v4 } = require("uuid");
 const rm = promisify(rimraf);
 
-const jobs = Math.max(1, os.cpus().length - 1);
+const jobs = Math.max(1, os.cpus().length + 1);
 const app = express();
 app.use(bodyParser.json());
 app.options("/build", cors());

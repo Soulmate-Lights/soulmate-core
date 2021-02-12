@@ -19,4 +19,4 @@ jobs:
       - name: build
         run: docker build --tag soulmate-dev .
       - name: make
-        run: docker run --rm soulmate-dev make -C builder
+        run: docker run --rm soulmate-dev make -j3 -C builder
