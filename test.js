@@ -41,7 +41,7 @@ const runTests = async () => {
   console.time("⏱", "Build failure");
   response = await fetchResult("Deliberately failing");
   size = parseInt(response.headers.get("content-length"));
-  test(`Built size was ${size}`, size == 253);
+  test(`Built size was ${size}`, size < 300);
   console.timeEnd("⏱", "Build failure");
 
   console.log("Testing parallel builds...");
