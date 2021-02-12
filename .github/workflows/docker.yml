@@ -1,4 +1,4 @@
-name: C/C++ CI
+name: Push Docker image
 
 on:
   push:
