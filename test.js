@@ -35,13 +35,13 @@ const runTests = async () => {
   console.time("⏱", "Compilation");
   response = await fetchResult(sketch);
   size = parseInt(response.headers.get("content-length"));
-  test("Size", size > 1320300 && size < 1320400);
+  test(`Built size was ${size}`, size > 1320000 && size < 1321000);
   console.timeEnd("⏱", "Compilation");
 
   console.time("⏱", "Build failure");
   response = await fetchResult("Deliberately failing");
   size = parseInt(response.headers.get("content-length"));
-  test("Size", size == 253);
+  test(`Built size was ${size}`, size == 253);
   console.timeEnd("⏱", "Build failure");
 
   console.log("Testing parallel builds...");
@@ -59,7 +59,7 @@ const runTests = async () => {
         // test("Parallel hex file is 13702 bytes", json.hex.length === 13702);
         // test("Size", response.headers.get("content-length") === 1320384);
         size = parseInt(response.headers.get("content-length"));
-        test("Size", size > 1320300 && size < 1320400);
+        test("Size", size > 1320000 && size < 1321000);
       })
     );
   });
