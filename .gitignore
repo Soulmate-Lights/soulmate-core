@@ -4,3 +4,4 @@ example/build
 .DS_Store
 sdkconfig
 sdkconfig.old
+.envrc
