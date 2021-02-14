@@ -18,11 +18,17 @@
     "type_traits": "cpp"
   },
   "files.exclude": {
-    ".github": true,
     "builder/build": true,
-    "components": true,
-    "drivers": true,
-    "esp-idf": true,
-    "xtensa-esp32-elf": true
+    "components": true
+  },
+  "launch": {
+    "configurations": [],
+    "compounds": []
+  },
+  "files.watcherExclude": {
+    "components/*": true
+  },
+  "search.exclude": {
+    "components/*": true
   }
 }

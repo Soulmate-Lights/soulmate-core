@@ -2,7 +2,7 @@
 #include "./SoulmateTime.h"
 
 #ifndef BUILDER_LIBRARIES_SOULMATE_CIRCADIAN_H_
-  #define BUILDER_LIBRARIES_SOULMATE_CIRCADIAN_H_
+#define BUILDER_LIBRARIES_SOULMATE_CIRCADIAN_H_
 
 namespace Circadian {
   const int SHOULD_TURN_OFF = 0;

@@ -1,10 +1,6 @@
-name: C/C++ CI
+name: Run tests
 
-on:
-  push:
-    branches: [master, elliott/builds]
-  pull_request:
-    branches: [master, elliott/builds]
+on: push
 
 jobs:
   build:
@@ -17,6 +13,6 @@ jobs:
         # Ignore the failure of a step and avoid terminating the job.
         continue-on-error: true
       - name: build
-        run: docker build --tag soulmate-dev .
-      - name: make
-        run: docker run --rm soulmate-dev make -j3 -C builder
+        run: docker build --tag soulmate-test .
+      - name: test
+        run: docker run --rm soulmate-test node test.js

@@ -1,5 +1,4 @@
 example/build
 .DS_Store
-builder/main/*
-!builder/main/component.mk
 builder/build
+node_modules
