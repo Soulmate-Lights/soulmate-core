@@ -12,6 +12,7 @@ const rm = promisify(rimraf);
 
 const jobs = Math.max(1, os.cpus().length + 1);
 const app = express();
+app.get("/", (req, res) => res.send(200));
 app.use(bodyParser.json());
 app.options("/build", cors());
 const port = process.env.PORT || 8081;
