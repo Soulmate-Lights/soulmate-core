@@ -9,7 +9,7 @@
 #define SOULMATE_CLOCK_PIN 29
 #define USE_WS2812B true
 
-#include <Soulmate.h>
+#include "Soulmate.h"
 
 void pattern() {
   for (int i = 0; i < N_LEDS; i++) {

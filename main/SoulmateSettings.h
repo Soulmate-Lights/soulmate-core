@@ -1,4 +1,4 @@
-#include "./SoulmateFiles.h"
+#include "SoulmateFiles.h"
 
 #ifndef BUILDER_LIBRARIES_SOULMATE_SETTINGS_H_
   #define BUILDER_LIBRARIES_SOULMATE_SETTINGS_H_

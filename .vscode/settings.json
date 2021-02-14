@@ -19,10 +19,10 @@
   },
   "files.exclude": {
     ".github": true,
-    "builder/build": true,
-    "components": true,
-    "drivers": true,
-    "esp-idf": true,
+    // "builder/build": true,
+    "components": false,
+    // "drivers": true,
+    // "esp-idf": true,
     "xtensa-esp32-elf": true
   }
 }

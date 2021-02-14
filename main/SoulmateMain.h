@@ -10,13 +10,13 @@
 #define FASTLED_INTERRUPT_RETRY_COUNT 1
 #define FASTLED_INTERNAL
 
-#include "./SoulmateBeatSin.h"
-#include "./SoulmateCircadian.h"
-#include "./SoulmateConfig.h"
-#include "./SoulmateFiles.h"
-#include "./SoulmateOTA.h"
-#include "./SoulmateSettings.h"
-#include "./components/ArduinoJson/ArduinoJson.h"
+#include "SoulmateBeatSin.h"
+#include "SoulmateCircadian.h"
+#include "SoulmateConfig.h"
+#include "SoulmateFiles.h"
+#include "SoulmateOTA.h"
+#include "SoulmateSettings.h"
+#include <ArduinoJson.h>
 #include <Arduino.h>
 #include <FastLED.h>
 #include <functional>

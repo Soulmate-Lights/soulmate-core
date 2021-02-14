@@ -6,7 +6,7 @@
 #include <HTTPClient.h>
 #include <HTTPUpdate.h>
 #include <time.h>
-#include "./SoulmateCircadian.h"
+#include "SoulmateCircadian.h"
 
 namespace SoulmateOTA {
   // What time of the day do we start updates?

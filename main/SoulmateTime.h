@@ -3,7 +3,7 @@
 
 String TIME_API = "http://worldtimeapi.org/api/ip";
 
-#include "./components/ArduinoJson/ArduinoJson.h"
+#include <ArduinoJson.h>
 #include <HTTPClient.h>
 #include <WiFi.h>
 

@@ -74,7 +74,7 @@ int GetIndex(struct Point pt) {
 }
 
 struct Point GetPoint(int index) {
-  Point out;
+  Point out = {};
 
   if ((index > N_CELLS) || (index < 0)) {
     out.x = -1;

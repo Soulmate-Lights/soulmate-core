@@ -1,9 +1,8 @@
 [submodule "components/arduino"]
 	path = components/arduino
 	url = https://github.com/espressif/arduino-esp32.git
-[submodule "components/Soulmate"]
-	path = components/Soulmate
-	url = git@github.com:Soulmate-Lights/soulmate-core.git
+	branch = master
+	# branch = idf-release/v4.2
 [submodule "components/ESPAsyncWebServer-master"]
 	path = components/ESPAsyncWebServer-master
 	url = https://github.com/me-no-dev/ESPAsyncWebServer.git
@@ -16,10 +15,7 @@
 [submodule "components/ArduinoJson"]
 	path = components/ArduinoJson
 	url = https://github.com/bblanchon/ArduinoJson.git
-    branch = 5.x	
-[submodule "example"]
-	path = example
-	url = git@github.com:Soulmate-Lights/soulmate-example.git
+    branch = 5.x
 [submodule "components/esp-nimble-component"]
 	path = components/esp-nimble-component
 	url = https://github.com/h2zero/esp-nimble-component.git
@@ -27,10 +23,8 @@
 [submodule "components/esp-nimble-cpp"]
 	path = components/esp-nimble-cpp
 	url = https://github.com/h2zero/esp-nimble-cpp.git
-[submodule "esp-idf"]
-	path = esp-idf
-	url = https://github.com/espressif/esp-idf.git
 [submodule "components/FastLED"]
 	path = components/FastLED
-	url = https://github.com/elliottkember/FastLED.git
-        branch = elliott/component.mk
+	url = https://github.com/FastLED/FastLED.git
+	# url = https://github.com/elliottkember/FastLED.git
+	# branch = elliott/component.mk

@@ -3,7 +3,8 @@
         {
             "name": "Mac",
             "includePath": [
-                "./components/**"
+                "${workspaceFolder}/main/**",
+                "${workspaceFolder}/components/**"
             ],
             "forcedInclude": [],
             "macFrameworkPath": [
@@ -11,7 +12,7 @@
                 "/Library/Frameworks"
             ],
             "intelliSenseMode": "gcc-x64",
-            "compilerPath": "~/esp/xtensa-esp32-elf/bin/xtensa-esp32-elf-gcc",
+            "compilerPath": "${env:IDF_TOOLS_PATH}/xtensa-esp32-elf-gcc",
             "cStandard": "c11",
             "cppStandard": "c++17",
             "defines": [

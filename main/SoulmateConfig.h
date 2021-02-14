@@ -3,7 +3,7 @@
 #ifndef BUILDER_LIBRARIES_SOULMATE_CONFIG_H_
 #define BUILDER_LIBRARIES_SOULMATE_CONFIG_H_
 
-#include "./components/ArduinoJson/ArduinoJson.h"
+#include <ArduinoJson.h>
 #include "soc/timer_group_reg.h"
 #include "soc/timer_group_struct.h"
 static TaskHandle_t FastLEDshowTaskHandle = 0;
