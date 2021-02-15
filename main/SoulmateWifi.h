@@ -39,7 +39,8 @@ void delayAndConnect(void *parameter) {
   if (!ssid.equals("")) {
     Serial.println("[Soulmate-Wifi] Set STA mode...");
     WiFi.mode(WIFI_STA);
-    WiFi.setSleep(false);
+    // Disabled due to errors with esp-idf 3.3.4
+    // WiFi.setSleep(false);
     vTaskDelay(1000 / portTICK_PERIOD_MS);
 
     Serial.println("[Soulmate-Wifi] WiFi.begin()...");
