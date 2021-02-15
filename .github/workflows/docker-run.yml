@@ -1,0 +1,22 @@
+name: Run in Docker
+
+on:
+  push:
+    branches: [master, elliott/builds]
+  pull_request:
+    branches: [master, elliott/builds]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      IDF_PATH: /home/runner/esp/esp-idf
+      SOULMATE_PATH: /home/runner/work/soulmate-core/soulmate-core
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Run a simple make
+        run: ./build.sh docker
