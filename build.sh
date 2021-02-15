@@ -12,8 +12,9 @@ esp_idf_v3_build_native() {
 
 # build docker v3.x
 esp_idf_v3_build_docker() {
+    N_CORES_DOCKER=$(docker run --rm espressif/idf:v3.3.4 /bin/bash -c "grep processor /proc/cpuinfo | wc -l; exit" | tail -1)
     cp arduinojason.mk components/ArduinoJson/component.mk
-    docker run --rm -v $PWD:/project -w /project espressif/idf:v3.3.2 make all -j$N_CORES;
+    docker run --rm -v $PWD:/project -w /project espressif/idf:v3.3.4 make all -j$N_CORES_DOCKER;
     rm components/ArduinoJson/component.mk
 }
 
