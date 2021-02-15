@@ -5,17 +5,17 @@ N_CORES=$(sysctl -n hw.ncpu) # macOS
 
 # ESP-IDF v3.x
 esp_idf_v3_build_native() {
-    cp arduinojason.mk components/ArduinoJson/component.mk
+    echo "COMPONENT_ADD_INCLUDEDIRS := src" > components/ArduinoJson/component.mk # No makefile workaround
     make all -j$N_CORES;
-    rm components/ArduinoJson/component.mk
+    rm components/ArduinoJson/component.mk  # No makefile workaround
 }
 
 # build docker v3.x
 esp_idf_v3_build_docker() {
     N_CORES_DOCKER=$(docker run --rm espressif/idf:v3.3.4 /bin/bash -c "grep processor /proc/cpuinfo | wc -l; exit" | tail -1)
-    cp arduinojason.mk components/ArduinoJson/component.mk
+    echo "COMPONENT_ADD_INCLUDEDIRS := src" > components/ArduinoJson/component.mk # No makefile workaround
     docker run --rm -v $PWD:/project -w /project espressif/idf:v3.3.4 make all -j$N_CORES_DOCKER;
-    rm components/ArduinoJson/component.mk
+    rm components/ArduinoJson/component.mk # No makefile workaround
 }
 
 # flash v3.x
