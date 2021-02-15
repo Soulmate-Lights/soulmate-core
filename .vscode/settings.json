@@ -18,7 +18,6 @@
     "type_traits": "cpp"
   },
   "files.exclude": {
-    ".github": true,
     // "builder/build": true,
     "components": false,
     // "drivers": true,
