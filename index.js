@@ -16,7 +16,9 @@ function execAsync(cmd) {
 }
 
 // TODO: Pull soulmate-core repo every build?
-execSync("./build.sh");
+console.log("Compiling a first build...");
+execSync("./build.sh > /dev/null");
+console.log("Done. Starting the app");
 
 const app = express();
 app.use(bodyParser.json());
@@ -34,7 +36,7 @@ app.post("/build", cors(), async (req, res) => {
 
   if (error) {
     execSync(`rm -rf ${sketchDir}`);
-    return res.status(500).send(stderr);
+    return res.sendStatus(500).send(stderr);
   }
 
   const binFile = path.join(sketchDir, "build", "soulmate.bin");

@@ -1,6 +1,6 @@
 FROM espressif/idf:v3.3.4 as esp
 RUN apt-get update \
-  && apt-get install -y curl \
+  && apt-get install -y curl rsync \
   && apt-get -y autoclean
 
 RUN curl -sL https://deb.nodesource.com/setup_12.x | bash -
