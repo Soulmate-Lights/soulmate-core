@@ -1,6 +1,11 @@
 #!/bin/bash
 
-N_CORES=$(sysctl -n hw.ncpu) # macOS
+if [ "$(uname)" == "Darwin" ]; then
+    N_CORES=$(sysctl -n hw.ncpu)
+elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+    N_CORES=$(nproc)
+fi
+
 # TODO: get cores linux
 
 # ESP-IDF v3.x
