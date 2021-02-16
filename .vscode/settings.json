@@ -18,10 +18,6 @@
     "type_traits": "cpp"
   },
   "files.exclude": {
-    // "builder/build": true,
     "components": false,
-    // "drivers": true,
-    // "esp-idf": true,
-    "xtensa-esp32-elf": true
   }
 }

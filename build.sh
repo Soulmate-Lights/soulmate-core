@@ -10,17 +10,43 @@ fi
 
 # ESP-IDF v3.x
 esp_idf_v3_build_native() {
-    echo "COMPONENT_ADD_INCLUDEDIRS := src" > components/ArduinoJson/component.mk # No makefile workaround
+    # [ArduinoJson] No makefile workaround begin
+    echo "COMPONENT_ADD_INCLUDEDIRS := src" > components/ArduinoJson/component.mk
+
+    # Run build
     make all -j$N_CORES;
-    rm components/ArduinoJson/component.mk  # No makefile workaround
+    STATUS=$?
+
+    # [ArduinoJson] No makefile workaround end
+    rm components/ArduinoJson/component.mk
+
+    # Verify build success
+    if [ $STATUS -ne 0 ]; then
+        echo "[ERROR] Build Failed"
+        exit $STATUS
+    fi
 }
 
 # build docker v3.x
 esp_idf_v3_build_docker() {
+    # get number of docker machine cores
     N_CORES_DOCKER=$(docker run --rm espressif/idf:v3.3.4 /bin/bash -c "grep processor /proc/cpuinfo | wc -l; exit" | tail -1)
-    echo "COMPONENT_ADD_INCLUDEDIRS := src" > components/ArduinoJson/component.mk # No makefile workaround
-    docker run --rm -v $PWD:/project -w /project espressif/idf:v3.3.4 make all -j$N_CORES_DOCKER;
-    rm components/ArduinoJson/component.mk # No makefile workaround
+
+    # [ArduinoJson] No makefile workaround begin
+    echo "COMPONENT_ADD_INCLUDEDIRS := src" > components/ArduinoJson/component.mk
+
+    # Run build
+    docker run --rm -v kconfig:/opt/esp/idf/tools/kconfig -v $PWD:/project -w /project espressif/idf:v3.3.4 make all -j$N_CORES_DOCKER;
+    STATUS=$?
+
+    # [ArduinoJson] No makefile workaround end
+    rm components/ArduinoJson/component.mk
+
+    # Verify build success
+    if [ $STATUS -ne 0 ]; then
+        echo "[ERROR] Docker Build Failed"
+        exit $STATUS
+    fi
 }
 
 # flash v3.x
