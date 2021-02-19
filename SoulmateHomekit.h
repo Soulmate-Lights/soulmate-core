@@ -1,6 +1,6 @@
 // TODO(elliott): Notify Bluetooth when value changes (without crashing)
 
-#include "./SoulmateMain.h"
+// #include "./SoulmateMain.h"
 #include "driver/gpio.h"
 #include "esp_event_loop.h"
 #include "esp_log.h"
