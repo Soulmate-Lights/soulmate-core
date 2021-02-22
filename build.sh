@@ -6,16 +6,17 @@ elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
     N_CORES=$(nproc)
 fi
 
-# TODO: get cores linux
+copy_overrides_files() {
+    cmp --silent overrides/arduinoJson.mk components/ArduinoJson/component.mk || cp overrides/arduinoJson.mk components/ArduinoJson/component.mk
+    cmp --silent overrides/arduino.mk components/arduino/component.mk || cp overrides/arduino.mk components/arduino/component.mk
+}
 
 # ESP-IDF v3.x
 esp_idf_v3_build_native() {
-    # Makefile config overrides 
-    cp overrides/arduinoJson.mk components/ArduinoJson/component.mk
-    cp overrides/arduino.mk components/arduino/component.mk
+    copy_overrides_files
 
     # Run build
-    make all -j$N_CORES;
+    make app -j$N_CORES;
     STATUS=$?
 
     # Verify build success
@@ -30,12 +31,10 @@ esp_idf_v3_build_docker() {
     # get number of docker machine cores
     N_CORES_DOCKER=$(docker run --rm espressif/idf:v3.3.4 /bin/bash -c "grep processor /proc/cpuinfo | wc -l; exit" | tail -1)
 
-    # Makefile config overrides
-    cp overrides/arduinoJson.mk components/ArduinoJson/component.mk
-    cp overrides/arduino.mk components/arduino/component.mk
+    copy_overrides_files
 
     # Run build
-    docker run --rm -v kconfig:/opt/esp/idf/tools/kconfig -v $PWD:/project -w /project espressif/idf:v3.3.4 make all -j$N_CORES_DOCKER;
+    docker run --rm -v kconfig:/opt/esp/idf/tools/kconfig -v $PWD:/project -w /project espressif/idf:v3.3.4 make app -j$N_CORES_DOCKER;
     STATUS=$?
 
     # Verify build success
