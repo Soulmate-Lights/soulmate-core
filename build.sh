@@ -20,6 +20,9 @@ esp_idf_v3_build_native() {
     # [ArduinoJson] No makefile workaround end
     rm components/ArduinoJson/component.mk
 
+    # [Arduino] component.mk needs flags
+    cp arduino-component.mk components/arduino/component.mk
+
     # Verify build success
     if [ $STATUS -ne 0 ]; then
         echo "[ERROR] Build Failed"
