@@ -13,15 +13,15 @@ esp_idf_v3_build_native() {
     # [ArduinoJson] No makefile workaround begin
     echo "COMPONENT_ADD_INCLUDEDIRS := src" > components/ArduinoJson/component.mk
 
+    # [Arduino] component.mk needs flags
+    cp arduino-component.mk components/arduino/component.mk
+
     # Run build
     make all -j$N_CORES;
     STATUS=$?
 
     # [ArduinoJson] No makefile workaround end
     rm components/ArduinoJson/component.mk
-
-    # [Arduino] component.mk needs flags
-    cp arduino-component.mk components/arduino/component.mk
 
     # Verify build success
     if [ $STATUS -ne 0 ]; then
@@ -37,6 +37,9 @@ esp_idf_v3_build_docker() {
 
     # [ArduinoJson] No makefile workaround begin
     echo "COMPONENT_ADD_INCLUDEDIRS := src" > components/ArduinoJson/component.mk
+
+    # [Arduino] component.mk needs flags
+    cp arduino-component.mk components/arduino/component.mk
 
     # Run build
     docker run --rm -v kconfig:/opt/esp/idf/tools/kconfig -v $PWD:/project -w /project espressif/idf:v3.3.4 make all -j$N_CORES_DOCKER;
