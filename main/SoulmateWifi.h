@@ -246,6 +246,8 @@ namespace SoulmateWifi {
           }
         } else if (info.disconnected.reason == WIFI_REASON_AUTH_EXPIRE) {
           Serial.println("Auth expired. We'll try again.");
+        } else if (info.disconnected.reason == WIFI_REASON_ASSOC_EXPIRE) {
+          xTaskCreate(delayAndConnectWayLater, "DelayAndConnectWayLater", 10000, NULL, 0, NULL);
         } else {
           // WIFI_REASON_UNSPECIFIED              = 1,
           // WIFI_REASON_AUTH_EXPIRE              = 2,
