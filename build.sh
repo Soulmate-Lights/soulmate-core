@@ -11,6 +11,11 @@ copy_overrides_files() {
     cmp --silent overrides/arduino.mk components/arduino/component.mk || cp overrides/arduino.mk components/arduino/component.mk
 }
 
+restore_ovrerides_files() {
+    (cd components/ArduinoJson && rm component.mk)
+    (cd components/arduino && git checkout component.mk)
+}
+
 # ESP-IDF v3.x
 esp_idf_v3_build_native() {
     copy_overrides_files
@@ -18,6 +23,8 @@ esp_idf_v3_build_native() {
     # Run build
     make app -j$N_CORES;
     STATUS=$?
+
+    restore_ovrerides_files
 
     # Verify build success
     if [ $STATUS -ne 0 ]; then
@@ -36,6 +43,8 @@ esp_idf_v3_build_docker() {
     # Run build
     docker run --rm -v kconfig:/opt/esp/idf/tools/kconfig -v $PWD:/project -w /project espressif/idf:v3.3.4 make app -j$N_CORES_DOCKER;
     STATUS=$?
+
+    restore_ovrerides_files
 
     # Verify build success
     if [ $STATUS -ne 0 ]; then
