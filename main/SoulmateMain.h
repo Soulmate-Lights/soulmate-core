@@ -14,7 +14,6 @@
 #include "SoulmateCircadian.h"
 #include "SoulmateConfig.h"
 #include "SoulmateFiles.h"
-#include "SoulmateOTA.h"
 #include "SoulmateSettings.h"
 #include <ArduinoJson.h>
 #include <Arduino.h>
@@ -196,9 +195,6 @@ public:
 
     // Restore lamp name
     name = SoulmateSettings::readSavedName();
-
-    writeFile("test", "this isn't going to work");
-    Serial.println(readFile("test"));
 
     // Restore last routine
     int savedRoutine = SoulmateSettings::savedRoutine();
@@ -419,20 +415,6 @@ public:
     }
 
     adjustFromButton();
-
-    // // This is something we use for our internal Soulmate lights!
-    // #ifdef AUTOMATIC_OTA_UPDATES
-    //     EVERY_N_SECONDS(300) {
-    //       if (wifiConnected()) {
-    //         if (!on && FastLED.getBrightness() == 0 &&
-    //             SoulmateOTA::shouldUpdate()) {
-    //           writeFile("/start-off", on ? "false" : "true");
-    //           stop();
-    //           SoulmateOTA::update();
-    //         }
-    //       }
-    //     }
-    // #endif
 
     EVERY_N_SECONDS(5) {
       switch (Circadian::checkTime()) {
