@@ -1,0 +1,30 @@
+name: Run in Docker
+
+on:
+  push:
+    branches: [master, elliott/builds]
+  pull_request:
+    branches: [master, feature/redo-project-layout]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      IDF_PATH: /home/runner/esp/esp-idf
+      SOULMATE_PATH: /home/runner/work/soulmate-core/soulmate-core
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Cache build path
+        uses: actions/cache@v2
+        with:
+          path: build
+          key: ${{ runner.os }}-${{ hashFiles('./build.sh') }}
+
+      - uses: satackey/action-docker-layer-caching@v0.0.11
+        continue-on-error: true
+      - name: Run a simple make
+        run: ./build.sh docker

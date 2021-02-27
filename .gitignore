@@ -1,5 +1,6 @@
+[Bb]uild/
+components/
 example/build
 .DS_Store
-builder/main/*
-!builder/main/component.mk
-builder/build
+sdkconfig.old
+.envrc
