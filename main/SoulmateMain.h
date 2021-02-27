@@ -197,9 +197,6 @@ public:
     // Restore lamp name
     name = SoulmateSettings::readSavedName();
 
-    writeFile("test", "this isn't going to work");
-    Serial.println(readFile("test"));
-
     // Restore last routine
     int savedRoutine = SoulmateSettings::savedRoutine();
     if (savedRoutine && savedRoutine < routineCount)
