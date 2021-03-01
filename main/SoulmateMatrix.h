@@ -145,9 +145,9 @@ int16_t gridIndexHorizontal(int16_t x, int16_t y) {
 
   // Mirrored left-to-right
   // Don't apply if we're reversing it (reversing does the same)
-  if (SOULMATE_MIRROR && !SOULMATE_REVERSE) {
-    xIndex = LED_COLS - 1 - xIndex;
-  }
+  // if (SOULMATE_MIRROR && !SOULMATE_REVERSE) {
+  //   xIndex = LED_COLS - 1 - xIndex;
+  // }
 
   int16_t index = y * LED_COLS + xIndex;
 
@@ -158,8 +158,7 @@ int16_t gridIndexHorizontal(int16_t x, int16_t y) {
   return -1;
 }
 
-uint16_t XY(uint8_t x, uint8_t y) {
-  // return (y * LED_COLS) + x;
+uint16_t XY(uint16_t x, uint16_t y) {
   return gridIndexHorizontal(x, y);
 }
 

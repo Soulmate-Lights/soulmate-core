@@ -3,7 +3,7 @@
 #ifndef BUILDER_LIBRARIES_SOULMATE_SOULMATEMAIN_H_
 #define BUILDER_LIBRARIES_SOULMATE_SOULMATEMAIN_H_
 
-#define SOULMATE_VERSION "9.0.0"
+#define SOULMATE_VERSION "9.0.1"
 
 // #define FASTLED_RMT_MAX_CHANNELS 1
 // #define FASTLED_RMT_BUILTIN_DRIVER 1
@@ -15,6 +15,7 @@
 #include "SoulmateConfig.h"
 #include "SoulmateFiles.h"
 #include "SoulmateSettings.h"
+#include "SoulmateMatrix.h"
 #include <ArduinoJson.h>
 #include <Arduino.h>
 #include <FastLED.h>
@@ -97,6 +98,10 @@ public:
     message["wakeTime"] = Circadian::wakeTime;
     message["sleepTime"] = Circadian::sleepTime;
     message["lanip"] = false;
+
+    #ifdef SOULMATE_BUILD
+      message["build"] = SOULMATE_BUILD
+    #endif
 
     if (showLANIP)
       message["lanip"] = ip();
@@ -284,24 +289,38 @@ public:
   }
 
   void reverseLeds() {
-    uint16_t left = 0;
-    uint16_t right = N_LEDS-1;
-    while (left < right) {
-      CRGB temp = leds[left];
-      leds[left++] = leds[right];
-      leds[right--] = temp;
+    // Flip vertical
+    if (SOULMATE_REVERSE) {
+      for (uint16_t x = 0; x < LED_COLS; x++) {
+        for (uint16_t y = 0; y < LED_ROWS / 2; y++) {
+          uint16_t one = XY(x, LED_ROWS - 1 - y);
+          uint16_t two = XY(x, y);
+          CRGB temp = leds[one];
+          leds[one] = leds[two];
+          leds[two] = temp;
+        }
+      }
+    }
+
+    // // Flip horizontal
+    if (SOULMATE_MIRROR) {
+      for (uint16_t y = 0; y < LED_ROWS; y++) {
+        for (uint16_t x = 0; x < LED_COLS / 2; x++) {
+          uint16_t one = XY(LED_COLS - 1 - x, y);
+          uint16_t two = XY(x, y);
+          CRGB temp = leds[one];
+          leds[one] = leds[two];
+          leds[two] = temp;
+        }
+      }
     }
   }
 
   void fastLedShow() {
     EVERY_N_MILLISECONDS(1000 / 60) {
-      if (SOULMATE_REVERSE) {
-        reverseLeds();
-        FastLED.show();
-        reverseLeds();
-      } else {
-        FastLED.show();
-      }
+      reverseLeds();
+      FastLED.show();
+      reverseLeds();
     }
   }
 
