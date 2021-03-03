@@ -100,7 +100,7 @@ public:
     message["lanip"] = false;
 
     #ifdef SOULMATE_BUILD
-      message["build"] = SOULMATE_BUILD
+      message["build"] = SOULMATE_BUILD;
     #endif
 
     if (showLANIP)
