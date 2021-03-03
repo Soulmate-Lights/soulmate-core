@@ -100,14 +100,8 @@ namespace BLE {
 
   void notify() {
     String status = Soulmate.status(false);
-    Serial.print("Notifying status: ");
-    Serial.println(status.c_str());
-    pCharacteristic->setValue(status.c_str());
-
-    std::string value = pCharacteristic->getValue();
-    String input = value.c_str();
-    Serial.print("Read status back: ");
-    Serial.println(input);
+    const char* data = status.c_str();
+    pCharacteristic->setValue((unsigned char *)data, status.length());
     pCharacteristic->notify();
   }
 
