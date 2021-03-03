@@ -21,7 +21,7 @@ esp_idf_v3_build_native() {
     copy_overrides_files
 
     # Run build
-    make app -j$N_CORES;
+    make all -j$N_CORES;
     STATUS=$?
 
     restore_ovrerides_files
@@ -41,7 +41,7 @@ esp_idf_v3_build_docker() {
     copy_overrides_files
 
     # Run build
-    docker run --rm -v kconfig:/opt/esp/idf/tools/kconfig -v $PWD:/project -w /project espressif/idf:v3.3.4 make app -j$N_CORES_DOCKER;
+    docker run --rm -v kconfig:/opt/esp/idf/tools/kconfig -v $PWD:/project -w /project espressif/idf:v3.3.4 make all -j$N_CORES_DOCKER;
     STATUS=$?
 
     restore_ovrerides_files
