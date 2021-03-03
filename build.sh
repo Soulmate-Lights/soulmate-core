@@ -1,8 +1,8 @@
 #!/bin/bash
 
-if [ "$(uname)" == "Darwin" ]; then
+if [[ "$(uname)" == "Darwin" ]]; then
     N_CORES=$(sysctl -n hw.ncpu)
-elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]]; then
     N_CORES=$(nproc)
 fi
 

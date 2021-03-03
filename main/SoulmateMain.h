@@ -10,6 +10,7 @@
 #define FASTLED_INTERRUPT_RETRY_COUNT 1
 #define FASTLED_INTERNAL
 
+#include "SoulmateAudio.h"
 #include "SoulmateBeatSin.h"
 #include "SoulmateCircadian.h"
 #include "SoulmateConfig.h"
@@ -230,6 +231,10 @@ public:
     WifiSetup();
 #ifndef SKIP_BLUETOOTH
     BluetoothSetup();
+#endif
+
+#ifdef MIC_ENABLED
+    InitI2SAudio(MODE_MIC);
 #endif
 
     Serial.println(status(true));

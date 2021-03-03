@@ -11,6 +11,9 @@
 #define SOULMATE_SERPENTINE true
 // #define USE_WS2812B true
 
+// NOCHECKIN
+#define MIC_ENABLED
+
 #include "Soulmate.h"
 
 void pattern() {

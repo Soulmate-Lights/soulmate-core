@@ -15,7 +15,9 @@
     "ratio": "cpp",
     "system_error": "cpp",
     "tuple": "cpp",
-    "type_traits": "cpp"
+    "type_traits": "cpp",
+    "timer.h": "cpp",
+    "soulmateaudio.h": "cpp"
   },
   "files.exclude": {
     "components": false,
