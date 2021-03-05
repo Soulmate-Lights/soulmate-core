@@ -421,6 +421,10 @@ public:
 
   void loop() {
 
+    if (isStopped()) {
+      return;
+    }
+
     while (Serial.available()) {
       char inChar = (char)Serial.read();
       inputString += inChar;
