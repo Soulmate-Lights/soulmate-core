@@ -356,7 +356,7 @@ namespace SoulmateWifi {
             if (!Update.begin()) {
               Update.printError(Serial);
               restartRequired = true;
-              ESP.restart();
+              Soulmate.stopped = false;
             }
           }
 
@@ -364,7 +364,7 @@ namespace SoulmateWifi {
             if (Update.write(data, len) != len) {
               Update.printError(Serial);
               restartRequired = true;
-              ESP.restart();
+              Soulmate.stopped = false;
             }
           }
 
@@ -378,7 +378,7 @@ namespace SoulmateWifi {
             // For some multi-thread reason,
             // it's better to restart in the main loop thread.
             restartRequired = true;
-            ESP.restart();
+            Soulmate.stopped = false;
           }
         });
   }
