@@ -55,7 +55,7 @@ esp_idf_v3_build_docker() {
 
 # flash v3.x
 esp_idf_v3_flash() {
-    python $IDF_PATH/components/esptool_py/esptool/esptool.py --chip esp32 $@ --baud 115200 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 40m --flash_size detect 0xe000 build/ota_data_initial.bin 0x1000 build/bootloader/bootloader.bin 0x10000 build/soulmate.bin 0x8000 build/partitions.bin
+    python $IDF_PATH/components/esptool_py/esptool/esptool.py --chip esp32 $@ --baud 1500000 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 40m --flash_size detect 0xe000 build/ota_data_initial.bin 0x1000 build/bootloader/bootloader.bin 0x10000 build/soulmate.bin 0x8000 build/partitions.bin
 }
 
 # ESP-IDF v4.x
