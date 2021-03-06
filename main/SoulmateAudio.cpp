@@ -10,18 +10,18 @@
 #define MIC_SAMPLE_FREQUENCY    16000   // Low samplerates not possible due to hardware requirements
 #define NUM_WINDOWS_PER_SECOND  50      // 20ms per window
 #define NUM_BUF_WINDOWS         2       // store N windows of audio
+#define WINDOW_PERIOD_US        (1000000 / NUM_WINDOWS_PER_SECOND)  // Microseconds per sampling window
 
-typedef struct {
-    uint16_t offset;
-    uint16_t window_length;
-    uint8_t n_windows;
-    uint8_t n_windows_available;
-    int16_t *samples;
-} audio_buffer_t;
+static uint16_t audioOffset;
+static int16_t audioSamples[MIC_SAMPLE_FREQUENCY / NUM_WINDOWS_PER_SECOND];
 
-static audio_buffer_t audioBuf;
+// Disable all audio
+esp_err_t audioDisable(void)
+{
+    return audioDisableI2S();
+}
 
-esp_err_t InitI2SAudio(audio_mode_t mode)
+esp_err_t audioEnableI2S(audio_mode_t mode)
 {
     esp_err_t err = i2s_driver_uninstall(SPEAKER_I2S_NUMBER);
     if (err != ESP_OK) {
@@ -29,18 +29,7 @@ esp_err_t InitI2SAudio(audio_mode_t mode)
     }
 
     // setup audio buffer
-    audioBuf.offset = 0;
-    audioBuf.window_length = MIC_SAMPLE_FREQUENCY / NUM_WINDOWS_PER_SECOND; // 20ms
-    audioBuf.n_windows = NUM_BUF_WINDOWS;
-    audioBuf.n_windows_available = 0;
-    uint16_t buf_size = audioBuf.window_length * audioBuf.n_windows * sizeof(audioBuf.samples[0]);
-    if (audioBuf.samples != NULL) {
-        free(audioBuf.samples);
-    }
-    audioBuf.samples = (int16_t*)malloc(buf_size);
-    if (audioBuf.samples == NULL) {
-        return ESP_FAIL;
-    }
+    audioOffset = 0;
     
     // configure i2s
     i2s_config_t i2s_config = {
@@ -50,8 +39,8 @@ esp_err_t InitI2SAudio(audio_mode_t mode)
         .channel_format = I2S_CHANNEL_FMT_ALL_RIGHT,
         .communication_format = I2S_COMM_FORMAT_I2S,
         .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
-        .dma_buf_count = audioBuf.n_windows,
-        .dma_buf_len = audioBuf.window_length,
+        .dma_buf_count = NUM_BUF_WINDOWS,
+        .dma_buf_len = MIC_SAMPLE_FREQUENCY / NUM_WINDOWS_PER_SECOND,
         .use_apll = false,
         .tx_desc_auto_clear = false,
         .fixed_mclk = 0,
@@ -83,36 +72,34 @@ esp_err_t InitI2SAudio(audio_mode_t mode)
     return err;
 }
 
-static void audioUpdate(void)
+esp_err_t audioDisableI2S(void)
 {
+    return i2s_driver_uninstall(SPEAKER_I2S_NUMBER);
+}
+
+static void audioI2SUpdate(void)
+{
+    // check time since last update
+    static int64_t last_update_time_us;
+    int64_t current_time_us = esp_timer_get_time();
+    if (current_time_us - last_update_time_us < WINDOW_PERIOD_US) {
+        return;
+    }
+    last_update_time_us = current_time_us;
+    
     // Find out how many bytes to read
-    uint16_t buf_len = audioBuf.window_length * audioBuf.n_windows;
-    uint16_t n_free_samples = buf_len - audioBuf.offset;
-    uint16_t n_bytes_to_read = (n_free_samples < audioBuf.window_length) ?
-        (n_free_samples * sizeof(audioBuf.samples[0])) :
-        (audioBuf.window_length * sizeof(audioBuf.samples[0]));
+    uint16_t buf_len = sizeof(audioSamples) / sizeof(audioSamples[0]);
+    uint16_t n_free_samples = buf_len - audioOffset;
+    uint16_t n_bytes_to_read = n_free_samples * sizeof(audioSamples[0]);
 
     // read bytes
     size_t bytes_read;
-    i2s_read(SPEAKER_I2S_NUMBER, (audioBuf.samples + audioBuf.offset), n_bytes_to_read, &bytes_read, 0);
-    audioBuf.offset = (audioBuf.offset + bytes_read) % buf_len;
-
-    // update n_windows_available
-    if (bytes_read > 0) {
-        Serial.printf("NumSaples: %d\n", bytes_read/2);
-        if (audioBuf.offset % audioBuf.window_length == 0) {    // complete window read
-            audioBuf.n_windows_available++;
-        } else if (audioBuf.n_windows_available == audioBuf.n_windows_available) { // partial window read with buffer overrun
-            audioBuf.n_windows_available--;
-        }
-
-        // complete window read with buffer overrun
-        if (audioBuf.n_windows_available > audioBuf.n_windows_available) {
-            audioBuf.n_windows_available = audioBuf.n_windows;
-        }
-    }
+    i2s_read(SPEAKER_I2S_NUMBER, (audioSamples + audioOffset), n_bytes_to_read, &bytes_read, 0);
+    audioOffset = (audioOffset + (bytes_read >> 1)) % buf_len;
 }
 
-uint16_t audioAvailable(void) {
-    return audioBuf.n_windows_available * audioBuf.window_length;
+int audioI2SSamples(int16_t **samples) {
+    audioI2SUpdate();
+    *samples = audioSamples;
+    return sizeof(audioSamples) / sizeof(audioSamples[0]);
 }

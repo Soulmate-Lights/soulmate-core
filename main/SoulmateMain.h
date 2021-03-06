@@ -233,8 +233,8 @@ public:
     BluetoothSetup();
 #endif
 
-#ifdef MIC_ENABLED
-    InitI2SAudio(MODE_MIC);
+#ifdef USE_MICROPHONE
+    audioEnableI2S(MODE_MIC);
 #endif
 
     Serial.println(status(true));

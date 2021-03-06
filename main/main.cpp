@@ -12,7 +12,7 @@
 // #define USE_WS2812B true
 
 // NOCHECKIN
-#define MIC_ENABLED
+#define USE_MICROPHONE
 
 #include "Soulmate.h"
 
