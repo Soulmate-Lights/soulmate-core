@@ -207,6 +207,10 @@ public:
     if (savedRoutine && savedRoutine < routineCount)
       currentRoutine = savedRoutine;
 
+#ifdef USE_MICROPHONE
+    audioEnableI2S(MODE_MIC);
+#endif
+
 // Set up FastLED
 #ifdef USE_WS2812B
     FastLED.addLeds<WS2812B, SOULMATE_DATA_PIN, SOULMATE_COLOR_ORDER>(leds,
@@ -231,10 +235,6 @@ public:
     WifiSetup();
 #ifndef SKIP_BLUETOOTH
     BluetoothSetup();
-#endif
-
-#ifdef USE_MICROPHONE
-    audioEnableI2S(MODE_MIC);
 #endif
 
     Serial.println(status(true));

@@ -17,6 +17,6 @@ esp_err_t audioDisable(void);
 // I2S Audio
 esp_err_t audioDisableI2S(void);
 esp_err_t audioEnableI2S(audio_mode_t mode);
-int audioI2SSamples(int16_t **samples);
+int16_t* audioI2SSamples(int *n);
 
 #endif /* soulmate_audio_h */

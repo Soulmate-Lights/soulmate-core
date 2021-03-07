@@ -10,7 +10,9 @@
 #define MIC_SAMPLE_FREQUENCY    16000   // Low samplerates not possible due to hardware requirements
 #define NUM_WINDOWS_PER_SECOND  50      // 20ms per window
 #define NUM_BUF_WINDOWS         2       // store N windows of audio
-#define WINDOW_PERIOD_US        (1000000 / NUM_WINDOWS_PER_SECOND)  // Microseconds per sampling window
+
+#define MICROSECONDS_PER_S      (1000000)   
+#define WINDOW_PERIOD_US        (MICROSECONDS_PER_S / NUM_WINDOWS_PER_SECOND)  // Microseconds per sampling window
 
 static uint16_t audioOffset;
 static int16_t audioSamples[MIC_SAMPLE_FREQUENCY / NUM_WINDOWS_PER_SECOND];
@@ -77,13 +79,13 @@ esp_err_t audioDisableI2S(void)
     return i2s_driver_uninstall(SPEAKER_I2S_NUMBER);
 }
 
-static void audioI2SUpdate(void)
+static esp_err_t audioI2SUpdate(void)
 {
     // check time since last update
     static int64_t last_update_time_us;
     int64_t current_time_us = esp_timer_get_time();
-    if (current_time_us - last_update_time_us < WINDOW_PERIOD_US) {
-        return;
+    if ((current_time_us - last_update_time_us) < (WINDOW_PERIOD_US + 250)) {
+        return ESP_OK;
     }
     last_update_time_us = current_time_us;
     
@@ -94,12 +96,24 @@ static void audioI2SUpdate(void)
 
     // read bytes
     size_t bytes_read;
-    i2s_read(SPEAKER_I2S_NUMBER, (audioSamples + audioOffset), n_bytes_to_read, &bytes_read, 0);
+    esp_err_t status = i2s_read(SPEAKER_I2S_NUMBER, (audioSamples + audioOffset), n_bytes_to_read, &bytes_read, 0);
     audioOffset = (audioOffset + (bytes_read >> 1)) % buf_len;
+
+    return status;
 }
 
-int audioI2SSamples(int16_t **samples) {
-    audioI2SUpdate();
-    *samples = audioSamples;
-    return sizeof(audioSamples) / sizeof(audioSamples[0]);
+int16_t* audioI2SSamples(int *n) {
+    esp_err_t status = ESP_FAIL;
+
+#ifdef USE_MICROPHONE
+    status = audioI2SUpdate();
+#endif
+
+    if (status != ESP_OK) {
+        *n = 0;
+        return NULL;
+    }
+
+    *n = sizeof(audioSamples) / sizeof(audioSamples[0]);
+    return audioSamples;
 }
