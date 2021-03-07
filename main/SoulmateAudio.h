@@ -11,12 +11,19 @@ typedef enum {
   MODE_SPK,
 } audio_mode_t;
 
+typedef struct {
+  uint32_t frame_number;
+  uint16_t sample_frequency;
+  uint16_t num_samples;
+  int16_t *samples;
+} audio_frame_t;
+
 // All audio
 esp_err_t audioDisable(void);
 
 // I2S Audio
 esp_err_t audioDisableI2S(void);
 esp_err_t audioEnableI2S(audio_mode_t mode);
-int16_t* audioI2SSamples(int *n);
+audio_frame_t* audioGetFrameI2S(void);
 
 #endif /* soulmate_audio_h */
