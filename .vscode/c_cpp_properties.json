@@ -1,7 +1,7 @@
 {
     "configurations": [
         {
-            "name": "Mac",
+            "name": "ESP32",
             "includePath": [
                 "${workspaceFolder}/main/**",
                 "${workspaceFolder}/components/**"
@@ -11,7 +11,7 @@
                 "/System/Library/Frameworks",
                 "/Library/Frameworks"
             ],
-            "intelliSenseMode": "gcc-x64",
+            "intelliSenseMode": "gcc-arm",
             "compilerPath": "${env:IDF_TOOLS_PATH}/xtensa-esp32-elf-gcc",
             "cStandard": "c11",
             "cppStandard": "c++17",

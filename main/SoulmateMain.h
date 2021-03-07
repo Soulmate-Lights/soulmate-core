@@ -10,6 +10,7 @@
 #define FASTLED_INTERRUPT_RETRY_COUNT 1
 #define FASTLED_INTERNAL
 
+#include "SoulmateAudio.h"
 #include "SoulmateBeatSin.h"
 #include "SoulmateCircadian.h"
 #include "SoulmateConfig.h"
@@ -205,6 +206,10 @@ public:
     int savedRoutine = SoulmateSettings::savedRoutine();
     if (savedRoutine && savedRoutine < routineCount)
       currentRoutine = savedRoutine;
+
+#ifdef USE_MICROPHONE
+    audioEnableI2S(MODE_MIC);
+#endif
 
 // Set up FastLED
 #ifdef USE_WS2812B
