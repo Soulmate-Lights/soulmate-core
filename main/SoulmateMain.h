@@ -3,7 +3,7 @@
 #ifndef SOULMATE_SOULMATEMAIN_H_
 #define SOULMATE_SOULMATEMAIN_H_
 
-#define SOULMATE_VERSION "9.0.3"
+#define SOULMATE_VERSION "9.0.4"
 
 // #define FASTLED_RMT_MAX_CHANNELS 1
 // #define FASTLED_RMT_BUILTIN_DRIVER 1
@@ -25,7 +25,7 @@
 void FastLEDshowTask(void *pvParameters);
 
 class SoulmateLibrary {
-public:
+ public:
   SoulmateLibrary() {
   }
 
@@ -420,7 +420,6 @@ public:
   boolean stringComplete = false;
 
   void loop() {
-
     if (isStopped()) {
       return;
     }
