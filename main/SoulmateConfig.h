@@ -1,7 +1,7 @@
 // Copyright 2019 Soulmate Lighting, LLC
 
-#ifndef BUILDER_LIBRARIES_SOULMATE_CONFIG_H_
-#define BUILDER_LIBRARIES_SOULMATE_CONFIG_H_
+#ifndef SOULMATE_CONFIG_H_
+#define SOULMATE_CONFIG_H_
 
 #include <ArduinoJson.h>
 #include "soc/timer_group_reg.h"
@@ -78,4 +78,4 @@ static TaskHandle_t FastLEDshowTaskHandle = 0;
   #define BUTTON_ON_VALUE LOW
 #endif
 
-#endif // BUILDER_LIBRARIES_SOULMATE_CONFIG_H_
+#endif // SOULMATE_CONFIG_H_

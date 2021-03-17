@@ -1,8 +1,8 @@
 // Copyright 2019 Soulmate Lighting, LLC
 /* cpplint-ignore readability/casting */
 
-#ifndef BUILDER_LIBRARIES_SOULMATE_SOULMATEWIFI_H_
-#define BUILDER_LIBRARIES_SOULMATE_SOULMATEWIFI_H_
+#ifndef SOULMATE_SOULMATEWIFI_H_
+#define SOULMATE_SOULMATEWIFI_H_
 
 #include <ArduinoOTA.h>
 #include <AsyncTCP.h>
@@ -440,4 +440,4 @@ String SoulmateLibrary::ip() {
   return WiFi.localIP().toString();
 }
 
-#endif // BUILDER_LIBRARIES_SOULMATE_SOULMATEWIFI_H_
+#endif // SOULMATE_SOULMATEWIFI_H_

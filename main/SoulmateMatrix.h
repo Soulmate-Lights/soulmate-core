@@ -1,7 +1,7 @@
 // Copyright 2019 Soulmate Lighting, LLC
 
-#ifndef BUILDER_LIBRARIES_SOULMATE_MATRIX_H_
-#define BUILDER_LIBRARIES_SOULMATE_MATRIX_H_
+#ifndef SOULMATE_MATRIX_H_
+#define SOULMATE_MATRIX_H_
 
 // A matrix assuming 13x13 grid. This was used for the Hex prototype.
 // Hex code might not compile without this but it eats memory
@@ -156,4 +156,4 @@ uint16_t XY(uint8_t x, uint8_t y) {
   return gridIndexHorizontal(x, y);
 }
 
-#endif // BUILDER_LIBRARIES_SOULMATE_MATRIX_H_
+#endif // SOULMATE_MATRIX_H_

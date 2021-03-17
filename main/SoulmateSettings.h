@@ -1,7 +1,7 @@
 #include "SoulmateFiles.h"
 
-#ifndef BUILDER_LIBRARIES_SOULMATE_SETTINGS_H_
-  #define BUILDER_LIBRARIES_SOULMATE_SETTINGS_H_
+#ifndef SOULMATE_SETTINGS_H_
+  #define SOULMATE_SETTINGS_H_
 
 namespace SoulmateSettings {
 

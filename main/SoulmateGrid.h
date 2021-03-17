@@ -1,7 +1,7 @@
 // Copyright 2018 Soulmate Lighting, LLC
 
-#ifndef BUILDER_LIBRARIES_SOULMATE_GRID_H_
-#define BUILDER_LIBRARIES_SOULMATE_GRID_H_
+#ifndef SOULMATE_GRID_H_
+#define SOULMATE_GRID_H_
 
 // Lights (physical):
 //  X   0   1   2   3   X   X
@@ -178,4 +178,4 @@ bool IsBottomRow(struct Point pt) { return pt.y == 0; }
 bool IsTopRow(struct Point pt) { return pt.y == (N_CELLS / LED_COLS - 1); }
 } // namespace Grid
 
-#endif // BUILDER_LIBRARIES_SOULMATE_GRID_H_
+#endif // SOULMATE_GRID_H_

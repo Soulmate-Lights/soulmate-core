@@ -1,5 +1,5 @@
-#ifndef BUILDER_LIBRARIES_SOULMATE_TIME_H_
-#define BUILDER_LIBRARIES_SOULMATE_TIME_H_
+#ifndef SOULMATE_TIME_H_
+#define SOULMATE_TIME_H_
 
 String TIME_API = "http://worldtimeapi.org/api/ip";
 

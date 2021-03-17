@@ -1,7 +1,7 @@
 // Copyright 2019 Soulmate Lighting, LLC
 
-#ifndef BUILDER_LIBRARIES_SOULMATE_FILES_H_
-#define BUILDER_LIBRARIES_SOULMATE_FILES_H_
+#ifndef SOULMATE_FILES_H_
+#define SOULMATE_FILES_H_
 #include "FS.h"
 
 #include <SPIFFS.h>
@@ -28,4 +28,4 @@ void deleteAllFiles() {
   filesPreferences.end();
 }
 
-#endif // BUILDER_LIBRARIES_SOULMATE_FILES_H_
+#endif // SOULMATE_FILES_H_

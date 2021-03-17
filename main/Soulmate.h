@@ -1,7 +1,7 @@
 // Copyright 2019 Soulmate Lighting, LLC
 
-#ifndef BUILDER_LIBRARIES_SOULMATE_SOULMATE_H_
-#define BUILDER_LIBRARIES_SOULMATE_SOULMATE_H_
+#ifndef SOULMATE_SOULMATE_H_
+#define SOULMATE_SOULMATE_H_
 
 #include "SoulmateMain.h"
 
@@ -18,4 +18,4 @@
 #include "SoulmateGrid.h"
 #include "SoulmateMatrix.h"
 
-#endif // BUILDER_LIBRARIES_SOULMATE_SOULMATE_H_
+#endif // SOULMATE_SOULMATE_H_

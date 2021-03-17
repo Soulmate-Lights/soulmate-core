@@ -1,5 +1,5 @@
-#ifndef BUILDER_LIBRARIES_SOULMATE_BEATSIN16_H_
-#define BUILDER_LIBRARIES_SOULMATE_BEATSIN16_H_
+#ifndef SOULMATE_BEATSIN16_H_
+#define SOULMATE_BEATSIN16_H_
 
 #include <FastLED.h>
 
@@ -14,4 +14,4 @@ float beatsin16float(float beats_per_minute, float lowest = 0,
   return result / multiplier;
 }
 
-#endif // BUILDER_LIBRARIES_SOULMATE_BEATSIN16_H_
+#endif // SOULMATE_BEATSIN16_H_

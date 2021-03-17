@@ -1,7 +1,7 @@
 // Copyright 2019 Soulmate Lighting, LLC
 
-#ifndef BUILDER_LIBRARIES_SOULMATE_BLE_H_
-#define BUILDER_LIBRARIES_SOULMATE_BLE_H_
+#ifndef SOULMATE_BLE_H_
+#define SOULMATE_BLE_H_
 
 #include "NimBLEDevice.h"
 
