@@ -316,6 +316,7 @@ namespace SoulmateWifi {
   }
 
   void setup(void) {
+    esp_wifi_set_max_tx_power(78);
     WiFi.onEvent(WiFiEvent);
 
     connectToSavedWifi();
