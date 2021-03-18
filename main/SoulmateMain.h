@@ -219,13 +219,13 @@ class SoulmateLibrary {
     pinMode(SOULMATE_BUTTON_PIN, INPUT_PULLDOWN);
 #endif
 
-#ifdef USE_WS2812B
-    xTaskCreatePinnedToCore(FastLEDshowTask, "FastLEDshowTask", 2048, NULL, 10,
-                            &FastLEDshowTaskHandle, 1);
-#else
+// #ifdef USE_WS2812B
+//     xTaskCreatePinnedToCore(FastLEDshowTask, "FastLEDshowTask", 2048, NULL, 10,
+//                             &FastLEDshowTaskHandle, 1);
+// #else
     xTaskCreatePinnedToCore(FastLEDshowTask, "FastLEDshowTask", 2048, NULL, 10,
                             &FastLEDshowTaskHandle, 0);
-#endif
+// #endif
 
     WifiSetup();
 #ifndef SKIP_BLUETOOTH
