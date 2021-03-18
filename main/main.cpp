@@ -1,17 +1,15 @@
-#define FASTLED_INTERRUPT_RETRY_COUNT 1
-
 #define FIRMWARE_NAME "soulmate"
-#define N_LEDS 256
+#define N_LEDS 196
 #define SOULMATE_MILLIAMPS 4000
-#define LED_TYPE WS2812B
+#define LED_TYPE SK9822
 // #define FADE_DURATION 10
-#define LED_COLS 16
-#define LED_ROWS 16
+#define LED_COLS 14
+#define LED_ROWS 14
 #define SOULMATE_DATA_PIN 32
 #define SOULMATE_CLOCK_PIN 26
 #define SOULMATE_BUTTON_PIN 39
 #define SOULMATE_SERPENTINE true
-#define USE_WS2812B true
+// #define USE_WS2812B true
 
 #include "Soulmate.h"
 
