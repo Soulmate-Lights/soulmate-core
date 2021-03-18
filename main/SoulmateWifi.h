@@ -157,7 +157,6 @@ namespace SoulmateWifi {
         Soulmate.currentRoutine = -2;
         if (isFirst) {
           streamedPixelIndex = 0;
-          Soulmate.fastLedShow();
         }
 
         if (streamedPixelIndex < N_LEDS) {
@@ -393,7 +392,7 @@ namespace SoulmateWifi {
       }
     }
 
-    EVERY_N_SECONDS(1) {
+    EVERY_N_SECONDS(2) {
       ws.cleanupClients();
     }
 
