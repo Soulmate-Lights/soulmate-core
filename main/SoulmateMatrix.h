@@ -109,8 +109,8 @@
 // use gridIndexHorizontal. If it looks weird, switch 'em.
 
 int16_t gridIndex(int16_t x, int16_t y) {
-  if (y > LED_ROWS) return -1;
-  if (x > LED_COLS) return -1;
+  if (y >= LED_ROWS) return -1;
+  if (x >= LED_COLS) return -1;
   if (x < 0) return -1;
   if (y < 0) return -1;
   if (x == 0 && y == 0) return 0;
@@ -135,15 +135,13 @@ int16_t gridIndexHorizontal(int16_t x, int16_t y) {
   if (x < 0) return -1;
   if (y < 0) return -1;
 
-  int16_t xIndex = x;
-
   // Serpentine row
   bool oddRow = y % 2 != 1;
   if (SOULMATE_SERPENTINE && oddRow) {
-    xIndex = LED_COLS - 1 - xIndex;
+    x = LED_COLS - 1 - x;
   }
 
-  int16_t index = y * LED_COLS + xIndex;
+  int16_t index = y * LED_COLS + x;
 
   if (index > -1 && index < N_LEDS) {
     return index;
