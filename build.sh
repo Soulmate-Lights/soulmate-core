@@ -20,8 +20,11 @@ restore_ovrerides_files() {
 esp_idf_v3_build_native() {
     copy_overrides_files
 
-    # Run build
-    make all -j$N_CORES;
+    # Run build. `make defconfig` first: it generates each component's
+    # component_project_vars.mk, which exports that component's include dirs to
+    # its dependents. Without it, a parallel build on a cold tree races those
+    # files and IDF's own sources fail to find IDF's own headers.
+    make defconfig && make all -j$N_CORES;
     STATUS=$?
 
     restore_ovrerides_files
@@ -41,7 +44,8 @@ esp_idf_v3_build_docker() {
     copy_overrides_files
 
     # Run build
-    docker run --rm -v kconfig:/opt/esp/idf/tools/kconfig -v $PWD:/project -w /project espressif/idf:v3.3.4 make all -j$N_CORES_DOCKER;
+    docker run --rm -v kconfig:/opt/esp/idf/tools/kconfig -v $PWD:/project -w /project espressif/idf:v3.3.4 \
+        bash -c "make defconfig && make all -j$N_CORES_DOCKER";
     STATUS=$?
 
     restore_ovrerides_files
