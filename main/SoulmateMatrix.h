@@ -135,9 +135,15 @@ int16_t gridIndexHorizontal(int16_t x, int16_t y) {
   if (x < 0) return -1;
   if (y < 0) return -1;
 
-  // Serpentine row
-  bool oddRow = y % 2 != 1;
-  if (SOULMATE_SERPENTINE && oddRow) {
+  // Serpentine row. Note this reverses EVEN rows: `y % 2 != 1` is true when y is
+  // even, so the old `oddRow` name described the opposite of what it selected.
+  //
+  // SoulmateGrid.h's GetIndex() uses the opposite convention (it reverses odd
+  // rows). The two disagree; this one matches the hardware — confirmed on a
+  // 14x14 SK9822 panel by rendering an L-shape under both conventions, where
+  // only even-row reversal produces straight edges.
+  bool reversedRow = y % 2 == 0;
+  if (SOULMATE_SERPENTINE && reversedRow) {
     x = LED_COLS - 1 - x;
   }
 
