@@ -150,7 +150,15 @@ int16_t gridIndexHorizontal(int16_t x, int16_t y) {
   return -1;
 }
 
-uint16_t XY(uint8_t x, uint8_t y) {
+// gridIndexHorizontal() returns int16_t and uses -1 to mean "out of range".
+// Returning that through a uint16_t yields 65535, so an unchecked
+// `leds[XY(x, y)]` writes ~196KB past the end of a 196-element array rather
+// than hitting a detectable sentinel. Clamp to the nearest edge cell instead:
+// patterns are compiled in verbatim from the gallery and cannot be expected to
+// bounds-check against every panel geometry.
+uint16_t XY(int16_t x, int16_t y) {
+  if (x < 0) x = 0; else if (x >= LED_COLS) x = LED_COLS - 1;
+  if (y < 0) y = 0; else if (y >= LED_ROWS) y = LED_ROWS - 1;
   return gridIndexHorizontal(x, y);
 }
 
