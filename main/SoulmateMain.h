@@ -19,11 +19,24 @@
 #include <ArduinoJson.h>
 #include <Arduino.h>
 #include <esp_heap_caps.h>
+#include <esp_timer.h>
 #include <FastLED.h>
 #include <functional>
 
 #define MAX_NUMBER_OF_ROUTINES 20
 void FastLEDshowTask(void *pvParameters);
+
+// The render task's period in scheduler ticks. A tick is
+// 1000/CONFIG_FREERTOS_HZ ms, so the tick rate is a hard ceiling on the frame
+// rate. Computed here rather than in SoulmateConfig.h because
+// portTICK_PERIOD_MS contains a cast, which the preprocessor can't evaluate in
+// an #if but C++ can evaluate in a constant expression.
+static constexpr TickType_t kFrameTicks =
+    (1000 / SOULMATE_FPS) / portTICK_PERIOD_MS;
+
+static_assert(kFrameTicks >= 1,
+              "SOULMATE_FPS is faster than CONFIG_FREERTOS_HZ can schedule. "
+              "Raise CONFIG_FREERTOS_HZ or lower SOULMATE_FPS.");
 
 class SoulmateLibrary {
  public:
@@ -148,6 +161,13 @@ class SoulmateLibrary {
     message["firmwareName"] = FIRMWARE_NAME;
 #endif
 
+    // Render cost, so a pattern that blows the frame budget is visible from the
+    // outside instead of just looking like "the lamp feels laggy".
+    message["fps"] = SOULMATE_FPS;
+    message["frameBudgetUs"] = 1000000 / SOULMATE_FPS;
+    message["frameUs"] = lastFrameUs;
+    message["peakFrameUs"] = peakFrameUs;
+
     String outputString;
     message.printTo(outputString);
     return outputString;
@@ -233,7 +253,15 @@ class SoulmateLibrary {
     pinMode(SOULMATE_BUTTON_PIN, INPUT_PULLDOWN);
 #endif
 
-    xTaskCreatePinnedToCore(FastLEDshowTask, "FastLEDshowTask", 2048, NULL, 10,
+    // Priority 3, matching AsyncTCP's own task (AsyncTCP.cpp:221), which also
+    // runs on core 0 via CONFIG_ASYNC_TCP_RUNNING_CORE=0.
+    //
+    // This was priority 10. FreeRTOS is strictly priority-preemptive, so at 10
+    // the render task pre-empted the entire network stack every time it woke —
+    // which is why websockets and pixel streaming went sluggish under heavy
+    // patterns. Any priority above 3 has the same problem; only equal priority
+    // lets the two time-slice instead of one starving the other.
+    xTaskCreatePinnedToCore(FastLEDshowTask, "FastLEDshowTask", 2048, NULL, 3,
                             &FastLEDshowTaskHandle, 0);
 
     WifiSetup();
@@ -244,12 +272,16 @@ class SoulmateLibrary {
     Serial.println(status(true));
   }
 
-  void nextRoutine() {
+  // persist = whether this change reflects something the user actually asked
+  // for. Auto-cycling passes false: it happens every CYCLE_LENGTH_IN_MS forever,
+  // and there's nothing worth restoring about "whichever pattern the timer
+  // happened to land on when the power went out".
+  void nextRoutine(bool persist = true) {
     if (currentRoutine < 0) return;
     int i = currentRoutine + 1;
     if (i == routineCount)
       i = 0;
-    chooseRoutine(i);
+    chooseRoutine(i, persist);
   }
 
   void adjustBrightness() {
@@ -325,13 +357,28 @@ class SoulmateLibrary {
     }
   }
 
+  // Pushes the framebuffer out.
+  //
+  // The frame clock used to live in here as EVERY_N_MILLISECONDS(1000/60),
+  // which meant the caller ran its whole body — pattern render, blend, buffer
+  // copies — on every pass and then discarded the result unless the gate
+  // happened to be open. showPixels() was called every 10ms against a 16ms
+  // gate, so roughly half of all render work was thrown away.
+  //
+  // The clock is now the render task's own period (kFrameTicks), so showPixels()
+  // is only entered when the frame it produces will actually be shown.
   void fastLedShow() {
-    EVERY_N_MILLISECONDS(1000 / 60) {
-      reverseLeds();
-      FastLED.show();
-      reverseLeds();
-    }
+    reverseLeds();
+    FastLED.show();
+    reverseLeds();
   }
+
+  // Render cost in microseconds, reported through status(). Nothing measured
+  // what a pattern actually costs before this, so there was no way to tell a
+  // pattern that fits in the frame budget from one that doesn't.
+  // The budget is 1000000 / SOULMATE_FPS, so 16667us at 60fps.
+  uint32_t lastFrameUs = 0;
+  uint32_t peakFrameUs = 0;
 
   // Allocates the two crossfade buffers, preferring PSRAM and falling back to
   // internal DRAM so boards without PSRAM keep the behaviour they have today.
@@ -396,6 +443,8 @@ class SoulmateLibrary {
       return;
     }
 
+    int64_t frameStart = esp_timer_get_time();
+
     spi_flash_op_lock();
 
     // This function is pinned to a core.
@@ -444,6 +493,10 @@ class SoulmateLibrary {
     }
 
     spi_flash_op_unlock();
+
+    lastFrameUs = static_cast<uint32_t>(esp_timer_get_time() - frameStart);
+    if (lastFrameUs > peakFrameUs)
+      peakFrameUs = lastFrameUs;
   }
 
   void adjustFromButton() {
@@ -524,13 +577,14 @@ class SoulmateLibrary {
 
     bool needsToCycle = millis() - lastCycle > CYCLE_LENGTH_IN_MS;
     if (cycle && needsToCycle) {
-      nextRoutine();
+      nextRoutine(false); // timer-driven, not user intent: don't persist
       lastCycle = millis();
     }
 
     adjustBrightness();
+    flushRoutineIfSettled();
     if (currentRoutine >= routineCount)
-      chooseRoutine(0);
+      chooseRoutine(0, false); // recovering from a bad index, not user intent
 
 #ifndef SKIP_WIFI
     WifiLoop();
@@ -551,14 +605,52 @@ class SoulmateLibrary {
     leds[index] = color;
   }
 
-  void chooseRoutine(int i) {
+  void chooseRoutine(int i, bool persist = true) {
     if (i == currentRoutine)
       return;
     previousRoutine = currentRoutine;
     if (millis() - fadeStart > FADE_DURATION)
       fadeStart = millis();
     currentRoutine = i;
-    SoulmateSettings::saveRoutine(currentRoutine);
+    if (persist)
+      routineNeedsSaving = true;
+  }
+
+  // Routine persistence is deferred rather than written inline.
+  //
+  // saveRoutine() is an NVS write, and a flash write on the ESP32 disables the
+  // cache on *both* cores while it runs — so writing from chooseRoutine() put a
+  // stall directly in the path of whatever the render task was doing. With
+  // auto-cycle on that fired every 60 seconds, forever, which is a visible hitch
+  // plus continuous flash wear for a value nobody reads until the next boot.
+  //
+  // Now: mark dirty, and flush from loop() once the value has settled.
+  // INT32_MIN, not -1: -1 and -2 are real values of currentRoutine (solid
+  // colour and streaming), so they can't double as "nothing pending".
+  bool routineNeedsSaving = false;
+  int pendingRoutine = INT32_MIN;
+  uint32_t routineDirtiedAt = 0;
+
+  // Called from loop(), which also means persistence now happens on one task
+  // instead of from whichever of AsyncTCP / NimBLE / serial handled the request.
+  void flushRoutineIfSettled() {
+    if (!routineNeedsSaving)
+      return;
+
+    // Restart the timer while the routine is still moving, so cycling through
+    // patterns on the button writes once at the end rather than once each.
+    if (currentRoutine != pendingRoutine) {
+      pendingRoutine = currentRoutine;
+      routineDirtiedAt = millis();
+      return;
+    }
+
+    if (millis() - routineDirtiedAt < ROUTINE_SAVE_DEBOUNCE_MS)
+      return;
+
+    routineNeedsSaving = false;
+    if (currentRoutine >= 0)
+      SoulmateSettings::saveRoutine(currentRoutine);
   }
 
   void setBrightness(int b) {
@@ -704,15 +796,36 @@ void SoulmateLibrary::BluetoothSetup() {
 }
 #endif
 
-// ESP32 dual-core task, pinned to a core
+// ESP32 dual-core task, pinned to a core.
+//
+// vTaskDelayUntil rather than vTaskDelay: vTaskDelay sleeps for the period
+// *after* the work finishes, so the real frame interval was render time + 10ms
+// and drifted with how expensive the pattern was. Delaying until an absolute
+// deadline gives a fixed period and absorbs render-time variation.
 void FastLEDshowTask(void *pvParameters) {
+  TickType_t lastWake = xTaskGetTickCount();
+
   for (;;) {
     // Disable the Task watchdog checking for a second-core task!
     TIMERG0.wdt_wprotect = TIMG_WDT_WKEY_VALUE;
     TIMERG0.wdt_feed = 1;
     TIMERG0.wdt_wprotect = 0;
     Soulmate.showPixels();
-    vTaskDelay(10 / portTICK_PERIOD_MS);
+
+    // If we overran the frame — a flash write stalling both cores, an OTA, a
+    // pattern that took too long — resync to now. Left alone, vTaskDelayUntil
+    // would stop blocking and replay every missed frame back-to-back to catch
+    // up, which reads as the animation lurching forwards.
+    //
+    // The vTaskDelay(1) matters: at priority 3 this task must yield or core 0's
+    // idle task never runs, and CONFIG_TASK_WDT_CHECK_IDLE_TASK_CPU0 is on.
+    TickType_t now = xTaskGetTickCount();
+    if (static_cast<TickType_t>(now - lastWake) > kFrameTicks) {
+      lastWake = now;
+      vTaskDelay(1);
+    } else {
+      vTaskDelayUntil(&lastWake, kFrameTicks);
+    }
   }
 }
 
