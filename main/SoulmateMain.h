@@ -5,10 +5,57 @@
 
 #define SOULMATE_VERSION "9.1.0"
 
+// FastLED configuration.
+//
+// These must be defined before FastLED.h is first pulled into the translation
+// unit, because chipsets.h consumes them with #if at template-definition time.
+// That is a sharper constraint than it looks: SoulmateBeatSin.h, included ten
+// lines below, includes FastLED.h — so this block has to stay above the includes,
+// and putting any of it in SoulmateConfig.h (included two lines *after*
+// SoulmateBeatSin.h) would be too late and would fail silently.
+//
+// Hence the guard. If FastLED has already been seen, say so at compile time
+// rather than quietly compiling the wrong branch of chipsets.h.
+#ifdef FASTLED_VERSION
+  #error "FastLED.h was included before SoulmateMain.h's FastLED configuration. FASTLED_USE_GLOBAL_BRIGHTNESS and friends are read by chipsets.h at template-definition time, so defining them now has no effect. Include Soulmate.h before anything that pulls in FastLED."
+#endif
+
 // #define FASTLED_RMT_MAX_CHANNELS 1
 // #define FASTLED_RMT_BUILTIN_DRIVER 1
 #define FASTLED_INTERRUPT_RETRY_COUNT 1
 #define FASTLED_INTERNAL
+
+// Use SK9822's 5-bit global brightness field.
+//
+// Without this, chipsets.h:303 takes its #else branch and pins that field at
+// 0x1F, so every bit of brightness scaling is crushed into the 8-bit RGB values.
+// With the power limiter clamping hard on a large panel — 1100 LEDs against a
+// 4A cap, when full white wants ~66A — the effective scale on a bright frame can
+// be around 16/255, which leaves roughly four usable bits. That is where
+// low-brightness banding and chunky gradients come from.
+//
+// Turning it on makes FastLED split the scale instead: brightness =
+// max(s) * 31 / 256, then the 8-bit values are scaled back up by 31/brightness.
+// A scale of 16 ships as red=165 with a global of 3/31 — same light output,
+// about four bits of colour resolution recovered, in hardware, with no temporal
+// artifacts and no extra transition density on the DATA line. (Which is why this
+// is the right tool and temporal dithering is not: dithering buys the same
+// resolution by churning the low bits every frame, and on a long chain that
+// churn is what eats the CLK/DATA timing margin.)
+//
+// Gated on the chipset because it is only safe on SK9822. On APA102 the same
+// 5-bit field is implemented as low-frequency PWM — the reason APA102 panels
+// strobe on camera — whereas SK9822 makes it a true constant-current scaler.
+// SK9822 is the only clocked chipset this firmware builds, so there is no board
+// this can reach the wrong way.
+//
+// Checked for current overshoot, since the power estimator runs before the split
+// and does not know about the 5-bit field: the round trip is faithful to within
+// one 255th at every scale (255 -> 31/255, 100 -> 13/238, 16 -> 3/165,
+// 1 -> 1/31), so the cap is not undermined.
+#ifndef USE_WS2812B
+  #define FASTLED_USE_GLOBAL_BRIGHTNESS 1
+#endif
 
 #include "SoulmateBeatSin.h"
 #include "SoulmateCircadian.h"
@@ -21,6 +68,13 @@
 #include <esp_heap_caps.h>
 #include <esp_timer.h>
 #include <FastLED.h>
+
+// The define above is worthless if it landed after chipsets.h was compiled, and
+// the failure is otherwise invisible — the panel just keeps its old, coarser
+// low-end. Assert the macro actually reached FastLED.
+#if !defined(USE_WS2812B) && FASTLED_USE_GLOBAL_BRIGHTNESS != 1
+  #error "FASTLED_USE_GLOBAL_BRIGHTNESS did not reach FastLED. Something included FastLED.h before SoulmateMain.h defined it."
+#endif
 #include <functional>
 
 #define MAX_NUMBER_OF_ROUTINES 20
