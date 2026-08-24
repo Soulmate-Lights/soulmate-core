@@ -16,6 +16,14 @@ restore_ovrerides_files() {
     (cd components/arduino && git checkout component.mk)
 }
 
+# The v3.3.4 image ships ccache 3.4.1, but IDF's make build system never calls
+# it. These masquerade symlinks sit ahead of the toolchain in PATH so every
+# compile routes through ccache. Done this way rather than via CC because
+# project.mk runs `which $(CC)`, which a "ccache xtensa-esp32-elf-gcc" value
+# would break. Single-quoted: $t and $PATH must expand inside the container.
+# The cache lives in a named volume so it survives --rm.
+CCACHE_SHIM='mkdir -p /tmp/ccache-shim && for t in gcc g++ c++; do ln -sf /usr/bin/ccache /tmp/ccache-shim/xtensa-esp32-elf-$t; done && export PATH=/tmp/ccache-shim:$PATH'
+
 # ESP-IDF v3.x
 esp_idf_v3_build_native() {
     copy_overrides_files
@@ -44,8 +52,10 @@ esp_idf_v3_build_docker() {
     copy_overrides_files
 
     # Run build
-    docker run --rm -v kconfig:/opt/esp/idf/tools/kconfig -v $PWD:/project -w /project espressif/idf:v3.3.4 \
-        bash -c "make defconfig && make all -j$N_CORES_DOCKER";
+    docker run --rm -v kconfig:/opt/esp/idf/tools/kconfig \
+        -v soulmate-ccache:/ccache -e CCACHE_DIR=/ccache \
+        -v $PWD:/project -w /project espressif/idf:v3.3.4 \
+        bash -c "$CCACHE_SHIM && make defconfig && make all -j$N_CORES_DOCKER && ccache -s";
     STATUS=$?
 
     restore_ovrerides_files
