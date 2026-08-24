@@ -23,6 +23,10 @@
 #include <FastLED.h>
 #include <functional>
 
+// Two levels, so the argument is macro-expanded before being stringified.
+#define SOULMATE_STRINGIFY_(x) #x
+#define SOULMATE_STRINGIFY(x) SOULMATE_STRINGIFY_(x)
+
 #define MAX_NUMBER_OF_ROUTINES 20
 void FastLEDshowTask(void *pvParameters);
 
@@ -37,6 +41,22 @@ static constexpr TickType_t kFrameTicks =
 static_assert(kFrameTicks >= 1,
               "SOULMATE_FPS is faster than CONFIG_FREERTOS_HZ can schedule. "
               "Raise CONFIG_FREERTOS_HZ or lower SOULMATE_FPS.");
+
+// N_CELLS is what FastLED clocks out and what `leds` is sized to. N_LEDS is what
+// the patterns, fill_solid() calls, the streaming path and gridIndexHorizontal()
+// all bound themselves by. Nothing kept them in agreement.
+//
+// If N_LEDS < N_CELLS, the tail of the chain is clocked out but never written —
+// it shows whatever is left in the buffer. Worse, gridIndexHorizontal() returns
+// -1 once `y * LED_COLS + x` reaches N_LEDS, and XY() returns that through a
+// uint16_t as 65535, so a pattern indexing the last rows writes far past the end
+// of the array. Both failure modes are confined to the end of the panel, which
+// makes them easy to mistake for a wiring or power problem.
+static_assert(N_LEDS == N_CELLS,
+              "N_LEDS and N_CELLS disagree. Define LED_ROWS and LED_COLS and "
+              "let N_LEDS derive from them, or set both consistently — "
+              "otherwise the last rows of the panel are never written and "
+              "XY() runs off the end of the buffer.");
 
 class SoulmateLibrary {
  public:
@@ -136,12 +156,13 @@ class SoulmateLibrary {
     // These paraemters are for flash config
     message["rows"] = LED_ROWS;
     message["cols"] = LED_COLS;
-    // This might want to say APA102?
-    #ifdef USE_WS2812B
-      message["ledType"] = "WS2812B";
-    #else
-      message["ledType"] = "SK9822";
-    #endif
+    // Stringified from LED_TYPE rather than re-derived from the USE_* flags.
+    // This is the field the UI configurator reads to decide which chipset a
+    // board is built for, and it could only ever say WS2812B or SK9822 — so an
+    // APA102 board reported itself as SK9822. Going through LED_TYPE means it
+    // also stays correct when an app sets LED_TYPE directly, which
+    // SoulmateConfig.h now allows.
+    message["ledType"] = SOULMATE_STRINGIFY(LED_TYPE);
     message["reverse"] = SOULMATE_REVERSE;
     message["mirror"] = SOULMATE_MIRROR;
     message["serpentine"] = SOULMATE_SERPENTINE;
@@ -238,9 +259,15 @@ class SoulmateLibrary {
     FastLED.addLeds<WS2812B, SOULMATE_DATA_PIN, SOULMATE_COLOR_ORDER>(leds,
                                                                       N_CELLS);
 #else
+    // Five template arguments, not four. The four-argument overload
+    // (FastLED.h:260) drops the data rate and lets the controller pick its own
+    // default; this one (FastLED.h:222) honours SOULMATE_LED_DATA_RATE_MHZ.
     FastLED.addLeds<LED_TYPE, SOULMATE_DATA_PIN, SOULMATE_CLOCK_PIN,
-                    SOULMATE_COLOR_ORDER>(leds, N_CELLS);
+                    SOULMATE_COLOR_ORDER,
+                    DATA_RATE_MHZ(SOULMATE_LED_DATA_RATE_MHZ)>(leds, N_CELLS);
 #endif
+
+    FastLED.setDither(SOULMATE_DITHER ? BINARY_DITHER : DISABLE_DITHER);
 
 #ifdef SOULMATE_BUTTON_PIN
     pinMode(SOULMATE_BUTTON_PIN, INPUT_PULLDOWN);

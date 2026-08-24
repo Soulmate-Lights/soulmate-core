@@ -52,10 +52,70 @@ static TaskHandle_t FastLEDshowTaskHandle = 0;
   #endif
 #endif
 
-#ifdef USE_WS2812B
-  #define LED_TYPE WS2812B
-#else
-  #define LED_TYPE SK9822
+// Chipset selection.
+//
+// SK9822 used to be the only clocked option, so an APA102 panel was driven by
+// the SK9822 controller. At the end of a long chain the two are not
+// interchangeable: FastLED's APA102Controller::endBoundary() sends 0xFF filler
+// bytes after the last pixel, SK9822Controller::endBoundary() sends 0x00
+// (chipsets.h:212 and :274 in the pinned 3.4.0).
+//
+// A real APA102 re-clocks the signal and delays it by one cycle per LED, so the
+// tail of a long chain is still shifting data through when the end frame
+// arrives — and 32 zero bits are exactly what a start frame looks like, so
+// those LEDs can latch the filler as pixel data and then run misaligned.
+// Wrong, changing colours in the last rows of a long panel is the symptom.
+//
+// Define USE_APA102 for genuine APA102/DotStar. Note the market labels these
+// two interchangeably, so this is worth trying either way on a panel that
+// misbehaves at the far end.
+//
+// An explicit LED_TYPE from the app now wins, rather than being silently
+// overwritten with SK9822 below.
+#ifndef LED_TYPE
+  #ifdef USE_WS2812B
+    #define LED_TYPE WS2812B
+  #elif defined(USE_APA102)
+    #define LED_TYPE APA102
+  #else
+    #define LED_TYPE SK9822
+  #endif
+#endif
+
+// SPI clock for the clocked chipsets. This was not reachable at all: the
+// addLeds() call passed four template arguments, which selects the FastLED
+// overload that takes no data rate, so the controller's own default applied —
+// DATA_RATE_MHZ(24) for SK9822.
+//
+// On a 240 MHz ESP32 that is not 24 MHz. FastLED 3.4.0 has no ESP32
+// hardware-SPI backend, so this is bit-banged: DATA_RATE_MHZ(24) gives
+// SPI_SPEED = 10, which costs ~25 delay cycles per bit and lands near 7 MHz.
+// Long chains are where that bites, because the tail of the panel sees the most
+// degraded clock edges.
+//
+// Measured cost at 1100 LEDs (~36,400 bits including start and end frames),
+// against the 16 ms budget at SOULMATE_FPS 60:
+//
+//   24 (default)  ~7.0 MHz   ~5.3 ms
+//   12            ~10 MHz    ~3.6 ms   <-- yes, faster than 24; see below
+//    6            ~5.5 MHz   ~6.7 ms
+//    4            ~3.7 MHz   ~9.7 ms
+//    2            ~1.9 MHz  ~18.8 ms   does not fit 60fps at this size
+//
+// The delay macro is discontinuous at SPI_SPEED == 10
+// (fastspi_bitbang.h:123-124 switches formula on `SPI_SPEED > 10`), which is why
+// asking for 12 MHz is faster than asking for 24. Values of 6 and below behave
+// monotonically, so tune downward from there.
+#ifndef SOULMATE_LED_DATA_RATE_MHZ
+  #define SOULMATE_LED_DATA_RATE_MHZ 24
+#endif
+
+// FastLED temporal dithering, on by default in FastLED whenever brightness is
+// below 255. It fakes extra low-end bits by modulating pixels frame to frame,
+// which depends on a steady frame rate — and on a panel this size the frame
+// rate is not steady. Set to 0 if the panel shimmers at low brightness.
+#ifndef SOULMATE_DITHER
+  #define SOULMATE_DITHER 1
 #endif
 
 #ifndef SOULMATE_DATA_PIN
