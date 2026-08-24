@@ -595,6 +595,7 @@ class SoulmateLibrary {
 
     adjustBrightness();
     flushRoutineIfSettled();
+    flushBrightnessIfSettled();
     if (currentRoutine >= routineCount)
       chooseRoutine(0, false); // recovering from a bad index, not user intent
 
@@ -663,6 +664,42 @@ class SoulmateLibrary {
     routineNeedsSaving = false;
     if (currentRoutine >= 0)
       SoulmateSettings::saveRoutine(currentRoutine);
+  }
+
+  // Same treatment for brightness, which needed it more.
+  //
+  // saveBrightness() used to run inline in consumeJson(), so a slider drag in
+  // the app was one NVS commit per websocket message, executed on the AsyncTCP
+  // task. Each commit calls
+  // spi_flash_disable_interrupts_caches_and_other_cpu(): cache off on both
+  // cores, interrupts off, for the erase and write — and NVS page compaction
+  // makes the tail of that distribution long. Before it can even start, it has
+  // to take spi_flash_op_lock(), which showPixels() holds for the whole frame.
+  //
+  // Both halves get worse with panel size. Read GET /frame for the real number
+  // on a given build: `frameUs` against `frameBudgetUs` is the fraction of
+  // wall-clock the lock is held for. CONFIG_ASYNC_TCP_USE_WDT is on and
+  // CONFIG_TASK_WDT_TIMEOUT_S is 5, so a long enough stall panics the AsyncTCP
+  // task rather than merely delaying it.
+  bool brightnessNeedsSaving = false;
+  int pendingBrightness = INT32_MIN;
+  uint32_t brightnessDirtiedAt = 0;
+
+  void flushBrightnessIfSettled() {
+    if (!brightnessNeedsSaving)
+      return;
+
+    if (brightness != pendingBrightness) {
+      pendingBrightness = brightness;
+      brightnessDirtiedAt = millis();
+      return;
+    }
+
+    if (millis() - brightnessDirtiedAt < BRIGHTNESS_SAVE_DEBOUNCE_MS)
+      return;
+
+    brightnessNeedsSaving = false;
+    SoulmateSettings::saveBrightness(brightness);
   }
 
   void setBrightness(int b) {
@@ -765,7 +802,11 @@ class SoulmateLibrary {
 
     if (root.containsKey("brightness")) {
       int brightness = static_cast<int>(root["brightness"]);
-      SoulmateSettings::saveBrightness(brightness);
+      // Deferred, for the same reason as the routine — see
+      // flushBrightnessIfSettled(). This mattered more than the routine did:
+      // dragging a slider in the app is one NVS commit per message, on the
+      // network task.
+      brightnessNeedsSaving = true;
       setBrightness(brightness);
     }
 

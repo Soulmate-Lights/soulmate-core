@@ -170,9 +170,17 @@ void setupHomekit() {
   wifi_event_group = xEventGroupCreate();
 }
 
+// hap_init() is idempotent (hap.c:476 returns early if already initialised) but
+// hap_accessory_register() is not: it allocates, registers a second accessory
+// and starts advertising it, while `acc` is overwritten so the previous one
+// leaks. This ran on every reconnect. Register once; a reconnect now does
+// nothing but set the connected bit.
+bool homekitRegistered = false;
+
 void connectHomekit() {
   xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_BIT);
-  {
+  if (!homekitRegistered) {
+    homekitRegistered = true;
     Serial.println("[Soulmate-Wifi] Registering with HomeKit");
     hap_init();
     uint8_t mac[6];
