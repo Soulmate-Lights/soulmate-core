@@ -161,13 +161,6 @@ class SoulmateLibrary {
     message["firmwareName"] = FIRMWARE_NAME;
 #endif
 
-    // Render cost, so a pattern that blows the frame budget is visible from the
-    // outside instead of just looking like "the lamp feels laggy".
-    message["fps"] = SOULMATE_FPS;
-    message["frameBudgetUs"] = 1000000 / SOULMATE_FPS;
-    message["frameUs"] = lastFrameUs;
-    message["peakFrameUs"] = peakFrameUs;
-
     String outputString;
     message.printTo(outputString);
     return outputString;
@@ -373,12 +366,31 @@ class SoulmateLibrary {
     reverseLeds();
   }
 
-  // Render cost in microseconds, reported through status(). Nothing measured
-  // what a pattern actually costs before this, so there was no way to tell a
-  // pattern that fits in the frame budget from one that doesn't.
-  // The budget is 1000000 / SOULMATE_FPS, so 16667us at 60fps.
+  // Render cost in microseconds. Nothing measured what a pattern actually costs
+  // before this, so there was no way to tell a pattern that fits the frame
+  // budget from one that doesn't.
+  //
+  // Deliberately NOT in status(). That builds a StaticJsonBuffer<2048> on the
+  // caller's stack, and consumeJson() can reach it from the NimBLE host task,
+  // whose stack is CONFIG_BT_NIMBLE_TASK_STACK_SIZE=4096 — so the buffer is
+  // already half that task's stack. It's also close enough to full that
+  // ArduinoJson 5 starts silently dropping trailing keys with a full gallery of
+  // long routine names. Adding to it was the wrong place; this gets served on
+  // its own with a buffer sized for it.
   uint32_t lastFrameUs = 0;
   uint32_t peakFrameUs = 0;
+
+  String frameStats() {
+    StaticJsonBuffer<192> jsonBuffer;
+    JsonObject &message = jsonBuffer.createObject();
+    message["fps"] = SOULMATE_FPS;
+    message["frameBudgetUs"] = 1000000 / SOULMATE_FPS;
+    message["frameUs"] = lastFrameUs;
+    message["peakFrameUs"] = peakFrameUs;
+    String out;
+    message.printTo(out);
+    return out;
+  }
 
   // Allocates the two crossfade buffers, preferring PSRAM and falling back to
   // internal DRAM so boards without PSRAM keep the behaviour they have today.
