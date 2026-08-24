@@ -18,6 +18,7 @@
 #include "SoulmateMatrix.h"
 #include <ArduinoJson.h>
 #include <Arduino.h>
+#include <esp_heap_caps.h>
 #include <FastLED.h>
 #include <functional>
 
@@ -62,10 +63,23 @@ class SoulmateLibrary {
   void (*routines[MAX_NUMBER_OF_ROUTINES])();
   String routineNames[MAX_NUMBER_OF_ROUTINES];
 
-  // 3 arrays of N_CELLS used for blending
+  // The framebuffer FastLED clocks out. This one has to stay in internal DRAM:
+  // FastLED's RMT driver refills its buffers from an ISR registered with
+  // ESP_INTR_FLAG_IRAM, which runs with the flash cache disabled, and PSRAM is
+  // unreachable from there.
   CRGB leds[N_CELLS];
-  CRGB previousLeds[N_CELLS];
-  CRGB nextLeds[N_CELLS];
+
+  // Crossfade scratch. The outgoing and incoming patterns each need their own
+  // persistent framebuffer, because plenty of patterns read back what they drew
+  // last frame (fadeToBlackBy, blur, trails).
+  //
+  // Only showPixels() touches these, never an ISR, so they can live in PSRAM.
+  // That takes the internal-DRAM cost from 9 bytes per LED down to 3, which is
+  // what was making large panels hard to fit. Allocated on the first crossfade
+  // rather than at boot, so a build that never fades never pays for them.
+  CRGB *previousLeds = nullptr;
+  CRGB *nextLeds = nullptr;
+  bool fadeBuffersUnavailable = false;
 
   String ip();
   void updateWifiClients();
@@ -319,6 +333,60 @@ class SoulmateLibrary {
     }
   }
 
+  // Allocates the two crossfade buffers, preferring PSRAM and falling back to
+  // internal DRAM so boards without PSRAM keep the behaviour they have today.
+  // Returns false if neither worked, in which case the caller should hard-cut
+  // instead of fading.
+  //
+  // Only tried once. If there's no room now there won't be room next frame
+  // either, and retrying at 60fps would just burn cycles.
+  bool ensureFadeBuffers() {
+    if (previousLeds && nextLeds)
+      return true;
+    if (fadeBuffersUnavailable)
+      return false;
+
+    const size_t bytes = sizeof(CRGB) * N_CELLS;
+    bool inPsram = true;
+
+    previousLeds = allocFadeBuffer(bytes, &inPsram);
+    nextLeds = allocFadeBuffer(bytes, &inPsram);
+
+    if (!previousLeds || !nextLeds) {
+      heap_caps_free(previousLeds);
+      heap_caps_free(nextLeds);
+      previousLeds = nullptr;
+      nextLeds = nullptr;
+      fadeBuffersUnavailable = true;
+      Serial.println(F("[Soulmate] No room for crossfade buffers. Pattern "
+                       "transitions will cut instead of fading."));
+      return false;
+    }
+
+    fill_solid(previousLeds, N_CELLS, CRGB::Black);
+    fill_solid(nextLeds, N_CELLS, CRGB::Black);
+
+    Serial.printf("[Soulmate] Crossfade buffers: 2 x %u bytes in %s. "
+                  "Free internal: %u, largest block: %u\n",
+                  static_cast<unsigned>(bytes), inPsram ? "PSRAM" : "DRAM",
+                  static_cast<unsigned>(
+                      heap_caps_get_free_size(MALLOC_CAP_INTERNAL)),
+                  static_cast<unsigned>(
+                      heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL)));
+    return true;
+  }
+
+  // Prefers PSRAM. Clears *inPsram if either buffer had to fall back to
+  // internal DRAM, so the caller can report where they actually landed.
+  static CRGB *allocFadeBuffer(size_t bytes, bool *inPsram) {
+    void *buffer = heap_caps_malloc(bytes, MALLOC_CAP_SPIRAM);
+    if (!buffer) {
+      buffer = heap_caps_malloc(bytes, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+      *inPsram = false;
+    }
+    return static_cast<CRGB *>(buffer);
+  }
+
   void showPixels() {
     if (isStopped())
       return;
@@ -337,20 +405,28 @@ class SoulmateLibrary {
 
     uint32_t fadeMs = millis() - fadeStart;
 
-    if (fadeMs < FADE_DURATION) {
+    if (fadeMs < FADE_DURATION && ensureFadeBuffers()) {
       uint8_t percentage =
           static_cast<float>(fadeMs) / static_cast<float>(FADE_DURATION) * 255;
-      int size = sizeof(leds);
+      const size_t size = sizeof(CRGB) * N_CELLS;
+
+      // First frame of this transition: the incoming pattern should start from
+      // black. This used to be cleared on every non-fading frame instead, which
+      // meant writing a whole framebuffer to black ~60 times a second to set up
+      // a transition that mostly wasn't happening.
+      if (!faded)
+        fill_solid(nextLeds, N_CELLS, CRGB::Black);
+
       // Grab the last frame from the previous pattern and run with it
       if (faded)
-        memcpy(&leds, &previousLeds, size);
+        memcpy(leds, previousLeds, size);
       if (previousRoutine >= 0)
         routines[previousRoutine]();
-      memcpy(&previousLeds, &leds, size);
+      memcpy(previousLeds, leds, size);
       // Put the next pattern's arrays into leds and run with it
-      memcpy(&leds, &nextLeds, size);
+      memcpy(leds, nextLeds, size);
       playCurrentRoutine();
-      memcpy(&nextLeds, &leds, size);
+      memcpy(nextLeds, leds, size);
       // Blend the two together
       for (int i = 0; i < N_CELLS; i++) {
         CRGB pixel = blend(CRGB::Black, previousLeds[i], 255 - percentage);
@@ -360,10 +436,10 @@ class SoulmateLibrary {
       fastLedShow();
       faded = true;
     } else {
+      // No clearing of previousLeds here: the crossfade path always overwrites
+      // it from leds before the blend reads it, so zeroing it was dead work.
       playCurrentRoutine();
       fastLedShow();
-      fill_solid(previousLeds, N_LEDS, CRGB::Black);
-      fill_solid(nextLeds, N_LEDS, CRGB::Black);
       faded = false;
     }
 
