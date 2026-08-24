@@ -329,6 +329,11 @@ namespace SoulmateWifi {
       request->send(200, F("text/plain"), Soulmate.status());
     });
 
+    // Render cost, kept out of /status so it can't crowd that payload's buffer.
+    server.on("/frame", HTTP_GET, [](AsyncWebServerRequest *request) {
+      request->send(200, F("application/json"), Soulmate.frameStats());
+    });
+
     server.on(
         "/ota", HTTP_POST,
         [](AsyncWebServerRequest *request) {
