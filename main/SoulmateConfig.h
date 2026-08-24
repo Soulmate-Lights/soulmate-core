@@ -72,11 +72,17 @@ static TaskHandle_t FastLEDshowTaskHandle = 0;
 //
 // An explicit LED_TYPE from the app now wins, rather than being silently
 // overwritten with SK9822 below.
+// USE_SK9822 is listed explicitly even though it is also the fallback, so the
+// firmware builder can emit exactly one define per chipset rather than relying
+// on "emit nothing and hope". That is what went wrong before: the configurator
+// offered APA102, emitted nothing for it, and got SK9822 by fallthrough.
 #ifndef LED_TYPE
   #ifdef USE_WS2812B
     #define LED_TYPE WS2812B
   #elif defined(USE_APA102)
     #define LED_TYPE APA102
+  #elif defined(USE_SK9822)
+    #define LED_TYPE SK9822
   #else
     #define LED_TYPE SK9822
   #endif
