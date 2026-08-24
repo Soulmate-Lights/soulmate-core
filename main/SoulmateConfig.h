@@ -79,11 +79,40 @@ static TaskHandle_t FastLEDshowTaskHandle = 0;
 //    2            ~1.9 MHz  ~18.8 ms   does not fit 60fps at this size
 //
 // The delay macro is discontinuous at SPI_SPEED == 10
-// (fastspi_bitbang.h:123-124 switches formula on `SPI_SPEED > 10`), which is why
-// asking for 12 MHz is faster than asking for 24. Values of 6 and below behave
-// monotonically, so tune downward from there.
+// (fastspi_bitbang.h:123-124 switches formula on `SPI_SPEED > 10`), and the two
+// formulas do not meet. So the ladder is NOT monotonic in this number, and the
+// direction is the opposite of the intuitive one. Measured at 1100 LEDs
+// (~36,400 bits including start and end frames), F_CPU 240 MHz:
+//
+//   requested   divider   actual      frame
+//      24         10      ~6.9 MHz    5.3 ms   <-- default
+//      23         10      ~6.9 MHz    5.3 ms
+//      22         10      ~6.9 MHz    5.3 ms
+//      21         11     ~14.1 MHz    2.6 ms   <-- the cliff
+//      20         12     ~13.3 MHz    2.7 ms
+//      16         15     ~12.6 MHz    2.9 ms
+//      13         18     ~10.9 MHz    3.3 ms
+//      12         20     ~10.0 MHz    3.6 ms
+//      10         24      ~8.6 MHz    4.2 ms
+//       8         30      ~7.1 MHz    5.1 ms
+//       6         40      ~5.5 MHz    6.7 ms
+//       4         60      ~3.7 MHz    9.7 ms
+//       2        120      ~1.9 MHz   18.8 ms   does not fit 60fps at this size
+//
+// Read that carefully before reaching for a "slower" value. The 24 default is
+// already close to the slowest setting available above 6, because it sits on the
+// far side of the cliff. **To go slower, go to 6 or below.** 12 is not a slower
+// setting; it is a 45% faster one.
 #ifndef SOULMATE_LED_DATA_RATE_MHZ
   #define SOULMATE_LED_DATA_RATE_MHZ 24
+#endif
+
+// 13..21 all land between ~11 and ~14 MHz — up to twice the default — while
+// reading as a reduction. There is no reason to want a value in there, and
+// picking one by mistake makes a marginal chain worse in the exact situation
+// where you were trying to make it better. Fail the build instead.
+#if SOULMATE_LED_DATA_RATE_MHZ >= 13 && SOULMATE_LED_DATA_RATE_MHZ <= 21
+  #error "SOULMATE_LED_DATA_RATE_MHZ between 13 and 21 is FASTER than the 24 default, not slower: FastLED's bit-bang delay formula changes shape at divider 10 (fastspi_bitbang.h:123). Use 24 for the current ~6.9MHz, 6/4/2 to go slower, or 12/10/8 if you actually want faster. See the table above."
 #endif
 
 // FastLED temporal dithering, on by default in FastLED whenever brightness is
