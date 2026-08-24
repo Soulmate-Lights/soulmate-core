@@ -19,7 +19,7 @@ jobs:
           submodules: recursive
 
       - name: Cache build path
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: build
           key: ${{ runner.os }}-${{ hashFiles('./build.sh') }}
