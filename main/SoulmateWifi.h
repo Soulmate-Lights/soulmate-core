@@ -10,6 +10,7 @@
 #include <ESPmDNS.h>
 #include <Preferences.h>
 #include <WiFi.h>
+#include <esp_heap_caps.h>
 
 #include "SoulmateHomekit.h"
 #include "SoulmateSettings.h"
@@ -17,81 +18,108 @@
 
 #include <GeneralUtils.h>
 
+// How long an association attempt gets before the supervisor declares it dead
+// and schedules another. The ESP32 supplicant normally gives up and reports a
+// reason code well inside this; the timeout is the backstop for the case where
+// no event arrives at all.
+#ifndef SOULMATE_WIFI_ASSOC_TIMEOUT_MS
+  #define SOULMATE_WIFI_ASSOC_TIMEOUT_MS 12000
+#endif
+
+// Backoff between attempts. The first retry after a working connection drops is
+// immediate; after that this doubles, capped.
+#ifndef SOULMATE_WIFI_BACKOFF_MIN_MS
+  #define SOULMATE_WIFI_BACKOFF_MIN_MS 5000
+#endif
+#ifndef SOULMATE_WIFI_BACKOFF_MAX_MS
+  #define SOULMATE_WIFI_BACKOFF_MAX_MS 60000
+#endif
+
+// Radio power save.
+//
+// arduino-esp32 leaves STA mode in WIFI_PS_MIN_MODEM, which powers the receiver
+// down between DTIM beacons. The WiFi task is pinned to core 1
+// (CONFIG_ESP32_WIFI_TASK_PINNED_TO_CORE_1), sharing it with the NimBLE host,
+// loopTask and the network event task — so it can be late to a beacon window,
+// and missed beacons are exactly what produces WIFI_REASON_BEACON_TIMEOUT.
+// This is a mains-powered lamp; there is nothing worth saving.
+//
+// The trade-off is BLE. With coexistence arbitration on, holding the WiFi
+// receiver up continuously leaves the BT controller less radio time. If BLE
+// control becomes unreliable, WIFI_PS_MIN_MODEM is the other end of this dial.
+#ifndef SOULMATE_WIFI_POWER_SAVE
+  #define SOULMATE_WIFI_POWER_SAVE WIFI_PS_NONE
+#endif
+
+// Max TX power. Kept at the previous value so this isn't a silent behaviour
+// change, but made a knob: on a panel drawing amps, a 19.5 dBm transmit burst
+// (~300 mA) sits on a rail that is already sagging, and dialling this back is
+// worth trying before blaming the AP. WIFI_POWER_15dBm is the usual next step.
+#ifndef SOULMATE_WIFI_TX_POWER
+  #define SOULMATE_WIFI_TX_POWER WIFI_POWER_19_5dBm
+#endif
+
 Preferences preferences;
 
 AsyncWebServer server(80);
 AsyncWebServer socketServer(81);
 AsyncWebSocket ws("/");
 
-void delayAndConnect(void *parameter) {
-  Serial.println("[Soulmate-Wifi] delayAndConnect starting.");
-  Serial.println("[Soulmate-Wifi] Disconnect WiFi...");
-  WiFi.disconnect();
-  vTaskDelay(1000 / portTICK_PERIOD_MS);
-
-  Serial.println("[Soulmate-Wifi] Read credentials...");
-  preferences.begin("Wifi", false);
-  String ssid = preferences.getString("ssid", "");
-  String pass = preferences.getString("pass", "");
-  preferences.end();
-
-  if (!ssid.equals("")) {
-    Serial.println("[Soulmate-Wifi] Set STA mode...");
-    WiFi.mode(WIFI_STA);
-    // Disabled due to errors with esp-idf 3.3.4
-    // WiFi.setSleep(false);
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-
-    Serial.println("[Soulmate-Wifi] WiFi.begin()...");
-    Serial.println(ssid.c_str());
-    WiFi.begin(ssid.c_str(), pass.c_str());
-    WiFi.setTxPower(WIFI_POWER_19_5dBm);
-  }
-
-  vTaskDelete(NULL);
-}
-
-void delayAndConnectWayLater(void *parameter) {
-  Serial.println("[Soulmate-Wifi] delayAndConnectWayLater starting.");
-  Serial.println("[Soulmate-Wifi] Disconnect WiFi...");
-  WiFi.disconnect();
-  vTaskDelay(20000 / portTICK_PERIOD_MS);
-
-  Serial.println("[Soulmate-Wifi] Read credentials...");
-  preferences.begin("Wifi", false);
-  String ssid = preferences.getString("ssid", "");
-  String pass = preferences.getString("pass", "");
-  preferences.end();
-
-  if (!ssid.equals("")) {
-    Serial.println("[Soulmate-Wifi] Set STA mode...");
-    WiFi.mode(WIFI_STA);
-    // Disabled due to errors with esp-idf 3.3.4
-    // WiFi.setSleep(false);
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-
-    Serial.println("[Soulmate-Wifi] WiFi.begin()...");
-    WiFi.begin(ssid.c_str(), pass.c_str());
-  }
-
-  vTaskDelete(NULL);
-}
-
 namespace SoulmateWifi {
 
-  bool connected = false;
   bool isConnected = false;
   bool restartRequired = false;
 
-  // Bounjour / mDNS presence announcement.
+  // Connection state machine.
+  //
+  // There used to be no state here beyond `isConnected`, and five call sites
+  // that each did `xTaskCreate(delayAndConnect, ...)` with nothing coordinating
+  // them. Two of those tasks running at once interleave their
+  // WiFi.disconnect() / WiFi.begin() pairs, which is a reliable way to wedge
+  // the supplicant. One owner, one state variable.
+  enum State {
+    IDLE,       // not connected, nothing in flight
+    CONNECTING, // WiFi.begin() issued, waiting for an IP
+    UP          // associated, DHCP done
+  };
+
+  State state = IDLE;
+  uint32_t stateEnteredAt = 0;
+  uint32_t attemptCount = 0;
+
+  // Cached so the once-per-second supervisor tick doesn't read NVS.
+  bool haveCredentials = false;
+
+  // Our own connect task calls WiFi.disconnect() before WiFi.begin(), which
+  // raises a DISCONNECTED event with reason ASSOC_LEAVE. Ignoring disconnects
+  // for the first moments of a CONNECTING state distinguishes that from a real
+  // association failure without needing a flag shared across three tasks.
+  static const uint32_t kSelfDisconnectWindowMs = 2500;
+
+  void enterState(State next) {
+    state = next;
+    stateEnteredAt = millis();
+  }
+
+  // Bonjour / mDNS presence announcement.
+  //
+  // The name used to carry a random suffix — "soulmate-" + MAC + random(255) —
+  // so it changed on every reconnect. Anything that had cached the hostname
+  // could no longer reach the lamp, which from the app's side is
+  // indistinguishable from the WiFi having dropped. (random() was also never
+  // seeded, so the "random" suffix was the same sequence every boot anyway.)
+  // The MAC alone is already unique.
   void startMDNS() {
-    // MDNS.end();
-    delay(100);
-    String name = String("soulmate-" + WiFi.macAddress() + String(random(255)));
+    MDNS.end();
+
+    String name = "soulmate-" + WiFi.macAddress();
     name.replace(":", "");
+    name.toLowerCase();
+
     char copy[50];
     name.toCharArray(copy, 50);
     if (MDNS.begin(copy)) {
+      Serial.println("[Soulmate-Wifi] mDNS: " + name + ".local");
       MDNS.addService("http", "tcp", 80);
     } else {
       Serial.println(F("[Soulmate-Wifi] Error starting MDNS"));
@@ -102,6 +130,120 @@ namespace SoulmateWifi {
     MDNS.end();
   }
 
+  bool credentialsPresent() {
+    preferences.begin("Wifi", false);
+    String ssid = preferences.getString("ssid", "");
+    preferences.end();
+    return !ssid.equals("");
+  }
+
+  // The single connect attempt. Runs as a short-lived task because WiFi.begin()
+  // wants a delay after the preceding disconnect, and nothing that calls this
+  // — a WiFi event, a websocket handler, a BLE write — can afford to block.
+  void connectTask(void *parameter) {
+    preferences.begin("Wifi", false);
+    String ssid = preferences.getString("ssid", "");
+    String pass = preferences.getString("pass", "");
+    preferences.end();
+
+    if (ssid.equals("")) {
+      Serial.println(F("[Soulmate-Wifi] No saved credentials."));
+      haveCredentials = false;
+      enterState(IDLE);
+      vTaskDelete(NULL);
+    }
+
+    // Internal DRAM, not total free heap: the WiFi stack's RX buffers have to
+    // come from internal DRAM, and running it low is one of the ways a large
+    // panel takes the network down with it. Logged at every attempt so a
+    // reconnect loop in the field says whether that's what's happening.
+    Serial.printf("[Soulmate-Wifi] Attempt %u -> \"%s\" (free internal DRAM "
+                  "%u, largest block %u)\n",
+                  static_cast<unsigned>(attemptCount), ssid.c_str(),
+                  static_cast<unsigned>(
+                      heap_caps_get_free_size(MALLOC_CAP_INTERNAL)),
+                  static_cast<unsigned>(
+                      heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL)));
+
+    WiFi.disconnect();
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    WiFi.mode(WIFI_STA);
+    vTaskDelay(100 / portTICK_PERIOD_MS);
+    WiFi.begin(ssid.c_str(), pass.c_str());
+
+    vTaskDelete(NULL);
+  }
+
+  void beginAttempt() {
+    attemptCount++;
+    enterState(CONNECTING);
+
+    // Checked, unlike the five xTaskCreate calls this replaces. If the stack
+    // can't be allocated the attempt silently never happened, and without
+    // dropping back to IDLE the supervisor would wait for the association
+    // timeout before noticing.
+    if (xTaskCreate(connectTask, "SoulmateConnect", 4096, NULL, 1, NULL) !=
+        pdPASS) {
+      Serial.println(F("[Soulmate-Wifi] Could not start connect task."));
+      enterState(IDLE);
+    }
+  }
+
+  // Reconnect supervisor. Runs from loop(), once a second.
+  //
+  // Reconnects used to be scheduled from inside the WiFi event handler, and
+  // only for two of the ~20 disconnect reason codes. Everything else —
+  // BEACON_TIMEOUT (200), HANDSHAKE_TIMEOUT (204), AUTH_FAIL (202),
+  // ASSOC_FAIL (203), 4WAY_HANDSHAKE_TIMEOUT (15) — printed "spurious
+  // disconnect" and gave up. And since isConnected was already false by the
+  // time a retry failed, *every* failed retry landed in that branch. One
+  // badly-timed drop parked the lamp offline until it was power-cycled, which
+  // is the reason the app stops working and Bluetooth is the only way back in.
+  //
+  // Now: one owner, every reason code treated the same, and retries forever
+  // with backoff.
+  void superviseConnection() {
+    if (!haveCredentials)
+      return;
+
+    uint32_t now = millis();
+
+    if (state == UP) {
+      // Trust the driver over our own bookkeeping. If the two ever disagree,
+      // WiFi.status() is the one that decides whether packets flow.
+      if (WiFi.status() == WL_CONNECTED)
+        return;
+      Serial.println(F("[Soulmate-Wifi] Marked up but not connected."));
+      isConnected = false;
+      enterState(IDLE);
+      return;
+    }
+
+    if (state == CONNECTING) {
+      if (now - stateEnteredAt < SOULMATE_WIFI_ASSOC_TIMEOUT_MS)
+        return;
+      Serial.println(F("[Soulmate-Wifi] Association timed out."));
+      enterState(IDLE);
+      return;
+    }
+
+    // IDLE. attemptCount is reset to 0 whenever a connection comes up or a
+    // working one drops, so the first retry after a real drop is immediate and
+    // only repeated failures back off.
+    if (attemptCount > 0) {
+      uint32_t shift = attemptCount - 1;
+      if (shift > 4)
+        shift = 4;
+      uint32_t backoff = SOULMATE_WIFI_BACKOFF_MIN_MS << shift;
+      if (backoff > SOULMATE_WIFI_BACKOFF_MAX_MS)
+        backoff = SOULMATE_WIFI_BACKOFF_MAX_MS;
+      if (now - stateEnteredAt < backoff)
+        return;
+    }
+
+    beginAttempt();
+  }
+
   // WiFi configuration
   void connectTo(const char *ssid, const char *pass) {
     Serial.println(F("[Soulmate-Wifi] Connecting to WiFi"));
@@ -110,9 +252,9 @@ namespace SoulmateWifi {
     preferences.putString("pass", String(pass));
     preferences.end();
 
-    // Soulmate.StopBluetooth();
-    // WiFi.begin(ssid, pass);
-    xTaskCreate(delayAndConnect, "DelayAndConnect", 10000, NULL, 0, NULL);
+    haveCredentials = true;
+    attemptCount = 0;
+    beginAttempt();
   }
 
   void disconnect() {
@@ -121,7 +263,32 @@ namespace SoulmateWifi {
     preferences.remove("ssid");
     preferences.remove("pass");
     preferences.end();
+
+    // Before WiFi.disconnect(), or the supervisor races the credential removal
+    // and starts one more doomed attempt.
+    haveCredentials = false;
+    isConnected = false;
+    enterState(IDLE);
     WiFi.disconnect();
+  }
+
+  void connectToSavedWifi() {
+    Serial.println(F("[Soulmate-Wifi] connectToSavedWifi"));
+    haveCredentials = credentialsPresent();
+    if (!haveCredentials)
+      return;
+    isConnected = false;
+    attemptCount = 0;
+    beginAttempt();
+  }
+
+  void reconnect() {
+    Serial.println(F("[Soulmate-Wifi] Reconnecting..."));
+    isConnected = false;
+    attemptCount = 0;
+    enterState(IDLE);
+    // Left to the supervisor rather than started here: reconnect() is reachable
+    // from consumeJson(), which runs on the AsyncTCP and NimBLE tasks.
   }
 
   // Ping a message to all WebSockets
@@ -184,138 +351,127 @@ namespace SoulmateWifi {
     }
   }
 
-  void connectToSavedWifi() {
-    // if (WiFi.status() == WL_CONNECTED) return;
-    Serial.println(F("[Soulmate-Wifi] connectToSavedWifi"));
+  // Everything that has to happen once we have an IP but must not happen on the
+  // WiFi event task.
+  //
+  // WiFi.onEvent() handlers run on arduino-esp32's `network_event` task, which
+  // has a 4096-byte stack and is the sole consumer of a 32-deep event queue
+  // (WiFiGeneric.cpp:64,110). fetchTime() used to run there: a blocking
+  // HTTPClient GET to worldtimeapi.org, five-second default timeout plus DNS,
+  // with a DynamicJsonBuffer and a String payload on that 4 KB stack. While it
+  // blocked, no other WiFi event was dispatched — including the DISCONNECTED
+  // event the reconnect logic depends on — and because postToSysQueue() enqueues
+  // with portMAX_DELAY, the IDF event loop task backed up behind it too, which
+  // stalls DHCP and lwIP event handling.
+  bool postConnectRunning = false;
 
-    preferences.begin("Wifi", false);
-    String ssid = preferences.getString("ssid", "");
-    preferences.end();
+  void postConnectTask(void *parameter) {
+    startMDNS();
 
-    if (!ssid.equals("")) {
-      isConnected = false;
-      // We may or may not need this for ESP32 wifi stability.
-      xTaskCreate(delayAndConnect, "DelayAndConnect", 10000, NULL, 1, NULL);
+    long receivedSeconds = fetchTime();
+    if (receivedSeconds > 0) {
+      unsigned long currentSeconds = millis() / 1000;
+      unsigned long startedSeconds = receivedSeconds - currentSeconds;
+      Circadian::startTrackingTime(startedSeconds);
     }
+
+    connectHomekit();
+
+    postConnectRunning = false;
+    vTaskDelete(NULL);
   }
 
-  void reconnect() {
-    Serial.println(F("[Soulmate-Wifi] Reconnecting..."));
-    isConnected = false;
-    connectToSavedWifi();
-  }
-
-  int spuriousCount = 0;
+  // Registered once per boot. addHandler() appends unconditionally, so doing
+  // this on every GOT_IP grew the handler list by a node per reconnect, and
+  // hap_accessory_register() registered a duplicate accessory each time while
+  // leaking the previous one.
+  bool serversStarted = false;
 
   void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info) {
-    Serial.println("WiFiEvent");
     switch (event) {
-    case SYSTEM_EVENT_WIFI_READY:
-      Serial.println(F("[Wifi] WiFi interface ready"));
-      break;
-    case SYSTEM_EVENT_SCAN_DONE:
-      Serial.println(F("[Wifi] Completed scan for access points"));
-      break;
     case SYSTEM_EVENT_STA_START:
-      Serial.println(F("[Wifi] WiFi client started"));
+      Serial.println(F("[Soulmate-Wifi] WiFi client started"));
+      // Both of these need the STA interface up, which is what this event
+      // means. esp_wifi_set_max_tx_power() used to be called from setup(),
+      // before esp_wifi_init() had run — so it returned ESP_ERR_WIFI_NOT_INIT
+      // and did nothing, and the return value was discarded.
+      if (!WiFi.setSleep(SOULMATE_WIFI_POWER_SAVE))
+        Serial.println(F("[Soulmate-Wifi] Could not set power save mode"));
+      if (!WiFi.setTxPower(SOULMATE_WIFI_TX_POWER))
+        Serial.println(F("[Soulmate-Wifi] Could not set TX power"));
       break;
-    case SYSTEM_EVENT_STA_STOP:
-      Serial.println(F("[Wifi] WiFi clients stopped"));
-      break;
+
     case SYSTEM_EVENT_STA_CONNECTED:
-      Serial.println(F("[Wifi] Connected to access point"));
+      Serial.println(F("[Soulmate-Wifi] Connected to access point"));
       break;
+
     case SYSTEM_EVENT_STA_DISCONNECTED:
-      Serial.println(F("[Soulmate-Wifi] Disconnected from WiFi access point"));
-      if (isConnected) {
+      Serial.print(F("[Soulmate-Wifi] Disconnected. Reason code: "));
+      Serial.println(info.disconnected.reason);
+
+      if (state == UP) {
         teardownHomekit();
         isConnected = false;
-        Serial.println("Was connected. Reconnect");
-        xTaskCreate(delayAndConnect, "DelayAndConnect", 10000, NULL, 0, NULL);
-      } else {
-        if (info.disconnected.reason == WIFI_REASON_NO_AP_FOUND) {
-          spuriousCount++;
-          Serial.println("The access point wasn't found. We can probably stop after a while.");
-          if (spuriousCount > 5) {
-            Serial.println("That's it, disconnect Wifi");
-            spuriousCount = 0;
-            WiFi.disconnect();
-            xTaskCreate(delayAndConnectWayLater, "DelayAndConnectWayLater", 10000, NULL, 0, NULL);
-          }
-        } else if (info.disconnected.reason == WIFI_REASON_AUTH_EXPIRE) {
-          Serial.println("Auth expired. We'll try again.");
-        } else if (info.disconnected.reason == WIFI_REASON_ASSOC_EXPIRE) {
-          xTaskCreate(delayAndConnectWayLater, "DelayAndConnectWayLater", 10000, NULL, 0, NULL);
-        } else {
-          // WIFI_REASON_UNSPECIFIED              = 1,
-          // WIFI_REASON_AUTH_EXPIRE              = 2,
-          // WIFI_REASON_AUTH_LEAVE               = 3,
-          // WIFI_REASON_ASSOC_EXPIRE             = 4,
-          // WIFI_REASON_ASSOC_TOOMANY            = 5,
-          // WIFI_REASON_NOT_AUTHED               = 6,
-          // WIFI_REASON_NOT_ASSOCED              = 7,
-          // WIFI_REASON_ASSOC_LEAVE              = 8,
-          // WIFI_REASON_ASSOC_NOT_AUTHED         = 9,
-          // WIFI_REASON_DISASSOC_PWRCAP_BAD      = 10,
-          // WIFI_REASON_DISASSOC_SUPCHAN_BAD     = 11,
-          // WIFI_REASON_IE_INVALID               = 13,
-          // WIFI_REASON_MIC_FAILURE              = 14,
-          // WIFI_REASON_4WAY_HANDSHAKE_TIMEOUT   = 15,
-          // WIFI_REASON_GROUP_KEY_UPDATE_TIMEOUT = 16,
-          // WIFI_REASON_IE_IN_4WAY_DIFFERS       = 17,
-          // WIFI_REASON_GROUP_CIPHER_INVALID     = 18,
-          // WIFI_REASON_PAIRWISE_CIPHER_INVALID  = 19,
-          // WIFI_REASON_AKMP_INVALID             = 20,
-          // WIFI_REASON_UNSUPP_RSN_IE_VERSION    = 21,
-          // WIFI_REASON_INVALID_RSN_IE_CAP       = 22,
-          // WIFI_REASON_802_1X_AUTH_FAILED       = 23,
-          // WIFI_REASON_CIPHER_SUITE_REJECTED    = 24,
-          // WIFI_REASON_BEACON_TIMEOUT           = 200,
-          // WIFI_REASON_NO_AP_FOUND              = 201,
-          // WIFI_REASON_AUTH_FAIL                = 202,
-          // WIFI_REASON_ASSOC_FAIL               = 203,
-          // WIFI_REASON_HANDSHAKE_TIMEOUT        = 204,
-          Serial.println(F("[Soulmate-Wifi] Spurious disconnect event. Disconnect code:"));
-          Serial.println(info.disconnected.reason);
-          Serial.println(F("[Soulmate-Wifi] See https://github.com/Soulmate-Lights/soulmate-core/blob/master/SoulmateWifi.h#L246 for error code."));
-        }
+        // 0, so the supervisor retries immediately. A connection that worked
+        // and then dropped deserves one fast attempt before any backoff.
+        attemptCount = 0;
+        enterState(IDLE);
+      } else if (state == CONNECTING &&
+                 millis() - stateEnteredAt > kSelfDisconnectWindowMs) {
+        // A real association failure rather than the WiFi.disconnect() our own
+        // connect task issues. Every reason code is handled the same way —
+        // which is the whole point, since the old code retried on two of them
+        // and printed "spurious disconnect" for the rest.
+        enterState(IDLE);
       }
       break;
+
     case SYSTEM_EVENT_STA_GOT_IP:
-      if (!isConnected) {
-        isConnected = true;
-        Serial.print("Obtained IP address: ");
-        Serial.println(WiFi.localIP());
-        startMDNS();
+      if (state == UP) {
+        Serial.println(F("[Soulmate-Wifi] Spurious got IP event."));
+        break;
+      }
+
+      isConnected = true;
+      attemptCount = 0;
+      enterState(UP);
+      Serial.print("Obtained IP address: ");
+      Serial.println(WiFi.localIP());
+
+      if (!serversStarted) {
+        serversStarted = true;
         ws.onEvent(onEvent);
         socketServer.addHandler(&ws);
         socketServer.begin();
         server.begin();
+      }
 
-        long receivedSeconds = fetchTime();
-        if (receivedSeconds > 0) {
-          unsigned long currentSeconds = millis() / 1000;
-          unsigned long startedSeconds = receivedSeconds - currentSeconds;
-          Circadian::startTrackingTime(startedSeconds);
+      // mDNS, time fetch and HomeKit registration, off this task. See
+      // postConnectTask().
+      if (!postConnectRunning) {
+        postConnectRunning = true;
+        if (xTaskCreate(postConnectTask, "SoulmatePostConnect", 8192, NULL, 1,
+                        NULL) != pdPASS) {
+          Serial.println(F("[Soulmate-Wifi] Could not start post-connect "
+                           "task."));
+          postConnectRunning = false;
         }
-
-        connectHomekit();
-      } else {
-        Serial.println(F("[Soulmate-Wifi] Spurious got IP event."));
       }
       break;
+
     case SYSTEM_EVENT_STA_LOST_IP:
-      Serial.println(F("[Soulmate-Wifi] [Wifi] Lost IP address and IP address "
-                       "is reset to 0"));
-      reconnect();
+      Serial.println(F("[Soulmate-Wifi] Lost IP address"));
+      isConnected = false;
+      attemptCount = 0;
+      enterState(IDLE);
       break;
+
     default:
       break;
     }
   }
 
   void setup(void) {
-    esp_wifi_set_max_tx_power(78);
     WiFi.onEvent(WiFiEvent);
 
     connectToSavedWifi();
@@ -390,6 +546,10 @@ namespace SoulmateWifi {
 
   void loop() {
     EVERY_N_SECONDS(1) {
+      superviseConnection();
+    }
+
+    EVERY_N_SECONDS(1) {
       if (
         Soulmate.currentRoutine == -2 && !isStreaming()
       ) {
@@ -428,13 +588,7 @@ bool SoulmateLibrary::isStreaming() {
 }
 
 void SoulmateLibrary::connectTo(const char *ssid, const char *pass) {
-  preferences.begin("Wifi", false);
-  preferences.putString("ssid", String(ssid));
-  preferences.putString("pass", String(pass));
-  preferences.end();
-
-  Serial.println("[Soulmate-Wifi] Saved credentials, start connect task");
-  xTaskCreate(delayAndConnect, "DelayAndConnect", 10000, NULL, 0, NULL);
+  SoulmateWifi::connectTo(ssid, pass);
 }
 
 bool SoulmateLibrary::wifiConnected() {

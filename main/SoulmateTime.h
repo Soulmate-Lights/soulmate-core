@@ -9,9 +9,19 @@ String TIME_API = "http://worldtimeapi.org/api/ip";
 
 HTTPClient http;
 
+// Called from SoulmateWifi's post-connect task, deliberately not from the WiFi
+// event handler — see the comment on postConnectTask(). Still bounded, because
+// worldtimeapi.org is frequently slow or rate-limited and the default timeouts
+// are 5s each.
+#ifndef SOULMATE_TIME_TIMEOUT_MS
+  #define SOULMATE_TIME_TIMEOUT_MS 3000
+#endif
+
 long fetchTime() {
   long seconds = -1;
 
+  http.setConnectTimeout(SOULMATE_TIME_TIMEOUT_MS);
+  http.setTimeout(SOULMATE_TIME_TIMEOUT_MS);
   http.begin(TIME_API);
   int httpCode = http.GET();
 

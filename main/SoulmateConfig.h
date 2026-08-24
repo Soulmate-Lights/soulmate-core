@@ -93,6 +93,13 @@ static TaskHandle_t FastLEDshowTaskHandle = 0;
   #define ROUTINE_SAVE_DEBOUNCE_MS 10000
 #endif
 
+// Same, for brightness. Shorter than the routine debounce: a slider drag
+// settles in well under a second, and there's no reason to risk losing the
+// value to a power cut for ten.
+#ifndef BRIGHTNESS_SAVE_DEBOUNCE_MS
+  #define BRIGHTNESS_SAVE_DEBOUNCE_MS 3000
+#endif
+
 #ifndef FADE_DURATION
   #define FADE_DURATION 2000
 #endif
