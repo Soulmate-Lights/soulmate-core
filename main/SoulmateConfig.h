@@ -85,7 +85,7 @@ static TaskHandle_t FastLEDshowTaskHandle = 0;
 // (~36,400 bits including start and end frames), F_CPU 240 MHz:
 //
 //   requested   divider   actual      frame
-//      24         10      ~6.9 MHz    5.3 ms   <-- default
+//      24         10      ~6.9 MHz    5.3 ms   <-- old default, anomalous
 //      23         10      ~6.9 MHz    5.3 ms
 //      22         10      ~6.9 MHz    5.3 ms
 //      21         11     ~14.1 MHz    2.6 ms   <-- the cliff
@@ -95,24 +95,40 @@ static TaskHandle_t FastLEDshowTaskHandle = 0;
 //      12         20     ~10.0 MHz    3.6 ms
 //      10         24      ~8.6 MHz    4.2 ms
 //       8         30      ~7.1 MHz    5.1 ms
-//       6         40      ~5.5 MHz    6.7 ms
+//       6         40      ~5.5 MHz    6.7 ms   <-- default
 //       4         60      ~3.7 MHz    9.7 ms
 //       2        120      ~1.9 MHz   18.8 ms   does not fit 60fps at this size
 //
-// Read that carefully before reaching for a "slower" value. The 24 default is
-// already close to the slowest setting available above 6, because it sits on the
-// far side of the cliff. **To go slower, go to 6 or below.** 12 is not a slower
-// setting; it is a 45% faster one.
+// Note the table is monotonic from 2 all the way to 21. Only 22 and above break
+// it: those collapse back to ~6.9 MHz, which is *slower* than anything in 8..21.
+// So the usable range is 2..21, where the number behaves the way you expect, and
+// >= 22 is rejected below.
+//
+// Default is 6 (~5.5 MHz). This was 24 (~6.9 MHz -- FastLED's SK9822 default,
+// and therefore the historical behaviour), lowered deliberately: at 1100 LEDs
+// the tail of the chain has very little accumulated CLK-vs-DATA timing margin
+// left, and a longer bit period is what buys it back.
+//
+// The cost is real but affordable. Frame output goes from ~5.3 ms to ~6.7 ms at
+// 1100 LEDs against a 16 ms budget -- and because clocked output is bit-banged,
+// that extra 1.4 ms is CPU, not idle waiting. Core 0's share for LED output goes
+// from about a third of wall-clock to about 42%, which also lengthens the window
+// showPixels() holds spi_flash_op_lock(). Smaller panels barely notice: a 14x14
+// Square goes from ~1.0 ms to ~1.2 ms.
+//
+// If this turns out to be the wrong trade, 8 (~7.1 MHz) is the closest in-range
+// equivalent of the old behaviour.
 #ifndef SOULMATE_LED_DATA_RATE_MHZ
-  #define SOULMATE_LED_DATA_RATE_MHZ 24
+  #define SOULMATE_LED_DATA_RATE_MHZ 6
 #endif
 
-// 13..21 all land between ~11 and ~14 MHz — up to twice the default — while
-// reading as a reduction. There is no reason to want a value in there, and
-// picking one by mistake makes a marginal chain worse in the exact situation
-// where you were trying to make it better. Fail the build instead.
-#if SOULMATE_LED_DATA_RATE_MHZ >= 13 && SOULMATE_LED_DATA_RATE_MHZ <= 21
-  #error "SOULMATE_LED_DATA_RATE_MHZ between 13 and 21 is FASTER than the 24 default, not slower: FastLED's bit-bang delay formula changes shape at divider 10 (fastspi_bitbang.h:123). Use 24 for the current ~6.9MHz, 6/4/2 to go slower, or 12/10/8 if you actually want faster. See the table above."
+// >= 22 is the one genuinely misleading region. The divider reaches 10, the
+// delay formula changes shape, and the actual clock drops to ~6.9 MHz -- so
+// asking for "24 MHz" gets you something slower than asking for 12. Nobody wants
+// that by intent, and 8 expresses the same clock inside the monotonic range, so
+// fail the build rather than quietly delivering the opposite of the request.
+#if SOULMATE_LED_DATA_RATE_MHZ >= 22
+  #error "SOULMATE_LED_DATA_RATE_MHZ >= 22 does not mean what it says: FastLED's bit-bang delay formula changes shape once the divider reaches 10 (fastspi_bitbang.h:123), so 22, 23 and 24 all collapse to ~6.9MHz -- slower than anything from 8 to 21. Usable range is 2..21, monotonic. Want the old ~6.9MHz? Use 8 (~7.1MHz). Want the fastest? Use 21 (~14.1MHz). See the table above."
 #endif
 
 // FastLED temporal dithering, on by default in FastLED whenever brightness is
