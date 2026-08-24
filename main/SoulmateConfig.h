@@ -70,6 +70,29 @@ static TaskHandle_t FastLEDshowTaskHandle = 0;
   #define CYCLE_LENGTH_IN_MS 60000
 #endif
 
+// Target frame rate for the render task. The scheduler tick rate caps this:
+// see the static_assert on kFrameTicks in SoulmateMain.h.
+//
+// This used to be silently wrong. The code asked for 60fps via
+// EVERY_N_MILLISECONDS(1000/60) while CONFIG_FREERTOS_HZ was 100, giving a 10ms
+// tick — and a 16ms request sampled on a 10ms grid fires every 20ms, so the
+// panel actually ran at 50fps. sdkconfig now sets CONFIG_FREERTOS_HZ=1000
+// (arduino-esp32's own default), making a 1ms tick.
+//
+// Note the delivered rate is 62.5fps, not exactly 60: the period is
+// (1000/60)/1ms = 16 ticks after integer division, so 16ms. That's the closest
+// the 1ms tick can get without going under; 17 ticks would give 58.8fps.
+#ifndef SOULMATE_FPS
+  #define SOULMATE_FPS 60
+#endif
+
+// How long the current routine has to hold still before it's written to NVS.
+// Long enough that cycling through patterns on the button, or an app dragging
+// through a list, collapses into one write.
+#ifndef ROUTINE_SAVE_DEBOUNCE_MS
+  #define ROUTINE_SAVE_DEBOUNCE_MS 10000
+#endif
+
 #ifndef FADE_DURATION
   #define FADE_DURATION 2000
 #endif
