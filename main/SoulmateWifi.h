@@ -47,8 +47,20 @@
 // The trade-off is BLE. With coexistence arbitration on, holding the WiFi
 // receiver up continuously leaves the BT controller less radio time. If BLE
 // control becomes unreliable, WIFI_PS_MIN_MODEM is the other end of this dial.
+//
+// WIFI_PS_NONE is only reachable when the BT controller is off. IDF asserts and
+// calls abort() in esp_wifi_set_ps() if power save is disabled while Bluetooth
+// is enabled ("Should enable WiFi modem sleep when both WiFi and Bluetooth are
+// enabled"), and sdkconfig ships CONFIG_BT_ENABLED=y with BluetoothSetup()
+// running from setup() unless SKIP_BLUETOOTH is defined. Since this is set from
+// SYSTEM_EVENT_STA_START, the abort lands on the first association attempt and
+// the board boot-loops rather than misbehaving in some recoverable way.
 #ifndef SOULMATE_WIFI_POWER_SAVE
-  #define SOULMATE_WIFI_POWER_SAVE WIFI_PS_NONE
+  #ifdef SKIP_BLUETOOTH
+    #define SOULMATE_WIFI_POWER_SAVE WIFI_PS_NONE
+  #else
+    #define SOULMATE_WIFI_POWER_SAVE WIFI_PS_MIN_MODEM
+  #endif
 #endif
 
 // Max TX power. Kept at the previous value so this isn't a silent behaviour
