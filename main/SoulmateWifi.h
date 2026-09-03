@@ -524,7 +524,13 @@ namespace SoulmateWifi {
           if (!index) {
             Soulmate.stop();
             SPIFFS.end();
+            // Declared via SoulmateBLE.h, which Soulmate.h only includes when
+            // SKIP_BLUETOOTH is undefined — so this call makes every
+            // SKIP_BLUETOOTH build fail to compile. There is also no controller
+            // to disable in that configuration.
+#ifndef SKIP_BLUETOOTH
             esp_bt_controller_disable();
+#endif
 
             if (!Update.begin()) {
               Update.printError(Serial);
