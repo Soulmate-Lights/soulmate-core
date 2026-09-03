@@ -177,7 +177,7 @@ class SoulmateLibrary {
   void BluetoothSetup();
   void BluetoothLoop();
   void StartBluetooth();
-  void StopBluetooth();
+  bool StopBluetooth();
 
   String status(bool showLANIP = true) {
     StaticJsonBuffer<2048> jsonBuffer;
@@ -917,7 +917,8 @@ SoulmateLibrary Soulmate;
 #ifdef SKIP_BLUETOOTH
 void SoulmateLibrary::StartBluetooth() {
 }
-void SoulmateLibrary::StopBluetooth() {
+bool SoulmateLibrary::StopBluetooth() {
+  return true; // nothing to tear down
 }
 void SoulmateLibrary::BluetoothLoop() {
 }

@@ -47,20 +47,51 @@
 // The trade-off is BLE. With coexistence arbitration on, holding the WiFi
 // receiver up continuously leaves the BT controller less radio time. If BLE
 // control becomes unreliable, WIFI_PS_MIN_MODEM is the other end of this dial.
-//
-// WIFI_PS_NONE is only reachable when the BT controller is off. IDF asserts and
-// calls abort() in esp_wifi_set_ps() if power save is disabled while Bluetooth
-// is enabled ("Should enable WiFi modem sleep when both WiFi and Bluetooth are
-// enabled"), and sdkconfig ships CONFIG_BT_ENABLED=y with BluetoothSetup()
-// running from setup() unless SKIP_BLUETOOTH is defined. Since this is set from
-// SYSTEM_EVENT_STA_START, the abort lands on the first association attempt and
-// the board boot-loops rather than misbehaving in some recoverable way.
+// Applied at STA_START, while the BT controller may still be up — so it must be
+// a value that is legal alongside Bluetooth. WIFI_PS_NONE is NOT: IDF asserts and
+// abort()s ("Should enable WiFi modem sleep when both WiFi and Bluetooth are
+// enabled"), boot-looping the board. See SOULMATE_RELEASE_BLE_ON_WIFI below for
+// how WIFI_PS_NONE is reached anyway, once BLE is no longer needed.
 #ifndef SOULMATE_WIFI_POWER_SAVE
   #ifdef SKIP_BLUETOOTH
     #define SOULMATE_WIFI_POWER_SAVE WIFI_PS_NONE
   #else
     #define SOULMATE_WIFI_POWER_SAVE WIFI_PS_MIN_MODEM
   #endif
+#endif
+
+// Opt in to handing the radio over to WiFi once the panel is connected: tear the
+// BLE stack down on STA_GOT_IP and switch to WIFI_PS_NONE.
+//
+// Why this exists. An always-advertising BT controller costs WiFi twice: it
+// time-slices the single 2.4GHz radio even when coexistence arbitrates it, and
+// its mere presence forces modem sleep on, which parks the receiver between DTIM
+// beacons. Measured on a 14x14 SK9822 panel 5ft from the AP:
+//
+//   BLE up,        MIN_MODEM:  0% loss, RTT 5.2/91.9/239.0 ms min/avg/max
+//   BLE released,  PS_NONE:    0% loss, RTT 4.8/43.6/162.5 ms
+//   SKIP_BLUETOOTH, PS_NONE:   0% loss, RTT 4.2/15.4/63.2 ms
+//
+// So this recovers about half the gap to a BLE-less build, not all of it —
+// coexistence appears to stay engaged once the controller has been initialised
+// at all. It matters when latency is the constraint: streaming pixels at 30fps
+// is a 33ms frame budget, and 91.9ms average misses it on nearly every frame.
+//
+// DEFAULT OFF, deliberately. BLE here is not provisioning-only: every
+// characteristic write goes to consumeJson(), the same general command surface
+// the WebSocket uses, so releasing it removes BLE *control* from any board that
+// relies on it. That is a behaviour change existing boards should opt into, not
+// inherit.
+//
+// The safety argument for the opt-in, though, is that it beats SKIP_BLUETOOTH:
+// BLE is this firmware's only WIRELESS provisioning path (SoulmateBLE pipes
+// writes into consumeJson(), which accepts SSID/WIFIPASS; there is no SoftAP,
+// captive portal or SmartConfig fallback), so compiling it out strands a panel
+// on USB serial forever. With the handover, a panel that cannot reach its
+// network never reaches STA_GOT_IP, so it keeps BLE and stays provisionable —
+// and a power cycle always brings BLE back.
+#ifndef SOULMATE_RELEASE_BLE_ON_WIFI
+  #define SOULMATE_RELEASE_BLE_ON_WIFI 0
 #endif
 
 // Max TX power. Kept at the previous value so this isn't a silent behaviour
@@ -399,6 +430,48 @@ namespace SoulmateWifi {
   // leaking the previous one.
   bool serversStarted = false;
 
+  // Requested from the WiFi event handler, performed from loop(). Deliberately
+  // not done inline in the handler: WiFi.onEvent() callbacks run on
+  // arduino-esp32's network_event task, which has a 4KB stack and is the sole
+  // consumer of a 32-deep queue — while it blocks, no WiFi event is dispatched,
+  // including the disconnect events the reconnect supervisor depends on. And
+  // btStop() busy-waits on the controller's status transitions. Same reasoning
+  // that moved fetchTime() off this task.
+  volatile bool bleReleasePending = false;
+  // Once per boot. Not re-armed on reconnect: after the handover the controller
+  // is deinitialised and cannot come back without a reboot.
+  bool bleReleased = false;
+
+  void releaseBleForWifiIfPending() {
+#if SOULMATE_RELEASE_BLE_ON_WIFI && !defined(SKIP_BLUETOOTH)
+    if (!bleReleasePending || bleReleased)
+      return;
+    bleReleasePending = false;
+    bleReleased = true;
+
+    Serial.println(F("[Soulmate-Wifi] On WiFi — releasing the BT radio"));
+    Serial.print(F("[Soulmate-Wifi] Free internal DRAM before: "));
+    Serial.println(heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
+
+    // Verify rather than assume. WIFI_PS_NONE is only legal once the controller
+    // is actually down; asking for it while Bluetooth is up makes IDF abort() and
+    // boot-loop the panel — precisely the failure this handover exists to avoid.
+    // A panel that keeps modem sleep is merely slower.
+    if (!Soulmate.StopBluetooth()) {
+      Serial.println(F("[Soulmate-Wifi] BT controller still up — keeping modem sleep"));
+      return;
+    }
+
+    if (!WiFi.setSleep(WIFI_PS_NONE))
+      Serial.println(F("[Soulmate-Wifi] Could not disable power save"));
+    else
+      Serial.println(F("[Soulmate-Wifi] Power save off; radio is WiFi-only"));
+
+    Serial.print(F("[Soulmate-Wifi] Free internal DRAM after:  "));
+    Serial.println(heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
+#endif
+  }
+
   void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info) {
     switch (event) {
     case SYSTEM_EVENT_STA_START:
@@ -449,6 +522,10 @@ namespace SoulmateWifi {
       enterState(UP);
       Serial.print("Obtained IP address: ");
       Serial.println(WiFi.localIP());
+
+      // WiFi is proven working, so BLE has done its job. Request the handover;
+      // loop() performs it, off this task.
+      bleReleasePending = true;
 
       if (!serversStarted) {
         serversStarted = true;
@@ -524,10 +601,10 @@ namespace SoulmateWifi {
           if (!index) {
             Soulmate.stop();
             SPIFFS.end();
-            // Declared via SoulmateBLE.h, which Soulmate.h only includes when
-            // SKIP_BLUETOOTH is undefined — so this call makes every
-            // SKIP_BLUETOOTH build fail to compile. There is also no controller
-            // to disable in that configuration.
+            // esp_bt_controller_disable() is declared via SoulmateBLE.h, which
+            // Soulmate.h only includes when SKIP_BLUETOOTH is undefined — so this
+            // call makes SKIP_BLUETOOTH builds fail to compile. There is also no
+            // controller to disable in that configuration.
 #ifndef SKIP_BLUETOOTH
             esp_bt_controller_disable();
 #endif
@@ -563,6 +640,8 @@ namespace SoulmateWifi {
   }
 
   void loop() {
+    releaseBleForWifiIfPending();
+
     EVERY_N_SECONDS(1) {
       superviseConnection();
     }
